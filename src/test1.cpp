@@ -30,6 +30,8 @@ int main(int argc, char* argv[])
 
 	Sleep(50);
 
+	right_arm_connection.close_connection();
+
 	printf("program over ... press Enter ...");
 	getchar();
 
