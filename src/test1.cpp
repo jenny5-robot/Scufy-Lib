@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	if (!right_arm_connection.connect(9, 9600)) {
 		printf("Error attaching to Jenny 5' right arm!\n");
 		getchar();
-		return 0;
+		return 0;   
 	}
 	Sleep(2000);
 
