@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 	Sleep(2000);
 
 	// empty the serial buffer
-	char sir[1000];
+	unsigned char sir[1000];
 	int num_read = right_arm_connection.get_data(sir, 1000);
 	sir[num_read] = 0;
 	printf("Serial buffer = %s\n", sir);
