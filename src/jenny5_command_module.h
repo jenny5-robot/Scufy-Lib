@@ -28,6 +28,9 @@ public:
 	bool lock_motor(int motor_index);
 	bool is_connected(void);
 	int get_data(char *buffer, int buffer_size);
+
+	void attach_sensors(int motor_index, int num_potentiometers, int *potentiometers_index);
+	void remove_attached_sensors(int motor_index);
 	const char* get_version(void);
 
 };

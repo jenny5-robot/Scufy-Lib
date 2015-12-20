@@ -209,3 +209,26 @@ int t_jenny5_command_module::get_data(char *buffer, int buffer_size)
 		return 0;
 }
 //--------------------------------------------------------------
+void t_jenny5_command_module::attach_sensors(int motor_index, int num_potentiometers, int *potentiometers_index)
+{
+	if (serial_connection.IsOpened()) {
+		char s[64];
+		sprintf(s, "A%d %d", motor_index, num_potentiometers);
+		for (int i = 0; i < num_potentiometers; i++) {
+			char tmp_str[64];
+			sprintf(s, " P%d#", potentiometers_index[i]);
+			strcat(s, tmp_str);
+		}
+		serial_connection.SendData((const char*)s, strlen(s) + 1);
+	}
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::remove_attached_sensors(int motor_index)
+{
+	if (serial_connection.IsOpened()) {
+		char s[10];
+		sprintf(s, "A%d 0#", motor_index);
+		serial_connection.SendData((const char*)s, strlen(s) + 1);
+	}
+}
+//--------------------------------------------------------------
