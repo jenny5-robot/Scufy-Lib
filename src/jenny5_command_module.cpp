@@ -5,12 +5,17 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module()
 {
-
+	strcpy(version, "2015.12.20.0"); // year.month.day.built number
 }
 //--------------------------------------------------------------
 t_jenny5_command_module::~t_jenny5_command_module()
 {
 
+}
+//--------------------------------------------------------------
+const char* t_jenny5_command_module::get_version(void)
+{
+	return version;
 }
 //--------------------------------------------------------------
 bool t_jenny5_command_module::connect(int port, int baud_rate)
@@ -31,6 +36,65 @@ bool t_jenny5_command_module::move_motor(int motor_index, int num_steps)
 	if (serial_connection.IsOpened()) {
 		char s[20];
 		sprintf(s, "M%d %d#", motor_index, num_steps);
+		serial_connection.SendData((const char*)s, strlen(s) + 1);
+	}
+	else
+		return false;
+
+	return true;
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::move_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
+{
+	if (serial_connection.IsOpened()) {
+		char s[20];
+		sprintf(s, "M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
+		serial_connection.SendData((const char*)s, strlen(s) + 1);
+	}
+	else
+		return false;
+
+	return true;
+}
+//--------------------------------------------------------------
+
+bool t_jenny5_command_module::move_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
+{
+	if (serial_connection.IsOpened()) {
+		char s[63];
+		sprintf(s, "M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
+		serial_connection.SendData((const char*)s, strlen(s) + 1);
+	}
+	else
+		return false;
+
+	return true;
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::move_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4)
+{
+	if (serial_connection.IsOpened()) {
+		char s[63];
+		sprintf(s, "M%d %d M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
+		serial_connection.SendData((const char*)s, strlen(s) + 1);
+	}
+	else
+		return false;
+
+	return true;
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::move_motor(int num_motors, int* motor_index, int *num_steps)
+{
+	if (serial_connection.IsOpened()) {
+		char s[63];
+		s[0] = 0;
+		for (int i = 0; i < num_motors; i++) {
+			char tmp_str[20];
+
+		  sprintf(tmp_str, "M%d %d#", motor_index[i], num_steps[i]);
+		  strcat(s, tmp_str);
+	    }
 		serial_connection.SendData((const char*)s, strlen(s) + 1);
 	}
 	else

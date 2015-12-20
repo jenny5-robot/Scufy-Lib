@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 	// attach to the robot
 	t_jenny5_command_module right_arm_connection;
 
-	if (!right_arm_connection.connect(9, 9600)) {
+	if (!right_arm_connection.connect(10, 9600)) {
 		printf("Error attaching to Jenny 5' right arm!\n");
 		getchar();
 		return 0;   
@@ -23,6 +23,8 @@ int main(int argc, char* argv[])
 	int num_read = right_arm_connection.get_data(sir, 1000);
 	sir[num_read] = 0;
 	printf("Serial buffer = %s\n", sir);
+
+	printf("Control module version = %s\n", right_arm_connection.get_version());
 	
 	// send a command to the module
 	right_arm_connection.move_motor(0, 10);
