@@ -92,7 +92,7 @@ bool t_jenny5_command_module::move_motor4(int motor_index1, int num_steps1, int 
 	return true;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::move_motor(int num_motors, int* motor_index, int *num_steps)
+bool t_jenny5_command_module::move_motor_array(int num_motors, int* motor_index, int *num_steps)
 {
 	if (RS232_is_open()) {
 		char s[63];
@@ -111,26 +111,16 @@ bool t_jenny5_command_module::move_motor(int num_motors, int* motor_index, int *
 	return true;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::set_motor_speed(int motor_index, int motor_speed, int motor_acceleration)
+bool t_jenny5_command_module::set_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
 {
 	if (RS232_is_open()) {
 		char s[20];
-		sprintf(s, "S%d %d %d#", motor_index, motor_speed, motor_acceleration);
+		sprintf(s, "SM%d %d %d#", motor_index, motor_speed, motor_acceleration);
 		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
 	}
 	else
 		return false;
 
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::set_motor_acceleration(int motor_index, int motor_acceleration)
-{
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "A%d %d#", motor_index, motor_acceleration);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
 	return true;
 }
 //--------------------------------------------------------------
@@ -166,7 +156,7 @@ int t_jenny5_command_module::get_potentiometer_position(int sensor_index)
 	return true;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::get_infrared_status(int sensor_index)
+bool t_jenny5_command_module::get_infrared_distance(int sensor_index)
 {
 	if (RS232_is_open()) {
 		char s[20];
@@ -176,7 +166,7 @@ bool t_jenny5_command_module::get_infrared_status(int sensor_index)
 	return true;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::get_motors_sensors_statistics()
+bool t_jenny5_command_module::get_motors_sensors_statistics(void)
 {
 	if (RS232_is_open()) {
 		char s[20];
@@ -238,6 +228,33 @@ void t_jenny5_command_module::remove_attached_sensors(int motor_index)
 	if (RS232_is_open()) {
 		char s[10];
 		sprintf(s, "A%d 0#", motor_index);
+		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
+	}
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::get_motor_parameters(int motor_index)
+{
+	if (RS232_is_open()) {
+		char s[10];
+		sprintf(s, "GM%d#", motor_index);
+		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
+	}
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::get_potentiometer_parameters(int potentiometer_index)
+{
+	if (RS232_is_open()) {
+		char s[10];
+		sprintf(s, "GP%d#", potentiometer_index);
+		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
+	}
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::set_potentiometer_parameters(int potentiometer_index, int _min, int _max, int _home)
+{
+	if (RS232_is_open()) {
+		char s[30];
+		sprintf(s, "SP%d %d %d %d#", potentiometer_index, _min, _max, _home);
 		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
 	}
 }
