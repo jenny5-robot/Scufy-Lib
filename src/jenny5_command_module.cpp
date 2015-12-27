@@ -200,22 +200,23 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 		if (tmp_str[i] >= 'A' && tmp_str[i] <= 'Z' || tmp_str[i] >= 'a' && tmp_str[i] <= 'z') {
 
 			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor was moved
-				int motor_index;
-				sscanf(tmp_str + i + 1, "%d", &motor_index);
-				i += 1;
-				jenny5_event *e = new jenny5_event(MOTOR_DONE_EVENT, motor_index, 0, 0);
+				int motor_index, distance_to_go;
+				sscanf(tmp_str + i + 1, "%d", &motor_index, &distance_to_go);
+				i += 5;
+				jenny5_event *e = new jenny5_event(MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
 				received_events.Add((void*)e);
 			}
 			else
 				if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection
 					jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
 					received_events.Add((void*)e);
+					i += 2;
 				}
 				else
 					if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {// motor was locked
 						int motor_index;
 						sscanf(tmp_str + i + 1, "%d", &motor_index);
-						i += 1;
+						i += 3;
 						jenny5_event *e = new jenny5_event(MOTOR_LOCKED_EVENT, motor_index, 0, 0);
 						received_events.Add((void*)e);
 					}
@@ -223,12 +224,14 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 						if (tmp_str[i] == 'D' || tmp_str[i] == 'd') {// motor was disabled
 							int motor_index;
 							sscanf(tmp_str + i + 1, "%d", &motor_index);
-							i += 1;
+							i += 3;
 							jenny5_event *e = new jenny5_event(MOTOR_DISABLED_EVENT, motor_index, 0, 0);
 							received_events.Add((void*)e);
 						}
-			// more to add
+			// more events to add
 		}
+		else
+			i++;
 	}
 }
 //--------------------------------------------------------------
@@ -239,7 +242,7 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 	int received_size = get_data_from_serial(tmp_buffer, 4096);
 	tmp_buffer[received_size] = 0;
 	if (received_size) {
-		memcpy(current_buffer + strlen(current_buffer), tmp_buffer, received_size);
+		strcpy(current_buffer + strlen(current_buffer), tmp_buffer);
 
 		int buffer_length = strlen(current_buffer);
 		for (int i = 0; i < buffer_length; i++)
