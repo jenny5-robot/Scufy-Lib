@@ -742,11 +742,6 @@ void RS232_flushRXTX(int comport_number)
 }
 
 
-int RS232_is_open(void)
-{
-	return 1;
-}
-
 #endif
 
 

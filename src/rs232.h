@@ -76,8 +76,6 @@ void RS232_flushRX(int);
 void RS232_flushTX(int);
 void RS232_flushRXTX(int);
 
-int RS232_is_open(void);
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
