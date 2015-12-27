@@ -1,5 +1,6 @@
 
 #include "jenny5_command_module.h"
+#include "jenny5_events.h"
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -9,12 +10,13 @@
 #endif
 
 //--------------------------------------------------------------
-t_jenny5_command_module::t_jenny5_command_module()
+t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2015.12.20.0"); // year.month.day.built number
+	strcpy(version, "2015.12.27.0"); // year.month.day.build number
+	current_buffer[0] = 0;
 }
 //--------------------------------------------------------------
-t_jenny5_command_module::~t_jenny5_command_module()
+t_jenny5_command_module::~t_jenny5_command_module(void)
 {
 
 }
@@ -29,233 +31,285 @@ bool t_jenny5_command_module::connect(int port, int baud_rate)
 	char mode[] = { '8', 'N', '1', 0 };
 
 	port_number = port;
-	return RS232_OpenComport(port, baud_rate, mode) == 0;
+	current_buffer[0] = 0;
 
+	return RS232_OpenComport(port, baud_rate, mode) == 0;
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::close_connection(void)
 {
 	RS232_CloseComport(port_number);
+	current_buffer[0] = 0;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::move_motor(int motor_index, int num_steps)
+void t_jenny5_command_module::send_move_motor(int motor_index, int num_steps)
 {
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "M%d %d#", motor_index, num_steps);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	
-	else
-		return false;
-		
-	return true;
+	char s[20];
+	sprintf(s, "M%d %d#", motor_index, num_steps);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::move_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
+void t_jenny5_command_module::send_move_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
 {
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	else
-		return false;
+	char s[20];
+	sprintf(s, "M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_move_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
+{
+	char s[63];
+	sprintf(s, "M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_move_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4)
+{
 
-	return true;
+	char s[63];
+	sprintf(s, "M%d %d M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
 }
 //--------------------------------------------------------------
+void t_jenny5_command_module::send_move_motor_array(int num_motors, int* motor_index, int *num_steps)
+{
+	char s[63];
+	s[0] = 0;
+	for (int i = 0; i < num_motors; i++) {
+		char tmp_str[20];
 
-bool t_jenny5_command_module::move_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
-{
-	if (RS232_is_open()) {
-		char s[63];
-		sprintf(s, "M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
+		sprintf(tmp_str, "M%d %d#", motor_index[i], num_steps[i]);
+		strcat(s, tmp_str);
 	}
-	else
-		return false;
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_set_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
+{
+	char s[20];
+	sprintf(s, "SM%d %d %d#", motor_index, motor_speed, motor_acceleration);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_get_ultrasonic_distance(int sensor_index)
+{
+	char s[20];
+	sprintf(s, "U%d#", sensor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_get_button_status(int button_index)
+{
+	char s[20];
+	sprintf(s, "B%d#", button_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_get_potentiometer_position(int sensor_index)
+{
+	char s[20];
+	sprintf(s, "P%d#", sensor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_get_infrared_distance(int sensor_index)
+{
+	char s[20];
+	sprintf(s, "I%d#", sensor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_get_motors_sensors_statistics(void)
+{
+	char s[20];
+	sprintf(s, "G#");
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_disable_motor(int motor_index)
+{
+	char s[10];
+	sprintf(s, "D%d#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_lock_motor(int motor_index)
+{
+	char s[10];
+	sprintf(s, "L%d#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+int t_jenny5_command_module::get_data_from_serial(char *buffer, int buffer_size)
+{
+	return RS232_PollComport(port_number, (unsigned char*)buffer, buffer_size);
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_attach_sensors(int motor_index, int num_potentiometers, int *potentiometers_index)
+{
+	char s[64];
+	sprintf(s, "A%d %d", motor_index, num_potentiometers);
+	for (int i = 0; i < num_potentiometers; i++) {
+		char tmp_str[64];
+		sprintf(s, " P%d#", potentiometers_index[i]);
+		strcat(s, tmp_str);
+	}
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_remove_attached_sensors(int motor_index)
+{
+	char s[10];
+	sprintf(s, "A%d 0#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_get_motor_parameters(int motor_index)
+{
+	char s[10];
+	sprintf(s, "GM%d#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_get_potentiometer_parameters(int potentiometer_index)
+{
+	char s[10];
+	sprintf(s, "GP%d#", potentiometer_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_set_potentiometer_parameters(int potentiometer_index, int _min, int _max, int _home)
+{
+	char s[30];
+	sprintf(s, "SP%d %d %d %d#", potentiometer_index, _min, _max, _home);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_is_alive(void)
+{
+	char s[3];
+	strcpy(s, "T#");
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_length)
+{
+	byte i = 0;
+	while (i < str_length) {
+		// can be more than 1 command in a string, so I have to check again for a letter
+		if (tmp_str[i] >= 'A' && tmp_str[i] <= 'Z' || tmp_str[i] >= 'a' && tmp_str[i] <= 'z') {
 
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::move_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4)
-{
-	if (RS232_is_open()) {
-		char s[63];
-		sprintf(s, "M%d %d M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	else
-		return false;
-
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::move_motor_array(int num_motors, int* motor_index, int *num_steps)
-{
-	if (RS232_is_open()) {
-		char s[63];
-		s[0] = 0;
-		for (int i = 0; i < num_motors; i++) {
-			char tmp_str[20];
-
-		  sprintf(tmp_str, "M%d %d#", motor_index[i], num_steps[i]);
-		  strcat(s, tmp_str);
-	    }
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	else
-		return false;
-
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::set_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
-{
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "SM%d %d %d#", motor_index, motor_speed, motor_acceleration);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	else
-		return false;
-
-	return true;
-}
-//--------------------------------------------------------------
-int t_jenny5_command_module::get_ultrasonic_distance(int sensor_index)
-{
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "U%d#", sensor_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-		// now wait for result
-	}
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::get_button_status(int button_index)
-{
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "B%d#", button_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	return true;
-}
-//--------------------------------------------------------------
-int t_jenny5_command_module::get_potentiometer_position(int sensor_index)
-{
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "P%d#", sensor_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-		// now wait for result
-	}
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::get_infrared_distance(int sensor_index)
-{
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "I%d#", sensor_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::get_motors_sensors_statistics(void)
-{
-	if (RS232_is_open()) {
-		char s[20];
-		sprintf(s, "G#");
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::disable_motor(int motor_index)
-{
-	if (RS232_is_open()) {
-		char s[10];
-		sprintf(s, "D%d#", motor_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	return true;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::lock_motor(int motor_index)
-{
-	if (RS232_is_open()) {
-		char s[10];
-		sprintf(s, "L%d#", motor_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
-	return true;
-}
-//--------------------------------------------------------------
-int t_jenny5_command_module::is_connected(void)
-{
-	return RS232_is_open();
-}
-//--------------------------------------------------------------
-int t_jenny5_command_module::get_data(unsigned char *buffer, int buffer_size)
-{
-	if (RS232_is_open())
-		return RS232_PollComport(port_number, buffer, buffer_size);
-	else
-		return 0;
-}
-//--------------------------------------------------------------
-void t_jenny5_command_module::attach_sensors(int motor_index, int num_potentiometers, int *potentiometers_index)
-{
-	if (RS232_is_open()) {
-		char s[64];
-		sprintf(s, "A%d %d", motor_index, num_potentiometers);
-		for (int i = 0; i < num_potentiometers; i++) {
-			char tmp_str[64];
-			sprintf(s, " P%d#", potentiometers_index[i]);
-			strcat(s, tmp_str);
+			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor was moved
+				int motor_index;
+				sscanf(tmp_str + i + 1, "%d", &motor_index);
+				i += 1;
+				jenny5_event *e = new jenny5_event(MOTOR_DONE_EVENT, motor_index, 0, 0);
+				received_events.Add((void*)e);
+			}
+			else
+				if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection
+					jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
+					received_events.Add((void*)e);
+				}
+				else
+					if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {// motor was locked
+						int motor_index;
+						sscanf(tmp_str + i + 1, "%d", &motor_index);
+						i += 1;
+						jenny5_event *e = new jenny5_event(MOTOR_LOCKED_EVENT, motor_index, 0, 0);
+						received_events.Add((void*)e);
+					}
+					else
+						if (tmp_str[i] == 'D' || tmp_str[i] == 'd') {// motor was disabled
+							int motor_index;
+							sscanf(tmp_str + i + 1, "%d", &motor_index);
+							i += 1;
+							jenny5_event *e = new jenny5_event(MOTOR_DISABLED_EVENT, motor_index, 0, 0);
+							received_events.Add((void*)e);
+						}
+			// more to add
 		}
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
 	}
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::remove_attached_sensors(int motor_index)
+bool t_jenny5_command_module::update_commands_from_serial(void)
 {
-	if (RS232_is_open()) {
-		char s[10];
-		sprintf(s, "A%d 0#", motor_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
+	// the same code as in firmware
+	char tmp_buffer[4096];
+	int received_size = get_data_from_serial(tmp_buffer, 4096);
+	tmp_buffer[received_size] = 0;
+	if (received_size) {
+		memcpy(current_buffer + strlen(current_buffer), tmp_buffer, received_size);
+
+		int buffer_length = strlen(current_buffer);
+		for (int i = 0; i < buffer_length; i++)
+			if (current_buffer[i] >= 'A' && current_buffer[i] <= 'Z' || current_buffer[i] >= 'a' && current_buffer[i] <= 'z') {// a command
+				// find the terminal character #
+				int j = i + 1;
+				for (; j < buffer_length && current_buffer[j] != '#'; j++);// parse until I find the termination char
+				if (j < buffer_length) {
+
+#ifdef DEBUG
+					char tmp_str[64];
+					strncpy(tmp_str, current_buffer + i, j - i);
+					tmp_str[j - i] = 0;
+					printf("current command is= %s", tmp_str);
+#endif
+
+					//parse_and_execute_commands(tmp_str, j - i);
+					parse_and_queue_commands(current_buffer + i, j - i);
+
+
+					// remove the current executed command
+					strcpy(current_buffer, current_buffer + j + 1);// not sure if this is good due to overlaps
+
+#ifdef DEBUG
+					Serial.write("buffer left=");
+					Serial.write(current_buffer);
+					Serial.write("\n----------------\n");
+					//Serial.println(strlen(current_buffer)); // buffer length
+#endif
+
+					break; //for i
+			}
+				else {// the string is not completed ... so I must wait for more...
+					break; // for i
+				}
 	}
+
+
+		return true;
+	}
+	else
+		return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::get_motor_parameters(int motor_index)
+bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1)
 {
-	if (RS232_is_open()) {
-		char s[10];
-		sprintf(s, "GM%d#", motor_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == event_type && e->param1 == param1) {
+			received_events.DeleteCurrent(node_p);
+			return true;
+		}
 	}
+	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::get_potentiometer_parameters(int potentiometer_index)
+bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1, intptr_t param2)
 {
-	if (RS232_is_open()) {
-		char s[10];
-		sprintf(s, "GP%d#", potentiometer_index);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == event_type && e->param1 == param1 && e->param2 == param2) {
+			received_events.DeleteCurrent(node_p);
+			return true;
+		}
 	}
+	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::set_potentiometer_parameters(int potentiometer_index, int _min, int _max, int _home)
+int t_jenny5_command_module::clear_data_from_serial(char *buffer, int buffer_size)
 {
-	if (RS232_is_open()) {
-		char s[30];
-		sprintf(s, "SP%d %d %d %d#", potentiometer_index, _min, _max, _home);
-		RS232_SendBuf(port_number, (unsigned char*)s, strlen(s) + 1);
-	}
+	return get_data_from_serial(buffer, buffer_size);
 }
 //--------------------------------------------------------------
