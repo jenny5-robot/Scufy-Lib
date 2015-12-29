@@ -37,6 +37,8 @@ public:
 	
 	void send_is_alive(void);
 
+	void send_go_home_motor(int motor_index);
+
 	void send_move_motor(int motor_index, int num_steps);
 	void send_move_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2);
 	void send_move_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3);

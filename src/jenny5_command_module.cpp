@@ -51,7 +51,7 @@ void t_jenny5_command_module::send_move_motor(int motor_index, int num_steps)
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_move_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
 {
-	char s[20];
+	char s[30];
 	sprintf(s, "M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
 	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
 }
@@ -342,5 +342,12 @@ bool t_jenny5_command_module::query_for_2_events(int event_type1, intptr_t param
 	}
 	else
 	return false;
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_go_home_motor(int motor_index)
+{
+	char s[20];
+	sprintf(s, "H%d#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
 }
 //--------------------------------------------------------------
