@@ -32,6 +32,7 @@ public:
 	int clear_data_from_serial(char *buffer, int buffer_size);
 
 	bool query_for_event(int event_type, intptr_t param1);
+	bool query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2);
 	bool query_for_event(int event_type, intptr_t param1, intptr_t param2);
 	
 	void send_is_alive(void);

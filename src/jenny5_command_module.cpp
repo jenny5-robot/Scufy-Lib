@@ -316,3 +316,31 @@ int t_jenny5_command_module::clear_data_from_serial(char *buffer, int buffer_siz
 	return get_data_from_serial(buffer, buffer_size);
 }
 //--------------------------------------------------------------
+bool t_jenny5_command_module::query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2)
+{
+	bool event1_found = false;
+	bool event2_found = false;
+
+	node_double_linked *node_p1, *node_p2;
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == event_type1 && e->param1 == param1_1) {
+			event1_found = true;
+			node_p1 = node_p;
+		}
+		else
+			if (e->type == event_type2 && e->param2 == param1_1) {
+				event2_found = true;
+				node_p2 = node_p;
+			}
+	}
+
+	if (event1_found && event2_found) {
+		received_events.DeleteCurrent(node_p1);
+		received_events.DeleteCurrent(node_p2);
+		return true;
+	}
+	else
+	return false;
+}
+//--------------------------------------------------------------
