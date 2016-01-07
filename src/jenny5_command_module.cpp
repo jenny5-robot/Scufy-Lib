@@ -194,14 +194,14 @@ void t_jenny5_command_module::send_is_alive(void)
 //--------------------------------------------------------------
 void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_length)
 {
-	byte i = 0;
+	int i = 0;
 	while (i < str_length) {
 		// can be more than 1 command in a string, so I have to check again for a letter
-		if (tmp_str[i] >= 'A' && tmp_str[i] <= 'Z' || tmp_str[i] >= 'a' && tmp_str[i] <= 'z') {
+		if ((tmp_str[i] >= 'A' && tmp_str[i] <= 'Z') || (tmp_str[i] >= 'a' && tmp_str[i] <= 'z')) {
 
 			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor was moved
 				int motor_index, distance_to_go;
-				sscanf(tmp_str + i + 1, "%d", &motor_index, &distance_to_go);
+				sscanf(tmp_str + i + 1, "%d%d", &motor_index, &distance_to_go);
 				i += 5;
 				jenny5_event *e = new jenny5_event(MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
 				received_events.Add((void*)e);
@@ -246,7 +246,7 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 
 		int buffer_length = strlen(current_buffer);
 		for (int i = 0; i < buffer_length; i++)
-			if (current_buffer[i] >= 'A' && current_buffer[i] <= 'Z' || current_buffer[i] >= 'a' && current_buffer[i] <= 'z') {// a command
+			if ((current_buffer[i] >= 'A' && current_buffer[i] <= 'Z') || (current_buffer[i] >= 'a' && current_buffer[i] <= 'z')) {// a command
 				// find the terminal character #
 				int j = i + 1;
 				for (; j < buffer_length && current_buffer[j] != '#'; j++);// parse until I find the termination char
