@@ -1,4 +1,5 @@
 #include <iostream>
+#include <time.h>
 
 #include <opencv2\objdetect\objdetect.hpp>
 #include <opencv2\highgui\highgui.hpp>
@@ -15,10 +16,6 @@
 #define Sleep(x) usleep((x)*1000)
 #endif
 
-#define COMMAND_NOT_SENT 0
-#define COMMAND_SENT 1
-#define COMMAND_DONE 2
-
 using namespace std;
 using namespace cv;
 
@@ -31,6 +28,8 @@ typedef struct _CENTER_POINT
 
 #define MOTOR_HEAD_HORIZONTAL 1
 #define MOTOR_HEAD_VERTICAL 0
+
+#define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
 //----------------------------------------------------------------
 bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
@@ -54,6 +53,8 @@ bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 //----------------------------------------------------------------
 int	main(int argc, const char** argv)
 {
+	//-------------- START INITIALIZATION ------------------------------
+
 	CascadeClassifier face_reco; // create cascade for face reco
 	t_jenny5_command_module head_controller;
 
@@ -62,18 +63,34 @@ int	main(int argc, const char** argv)
 		getchar();
 		return 1;
 	}
-	Sleep(2000);
+	// now wait to see if I was connected
+	// wait for no more than 3 seconds. If it takes more it means that something is not right, so we have to abandon it
+	clock_t start_time = clock();
 
-	// empty the serial buffer
-	char sir[1000];
-	int num_read = head_controller.clear_data_from_serial(sir, 1000);
-	sir[num_read] = 0;
-	printf("Serial buffer = %s\n", sir);
+	while (1) {
+		if (!head_controller.update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 50, 50);
+		if (head_controller.query_for_event(IS_ALIVE_EVENT, 0)) { // have we received the event from Serial ?
+			printf("Connected to head.\n");
+			break;
+		}
+		clock_t end_time = clock();
 
-	face_reco.load("haarcascade_frontalface_alt.xml"); // loading haarcascade library
+		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
+			printf("Head does not respond! Game over!\n");
+			getchar();
+			return 2;
+			break;
+		}
+	}
 
+	if (!face_reco.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) { // loading haarcascade library
+		printf("Cannot load haarcascade! Please place the file in the correct folder!\n");
+		getchar();
+		return 3;
+	}
 	VideoCapture cam;		// setup video capturing device (a.k.a webcam)
 	cam.open(0);			// link it to the device [0 = default cam] (USBcam is default 'cause I disabled the onbord one IRRELEVANT!)
 	if (!cam.isOpened())	// check if we succeeded
@@ -81,19 +98,22 @@ int	main(int argc, const char** argv)
 		cout << "Couldn't open the video cam!!" << endl;
 		waitKey(1);
 		head_controller.close_connection();
-		return 2;
+		return 4;
 	}
+
+	//-------------- INITIALIZATION OVER ------------------------------
 
 	Mat frame; // images used in the proces
 	Mat grayFrame;
 
 	namedWindow("display", WINDOW_AUTOSIZE); // window to display the results
 	cam >> frame;
-	printf("capture size:%d %d\n", frame.cols, frame.rows);
+	printf("Capture size:%d %d\n", frame.cols, frame.rows);
 
 	bool active = true;
 
-	int motor_state = COMMAND_DONE; // COMMAND_NOT_SENT;
+	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 50, 50);
+	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 50, 50);
 
 	while (active)        // starting infinit loop
 	{
@@ -113,7 +133,7 @@ int	main(int argc, const char** argv)
 		CENTER_POINT center;
 
 		bool face_found = biggest_face(faces, center);
-		
+
 		if (face_found) {
 			Point p1(center.x - center.range, center.y - center.range);
 			Point p2(center.x + center.range, center.y + center.range);
@@ -124,23 +144,40 @@ int	main(int argc, const char** argv)
 		imshow("display", frame); // display the result
 
 		if (face_found) {// 
-			if (motor_state == COMMAND_DONE) {
+			// horizontal movement motor
+			if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_DONE) {
 				// send a command to the module so that the face is in the center of the image
 				if (center.x < frame.cols / 2) {
-					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, 5);
+					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, 1);
 					printf("M1 5# - sent\n");
 				}
 				else {
-					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -5);
+					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -1);
 					printf("M1 -5# - sent\n");
 				}
-				motor_state = COMMAND_SENT;
+				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+			}
+
+			// vertical movement motor
+			if (head_controller.get_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_DONE) {
+				// send a command to the module so that the face is in the center of the image
+				if (center.y < frame.rows / 2) {
+					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, 1);
+					printf("M0 1# - sent\n");
+				}
+				else {
+					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -1);
+					printf("M0 -1# - sent\n");
+				}
+				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 			}
 		}
-		if (motor_state == COMMAND_SENT) {// if a command has been sent
-			// now wait for the motor to complete the movement
+
+		// now check if the the horizontal motor has completed the movement
+		if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
+
 			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
-				motor_state = COMMAND_DONE;
+				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
 				printf("M1# - done\n");
 			}
 			else {
@@ -148,6 +185,17 @@ int	main(int argc, const char** argv)
 			}
 		}
 
+		// now check if the the vertical motor has completed the movement
+		if (head_controller.get_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_SENT) {// if a command has been sent
+
+			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
+				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
+				printf("M0# - done\n");
+			}
+			else {
+				// motor is still running and we can supervise it (with a camera?)
+			}
+		}
 		if (waitKey(1) >= 0)  // break the loop
 			active = false;
 	}
