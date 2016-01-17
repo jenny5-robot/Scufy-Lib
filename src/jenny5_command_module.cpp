@@ -228,6 +228,8 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 							jenny5_event *e = new jenny5_event(MOTOR_DISABLED_EVENT, motor_index, 0, 0);
 							received_events.Add((void*)e);
 						}
+						else
+							i++;
 			// more events to add
 		}
 		else
