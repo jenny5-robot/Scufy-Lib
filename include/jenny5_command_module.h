@@ -1,6 +1,12 @@
+#ifndef jenny5_command_moduleH
+#define jenny5_command_moduleH
+
 #include "rs232.h"
 #include "lista_voidp.h"
 
+#define COMMAND_NOT_SENT 0
+#define COMMAND_SENT 1
+#define COMMAND_DONE 2
 
 
 //----------------------------------------------------------------
@@ -15,7 +21,8 @@ private:
 
 	char current_buffer[4096]; // I should not need this size
 
-	int get_data_from_serial(char *buffer, int buffer_size);
+	int motor_state[4]; // max 4 motors
+
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
 public:
@@ -28,8 +35,7 @@ public:
 	const char* get_version(void);
 	
 	bool update_commands_from_serial(void);
-
-	int clear_data_from_serial(char *buffer, int buffer_size);
+	int get_data_from_serial(char *buffer, int buffer_size);
 
 	bool query_for_event(int event_type, intptr_t param1);
 	bool query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2);
@@ -65,5 +71,9 @@ public:
 	void send_set_potentiometer_parameters(int potentiometer_index, int min, int max, int home);
 	
 	void send_remove_attached_sensors(int motor_index);
+
+	int get_motor_state(int motor_index);
+	void set_motor_state(int motor_index, int state);
 };
 //----------------------------------------------------------------
+#endif

@@ -1,3 +1,5 @@
+#ifndef jenny5_eventsH
+#define jenny5_eventsH
 
 #include <stdio.h>
 
@@ -26,3 +28,5 @@ public:
 	}
 };
 //-----------------------------------------------------------------------
+
+#endif

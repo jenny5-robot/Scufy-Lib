@@ -12,8 +12,10 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2015.12.27.0"); // year.month.day.build number
+	strcpy(version, "2016.01.17.0"); // year.month.day.build number
 	current_buffer[0] = 0;
+	for (int i = 0; i < 4; i++)
+	  motor_state[i] = COMMAND_DONE;
 }
 //--------------------------------------------------------------
 t_jenny5_command_module::~t_jenny5_command_module(void)
@@ -313,11 +315,6 @@ bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1, i
 	return false;
 }
 //--------------------------------------------------------------
-int t_jenny5_command_module::clear_data_from_serial(char *buffer, int buffer_size)
-{
-	return get_data_from_serial(buffer, buffer_size);
-}
-//--------------------------------------------------------------
 bool t_jenny5_command_module::query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2)
 {
 	bool event1_found = false;
@@ -351,5 +348,15 @@ void t_jenny5_command_module::send_go_home_motor(int motor_index)
 	char s[20];
 	sprintf(s, "H%d#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+int t_jenny5_command_module::get_motor_state(int motor_index)
+{
+	return motor_state[motor_index];
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::set_motor_state(int motor_index, int state)
+{
+	motor_state[motor_index] = state;
 }
 //--------------------------------------------------------------
