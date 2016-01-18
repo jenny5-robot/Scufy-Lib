@@ -31,6 +31,8 @@ typedef struct _CENTER_POINT
 
 #define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
+#define PRECISION 5
+
 //----------------------------------------------------------------
 bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 {
@@ -63,7 +65,7 @@ int	main(int argc, const char** argv)
 		getchar();
 		return 1;
 	}
-	// now wait to see if I was connected
+	// now wait to see if I have been connected
 	// wait for no more than 3 seconds. If it takes more it means that something is not right, so we have to abandon it
 	clock_t start_time = clock();
 
@@ -75,9 +77,11 @@ int	main(int argc, const char** argv)
 			printf("Connected to head.\n");
 			break;
 		}
+		// measure the passed time 
 		clock_t end_time = clock();
 
 		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		// if more than 3 seconds then game over
 		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
 			printf("Head does not respond! Game over!\n");
 			getchar();
@@ -85,12 +89,13 @@ int	main(int argc, const char** argv)
 			break;
 		}
 	}
-
-	if (!face_reco.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) { // loading haarcascade library
+	// load haarcascade library
+	if (!face_reco.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) { 
 		printf("Cannot load haarcascade! Please place the file in the correct folder!\n");
 		getchar();
 		return 3;
 	}
+	// connect to video camera
 	VideoCapture cam;		// setup video capturing device (a.k.a webcam)
 	cam.open(0);			// link it to the device [0 = default cam] (USBcam is default 'cause I disabled the onbord one IRRELEVANT!)
 	if (!cam.isOpened())	// check if we succeeded
@@ -147,29 +152,34 @@ int	main(int argc, const char** argv)
 			// horizontal movement motor
 			if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_DONE) {
 				// send a command to the module so that the face is in the center of the image
-				if (center.x < frame.cols / 2) {
+				if (center.x < frame.cols / 2 - PRECISION) {
 					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, 1);
-					printf("M1 5# - sent\n");
+					head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+					printf("M%d 1# - sent\n", MOTOR_HEAD_HORIZONTAL);
 				}
-				else {
-					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -1);
-					printf("M1 -5# - sent\n");
-				}
-				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+				else 
+					if (center.x > frame.cols / 2 + PRECISION) {
+					  head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -1);
+					  head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+					  printf("M%d -1# - sent\n", MOTOR_HEAD_HORIZONTAL);
+				    }
+				
 			}
 
 			// vertical movement motor
 			if (head_controller.get_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_DONE) {
 				// send a command to the module so that the face is in the center of the image
-				if (center.y < frame.rows / 2) {
+				if (center.y < frame.rows / 2 - PRECISION) {
 					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, 1);
-					printf("M0 1# - sent\n");
+					head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+					printf("M%d 1# - sent\n", MOTOR_HEAD_VERTICAL);
 				}
-				else {
-					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -1);
-					printf("M0 -1# - sent\n");
-				}
-				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+				else 
+					if (center.y > frame.rows / 2 + PRECISION) {
+					  head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -1);
+					  head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+					  printf("M%d -1# - sent\n", MOTOR_HEAD_VERTICAL);
+				    }
 			}
 		}
 
@@ -178,7 +188,7 @@ int	main(int argc, const char** argv)
 
 			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
 				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
-				printf("M1# - done\n");
+				printf("M%d# - done\n", MOTOR_HEAD_HORIZONTAL);
 			}
 			else {
 				// motor is still running and we can supervise it (with a camera?)
@@ -190,7 +200,7 @@ int	main(int argc, const char** argv)
 
 			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
 				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
-				printf("M0# - done\n");
+				printf("M%d# - done\n", MOTOR_HEAD_VERTICAL);
 			}
 			else {
 				// motor is still running and we can supervise it (with a camera?)
