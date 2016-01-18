@@ -12,10 +12,10 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.01.17.0"); // year.month.day.build number
+	strcpy(version, "2016.01.18.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
-	  motor_state[i] = COMMAND_DONE;
+		motor_state[i] = COMMAND_DONE;
 }
 //--------------------------------------------------------------
 t_jenny5_command_module::~t_jenny5_command_module(void)
@@ -204,7 +204,7 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor was moved
 				int motor_index, distance_to_go;
 				sscanf(tmp_str + i + 1, "%d%d", &motor_index, &distance_to_go);
-				i += 5;
+				i += 4;
 				jenny5_event *e = new jenny5_event(MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
 				received_events.Add((void*)e);
 			}
@@ -278,11 +278,11 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 #endif
 
 					break; //for i
-			}
+				}
 				else {// the string is not completed ... so I must wait for more...
 					break; // for i
 				}
-	}
+			}
 
 
 		return true;
@@ -328,7 +328,7 @@ bool t_jenny5_command_module::query_for_2_events(int event_type1, intptr_t param
 			node_p1 = node_p;
 		}
 		else
-			if (e->type == event_type2 && e->param2 == param1_1) {
+			if (e->type == event_type2 && e->param2 == param1_2) {
 				event2_found = true;
 				node_p2 = node_p;
 			}
@@ -340,7 +340,7 @@ bool t_jenny5_command_module::query_for_2_events(int event_type1, intptr_t param
 		return true;
 	}
 	else
-	return false;
+		return false;
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_go_home_motor(int motor_index)
