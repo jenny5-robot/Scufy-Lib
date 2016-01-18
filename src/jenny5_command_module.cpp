@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.01.18.0"); // year.month.day.build number
+	strcpy(version, "2016.01.18.1"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		motor_state[i] = COMMAND_DONE;
@@ -252,9 +252,9 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 		for (int i = 0; i < buffer_length; i++)
 			if ((current_buffer[i] >= 'A' && current_buffer[i] <= 'Z') || (current_buffer[i] >= 'a' && current_buffer[i] <= 'z')) {// a command
 				// find the terminal character #
-				int j = i + 1;
-				for (; j < buffer_length && current_buffer[j] != '#'; j++);// parse until I find the termination char
-				if (j < buffer_length) {
+				int j = buffer_length - 1;
+				for (; j > i && current_buffer[j] != '#'; j--);// parse until I find the termination char
+				if (j > i) {
 
 #ifdef DEBUG
 					char tmp_str[64];
