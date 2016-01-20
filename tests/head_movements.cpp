@@ -7,6 +7,7 @@
 
 #include "jenny5_command_module.h"
 #include "jenny5_events.h"
+#include "point_tracker.h"
 //----------------------------------------------------------------
 
 #ifdef WIN32
@@ -26,12 +27,13 @@ typedef struct _CENTER_POINT
 	int range;
 }CENTER_POINT, *PCENTER_POINT;
 
-#define MOTOR_HEAD_HORIZONTAL 1
-#define MOTOR_HEAD_VERTICAL 0
+#define MOTOR_HEAD_HORIZONTAL 0
+#define MOTOR_HEAD_VERTICAL 1
 
 #define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
 #define PRECISION 5
+#define NUM_STEPS 10
 
 //----------------------------------------------------------------
 bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
@@ -90,15 +92,15 @@ int	main(int argc, const char** argv)
 		}
 	}
 	// load haarcascade library
-	if (!face_reco.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) { 
+	if (!face_reco.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
 		printf("Cannot load haarcascade! Please place the file in the correct folder!\n");
 		getchar();
 		return 3;
 	}
 	// connect to video camera
-	VideoCapture cam;		// setup video capturing device (a.k.a webcam)
-	cam.open(0);			// link it to the device [0 = default cam] (USBcam is default 'cause I disabled the onbord one IRRELEVANT!)
-	if (!cam.isOpened())	// check if we succeeded
+	VideoCapture head_cam;		// setup video capturing device (a.k.a webcam)
+	head_cam.open(0);			// link it to the device [0 = default cam] (USBcam is default 'cause I disabled the onbord one IRRELEVANT!)
+	if (!head_cam.isOpened())	// check if we succeeded
 	{
 		cout << "Couldn't open the video cam!!" << endl;
 		waitKey(1);
@@ -112,20 +114,20 @@ int	main(int argc, const char** argv)
 	Mat grayFrame;
 
 	namedWindow("display", WINDOW_AUTOSIZE); // window to display the results
-	cam >> frame;
+	head_cam >> frame;
 	printf("Capture size:%d %d\n", frame.cols, frame.rows);
 
 	bool active = true;
 
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 50, 50);
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 50, 50);
+	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 200);
+	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 200);
 
 	while (active)        // starting infinit loop
 	{
 		if (!head_controller.update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-		cam >> frame; // put captured-image frame in frame
+		head_cam >> frame; // put captured-image frame in frame
 
 		cvtColor(frame, grayFrame, CV_BGR2GRAY); // convert to gray and equalize
 		equalizeHist(grayFrame, grayFrame);
@@ -153,33 +155,41 @@ int	main(int argc, const char** argv)
 			if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_DONE) {
 				// send a command to the module so that the face is in the center of the image
 				if (center.x < frame.cols / 2 - PRECISION) {
-					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, 1);
+					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+					int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
+					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
 					head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
-					printf("M%d 1# - sent\n", MOTOR_HEAD_HORIZONTAL);
+					printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 				}
-				else 
+				else
 					if (center.x > frame.cols / 2 + PRECISION) {
-					  head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -1);
-					  head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
-					  printf("M%d -1# - sent\n", MOTOR_HEAD_HORIZONTAL);
-				    }
-				
+						tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+						int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
+						head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
+						head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+						printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
+					}
+
 			}
 
 			// vertical movement motor
 			if (head_controller.get_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_DONE) {
 				// send a command to the module so that the face is in the center of the image
 				if (center.y < frame.rows / 2 - PRECISION) {
-					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, 1);
+					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+					int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
+					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
 					head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-					printf("M%d 1# - sent\n", MOTOR_HEAD_VERTICAL);
+					printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, NUM_STEPS);
 				}
-				else 
+				else
 					if (center.y > frame.rows / 2 + PRECISION) {
-					  head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -1);
-					  head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-					  printf("M%d -1# - sent\n", MOTOR_HEAD_VERTICAL);
-				    }
+						tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+						int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
+						head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
+						head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+						printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, NUM_STEPS);
+					}
 			}
 		}
 
