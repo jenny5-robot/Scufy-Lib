@@ -33,7 +33,7 @@ typedef struct _CENTER_POINT
 #define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
 #define TOLERANCE 20
-#define NUM_STEPS 10
+
 
 //----------------------------------------------------------------
 bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
@@ -55,17 +55,13 @@ bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 	return found_one;
 }
 //----------------------------------------------------------------
-int	main(int argc, const char** argv)
+bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, CascadeClassifier &face_classifier, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	CascadeClassifier face_reco; // create cascade for face reco
-	t_jenny5_command_module head_controller;
-
 	if (!head_controller.connect(10, 115200)) {
-		printf("Error attaching to Jenny 5' head!\n");
-		getchar();
-		return 1;
+		sprintf(error_string, "Error attaching to Jenny 5' head!");
+		return false;
 	}
 	// now wait to see if I have been connected
 	// wait for no more than 3 seconds. If it takes more it means that something is not right, so we have to abandon it
@@ -76,7 +72,6 @@ int	main(int argc, const char** argv)
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
 		if (head_controller.query_for_event(IS_ALIVE_EVENT, 0)) { // have we received the event from Serial ?
-			printf("Connected to head.\n");
 			break;
 		}
 		// measure the passed time 
@@ -85,37 +80,50 @@ int	main(int argc, const char** argv)
 		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 		// if more than 3 seconds then game over
 		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
-			printf("Head does not respond! Game over!\n");
-			getchar();
-			return 2;
-			break;
+			sprintf(error_string, "Head does not respond! Game over!");
+			return false;
 		}
 	}
+	; // create cascade for face reco
 	// load haarcascade library
-	if (!face_reco.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
-		printf("Cannot load haarcascade! Please place the file in the correct folder!\n");
-		getchar();
-		return 3;
+	if (!face_classifier.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
+		sprintf(error_string, "Cannot load haarcascade! Please place the file in the correct folder!");
+		return false;
 	}
 	// connect to video camera
-	VideoCapture head_cam;		// setup video capturing device (a.k.a webcam)
+
 	head_cam.open(0);			// link it to the device [0 = default cam] (USBcam is default 'cause I disabled the onbord one IRRELEVANT!)
 	if (!head_cam.isOpened())	// check if we succeeded
 	{
-		cout << "Couldn't open the video cam!!" << endl;
-		waitKey(1);
+		sprintf(error_string, "Couldn't open the video cam!");
 		head_controller.close_connection();
-		return 4;
+		return false;
 	}
+	return true;
+}
+//----------------------------------------------------------------
+int	main(int argc, const char** argv)
+{
+	t_jenny5_command_module head_controller;
+	VideoCapture head_cam;
+	CascadeClassifier face_classifier;
 
-	//-------------- INITIALIZATION OVER ------------------------------
+	// initialization
+	char error_string[1000];
+	if (!init(head_controller, head_cam, face_classifier, error_string)) {
+		printf("%s\n", error_string);
+		getchar();
+		return -1;
+	}
+	else
+		printf("Initialization succceded.\n");
 
 	Mat frame; // images used in the proces
 	Mat grayFrame;
 
-	namedWindow("display", WINDOW_AUTOSIZE); // window to display the results
-	head_cam >> frame;
-	printf("Capture size:%d %d\n", frame.cols, frame.rows);
+	namedWindow("Head camera", WINDOW_AUTOSIZE); // window to display the results
+	//head_cam >> frame;// how can we ensure a fixed size on every camera???
+	//printf("Capture size:%d %d\n", frame.cols, frame.rows); 
 
 	bool active = true;
 
@@ -135,7 +143,7 @@ int	main(int argc, const char** argv)
 		std::vector<Rect> faces;// create an array to store the faces found
 
 		// find and store the faces
-		face_reco.detectMultiScale(grayFrame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
+		face_classifier.detectMultiScale(grayFrame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
 		CENTER_POINT center;
 
@@ -147,14 +155,25 @@ int	main(int argc, const char** argv)
 			// draw an outline for the faces
 			rectangle(frame, p1, p2, cvScalar(0, 255, 0, 0), 1, 8, 0);
 		}
+		else
+			Sleep(5); // no face found
 
-		imshow("display", frame); // display the result
+		imshow("Head camera", frame); // display the result
 
 		if (face_found) {// 
 			// horizontal movement motor
-			
-				// send a command to the module so that the face is in the center of the image
+
+			// send a command to the module so that the face is in the center of the image
 			if (center.x < frame.cols / 2 - TOLERANCE) {
+				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+				int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
+
+				head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
+				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+				printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
+			}
+			else
+				if (center.x > frame.cols / 2 + TOLERANCE) {
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 					int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
 
@@ -162,40 +181,31 @@ int	main(int argc, const char** argv)
 					head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 					printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 				}
-				else
-					if (center.x > frame.cols / 2 + TOLERANCE) {
-						tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-						int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
-
-						head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
-						head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
-						printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
-					}
 
 
 			// vertical movement motor
-				// send a command to the module so that the face is in the center of the image
+			// send a command to the module so that the face is in the center of the image
 			if (center.y < frame.rows / 2 - TOLERANCE) {
+				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+				int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
+
+				head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
+				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+				printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
+			}
+			else
+				if (center.y > frame.rows / 2 + TOLERANCE) {
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 					int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
 
 					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
 					head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-					printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, NUM_STEPS);
+					printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 				}
-				else
-					if (center.y > frame.rows / 2 + TOLERANCE) {
-						tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-						int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
 
-						head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
-						head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-						printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, NUM_STEPS);
-					}
-			
 		}
 
-		// now extract the moves done from the queue
+		// now extract the executed moves from the queue ... otherwise they will just stay there
 		if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
 
 			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
