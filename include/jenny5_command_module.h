@@ -37,10 +37,13 @@ public:
 	bool update_commands_from_serial(void);
 	int get_data_from_serial(char *buffer, int buffer_size);
 
+	bool query_for_event(int event_type);
 	bool query_for_event(int event_type, intptr_t param1);
 	bool query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2);
 	bool query_for_event(int event_type, intptr_t param1, intptr_t param2);
 	
+	void send_create_motors(int num_motors, int* step_pins, int* dir_pins, int* enable_pins);
+
 	void send_is_alive(void);
 
 	void send_go_home_motor(int motor_index);

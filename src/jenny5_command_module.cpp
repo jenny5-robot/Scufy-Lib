@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.01.18.1"); // year.month.day.build number
+	strcpy(version, "2016.01.21.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		motor_state[i] = COMMAND_DONE;
@@ -231,7 +231,17 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 							received_events.Add((void*)e);
 						}
 						else
-							i++;
+							if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
+								if (tmp_str[i + 1] == 'M' || tmp_str[i + 1] == 'm') {// motor controller created
+									i += 3;
+									jenny5_event *e = new jenny5_event(MOTOR_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+									received_events.Add((void*)e);
+								}
+								else
+									i++;
+							}
+							else
+								i++;
 			// more events to add
 		}
 		else
@@ -289,6 +299,18 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 	}
 	else
 		return false;
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::query_for_event(int event_type)
+{
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == event_type) {
+			received_events.DeleteCurrent(node_p);
+			return true;
+		}
+	}
+	return false;
 }
 //--------------------------------------------------------------
 bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1)
@@ -358,5 +380,19 @@ int t_jenny5_command_module::get_motor_state(int motor_index)
 void t_jenny5_command_module::set_motor_state(int motor_index, int state)
 {
 	motor_state[motor_index] = state;
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_create_motors(int num_motors, int* step_pins, int* dir_pins, int* enable_pins)
+{
+	char s[100];
+	sprintf(s, "CM %d", num_motors);
+	char tmp_s[100];
+	for (int i = 0; i < num_motors; i++) {
+		sprintf(tmp_s, "%d %d %d", step_pins[i], dir_pins[i], enable_pins[i]);
+		strcat(s, " ");
+		strcat(s, tmp_s);
+	}
+	strcat(s, "#");
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
 }
 //--------------------------------------------------------------
