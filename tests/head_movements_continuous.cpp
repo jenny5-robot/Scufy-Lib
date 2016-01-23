@@ -34,6 +34,8 @@ typedef struct _CENTER_POINT
 
 #define TOLERANCE 20
 
+#define DOES_NOTHING_SLEEP 10
+
 
 //----------------------------------------------------------------
 bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
@@ -95,10 +97,45 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 	head_cam.open(0);			// link it to the device [0 = default cam] (USBcam is default 'cause I disabled the onbord one IRRELEVANT!)
 	if (!head_cam.isOpened())	// check if we succeeded
 	{
-		sprintf(error_string, "Couldn't open the video cam!");
+		sprintf(error_string, "Couldn't open head's video cam!");
 		head_controller.close_connection();
 		return false;
 	}
+	return true;
+}
+//----------------------------------------------------------------
+bool setup(t_jenny5_command_module &head_controller, char* error_string)
+{
+	
+	int head_motors_step_pins[2] = { 3, 6 };
+	int head_motors_dir_pins[2] = { 2, 5 };
+	int head_motors_enable_pins[2] = { 4, 7 };
+	head_controller.send_create_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
+
+	clock_t start_time = clock();
+
+	while (1) {
+		if (!head_controller.update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+		if (head_controller.query_for_event(MOTOR_CONTROLLER_CREATED_EVENT, 0)) { // have we received the event from Serial ?
+			break;
+		}
+		// measure the passed time 
+		clock_t end_time = clock();
+
+		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		// if more than 3 seconds then game over
+		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
+			sprintf(error_string, "Cannot create head's motor controller! Game over!");
+			return false;
+		}
+	}
+	
+
+	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
+	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
+
 	return true;
 }
 //----------------------------------------------------------------
@@ -112,28 +149,33 @@ int	main(int argc, const char** argv)
 	char error_string[1000];
 	if (!init(head_controller, head_cam, face_classifier, error_string)) {
 		printf("%s\n", error_string);
+		printf("Press Enter...");
 		getchar();
 		return -1;
 	}
 	else
 		printf("Initialization succceded.\n");
 
+	// setup
+	if (!setup(head_controller, error_string)) {
+		printf("%s\n", error_string);
+		printf("Press Enter...");
+		getchar();
+		return -1;
+	}
+	else
+		printf("Setup succceded.\n");
+	
 	Mat frame; // images used in the proces
 	Mat grayFrame;
 
 	namedWindow("Head camera", WINDOW_AUTOSIZE); // window to display the results
-	//head_cam >> frame;// how can we ensure a fixed size on every camera???
-	//printf("Capture size:%d %d\n", frame.cols, frame.rows); 
 
-	bool active = true;
-
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
-
+	bool active = true; 
 	while (active)        // starting infinit loop
 	{
 		if (!head_controller.update_commands_from_serial())
-			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+			Sleep(DOES_NOTHING_SLEEP); // no new data from serial ... we make a little pause so that we don't kill the processor
 
 		head_cam >> frame; // put captured-image frame in frame
 
@@ -155,8 +197,11 @@ int	main(int argc, const char** argv)
 			// draw an outline for the faces
 			rectangle(frame, p1, p2, cvScalar(0, 255, 0, 0), 1, 8, 0);
 		}
-		else
-			Sleep(5); // no face found
+		else {
+			Sleep(DOES_NOTHING_SLEEP); // no face found
+			//head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, 0);// stops 
+			//head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, 0);
+		}
 
 		imshow("Head camera", frame); // display the result
 
@@ -180,6 +225,10 @@ int	main(int argc, const char** argv)
 					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
 					head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 					printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
+				}
+				else {
+					// face is in the center, so I do not move
+					Sleep(DOES_NOTHING_SLEEP);
 				}
 
 
