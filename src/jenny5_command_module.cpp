@@ -211,46 +211,52 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 				received_events.Add((void*)e);
 			}
 			else
-				if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection
-					jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
+				if (tmp_str[i] == 'U' || tmp_str[i] == 'u') {// motor finished movement
+					int sonar_index, distance;
+					sscanf(tmp_str + i + 1, "%d%d", &sonar_index, &distance);
+					i += 4;
+					jenny5_event *e = new jenny5_event(SONAR_EVENT, sonar_index, distance, 0);
 					received_events.Add((void*)e);
-					i += 2;
 				}
 				else
-					if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {// motor was locked
-						int motor_index;
-						sscanf(tmp_str + i + 1, "%d", &motor_index);
-						i += 3;
-						jenny5_event *e = new jenny5_event(MOTOR_LOCKED_EVENT, motor_index, 0, 0);
+					if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection
+						jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
 						received_events.Add((void*)e);
+						i += 2;
 					}
 					else
-						if (tmp_str[i] == 'D' || tmp_str[i] == 'd') {// motor was disabled
+						if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {// motor was locked
 							int motor_index;
 							sscanf(tmp_str + i + 1, "%d", &motor_index);
 							i += 3;
-							jenny5_event *e = new jenny5_event(MOTOR_DISABLED_EVENT, motor_index, 0, 0);
+							jenny5_event *e = new jenny5_event(MOTOR_LOCKED_EVENT, motor_index, 0, 0);
 							received_events.Add((void*)e);
 						}
 						else
-							if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
-								if (tmp_str[i + 1] == 'M' || tmp_str[i + 1] == 'm') {// motor controller created
-									i += 3;
-									jenny5_event *e = new jenny5_event(MOTOR_CONTROLLER_CREATED_EVENT, 0, 0, 0);
-									received_events.Add((void*)e);
-								}
-								else
-									i++;
+							if (tmp_str[i] == 'D' || tmp_str[i] == 'd') {// motor was disabled
+								int motor_index;
+								sscanf(tmp_str + i + 1, "%d", &motor_index);
+								i += 3;
+								jenny5_event *e = new jenny5_event(MOTOR_DISABLED_EVENT, motor_index, 0, 0);
+								received_events.Add((void*)e);
 							}
 							else
-								if (tmp_str[i] == 'U' || tmp_str[i] == 'u') {// motor finished movement
-									int sonar_index, distance;
-									sscanf(tmp_str + i + 1, "%d%d", &sonar_index, &distance);
-									i += 4;
-									jenny5_event *e = new jenny5_event(SONAR_EVENT, sonar_index, distance, 0);
-									received_events.Add((void*)e);
+								if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
+									if (tmp_str[i + 1] == 'M' || tmp_str[i + 1] == 'm') {// motors controller created
+										i += 3;
+										jenny5_event *e = new jenny5_event(MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+										received_events.Add((void*)e);
+									}
+									else
+										if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {// sonars controller created
+											i += 3;
+											jenny5_event *e = new jenny5_event(SONARS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+											received_events.Add((void*)e);
+										}
+										else
+											i++;
 								}
-								else
+								else// not an recognized event
 									i++;
 			// more events to add
 		}
@@ -284,7 +290,7 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 #endif
 
 					//parse_and_execute_commands(tmp_str, j - i);
-					parse_and_queue_commands(current_buffer + i, j - i);
+					parse_and_queue_commands(current_buffer + i, j - i + 1);
 
 
 					// remove the current executed command
@@ -298,11 +304,11 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 #endif
 
 					break; //for i
-				}
+	}
 				else {// the string is not completed ... so I must wait for more...
 					break; // for i
 				}
-			}
+}
 
 
 		return true;
@@ -438,7 +444,7 @@ void t_jenny5_command_module::send_create_sonars(int num_sonars, int* trig_pins,
 	sprintf(s, "CU %d", num_sonars);
 	char tmp_s[100];
 	for (int i = 0; i < num_sonars; i++) {
-		sprintf(tmp_s, "%d %d %d", trig_pins[i], echo_pins[i]);
+		sprintf(tmp_s, "%d %d", trig_pins[i], echo_pins[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}

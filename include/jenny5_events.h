@@ -10,7 +10,8 @@
 #define BUTTON_EVENT 4
 #define MOTOR_LOCKED_EVENT 5
 #define MOTOR_DISABLED_EVENT 6
-#define MOTOR_CONTROLLER_CREATED_EVENT 7
+#define MOTORS_CONTROLLER_CREATED_EVENT 7
+#define SONARS_CONTROLLER_CREATED_EVENT 8
 
 //-----------------------------------------------------------------------
 class jenny5_event{
