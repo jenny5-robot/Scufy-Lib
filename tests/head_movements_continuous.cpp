@@ -112,22 +112,39 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 	int head_motors_enable_pins[2] = { 4, 7 };
 	head_controller.send_create_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
 
+	int head_sonars_trig_pins[1] = { 8 };
+	int head_sonars_echo_pins[1] = { 9 };
+
+	head_controller.send_create_sonars(1, head_sonars_trig_pins, head_sonars_echo_pins);
+
 	clock_t start_time = clock();
+
+	bool motors_controller_created = false;
+	bool sonars_controller_created = false;
 
 	while (1) {
 		if (!head_controller.update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-		if (head_controller.query_for_event(MOTOR_CONTROLLER_CREATED_EVENT, 0)) { // have we received the event from Serial ?
+		if (head_controller.query_for_event(MOTORS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
+			motors_controller_created = true;
+		
+		if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
+			sonars_controller_created = true;
+
+		if (motors_controller_created && sonars_controller_created)
 			break;
-		}
+
 		// measure the passed time 
 		clock_t end_time = clock();
 
 		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 		// if more than 3 seconds then game over
 		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
-			sprintf(error_string, "Cannot create head's motor controller! Game over!");
+			if (!motors_controller_created) 
+				sprintf(error_string, "Cannot create head's motors controller! Game over!");
+			if (!sonars_controller_created)
+				sprintf(error_string, "Cannot create head's sonars controller! Game over!");
 			return false;
 		}
 	}
@@ -205,6 +222,12 @@ int	main(int argc, const char** argv)
 
 		imshow("Head camera", frame); // display the result
 
+		if (head_controller.get_sonar_state(0) == COMMAND_DONE) {// I ping the sonar only if no ping was sent before
+			head_controller.send_get_sonar_distance(0);
+			head_controller.set_sonar_state(0, COMMAND_SENT);
+			printf("U0# - sent\n");
+		}
+
 		if (face_found) {// 
 			// horizontal movement motor
 
@@ -231,7 +254,6 @@ int	main(int argc, const char** argv)
 					Sleep(DOES_NOTHING_SLEEP);
 				}
 
-
 			// vertical movement motor
 			// send a command to the module so that the face is in the center of the image
 			if (center.y < frame.rows / 2 - TOLERANCE) {
@@ -256,27 +278,28 @@ int	main(int argc, const char** argv)
 
 		// now extract the executed moves from the queue ... otherwise they will just stay there
 		if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
-
 			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
 				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_HORIZONTAL);
-			}
-			else {
-				// motor is still running and we can supervise it (with a camera?)
 			}
 		}
 
 		// now extract the moves done from the queue
 		if (head_controller.get_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_SENT) {// if a command has been sent
-
 			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
 				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_VERTICAL);
 			}
-			else {
-				// motor is still running and we can supervise it (with a camera?)
+		}
+// read to see if there is any distance received from sonar
+		if (head_controller.get_sonar_state(0) == COMMAND_SENT) {// if a command has been sent
+			int distance;
+			if (head_controller.query_for_event(SONAR_EVENT, 0, &distance)) { // have we received the event from Serial ?
+				head_controller.set_sonar_state(0, COMMAND_DONE);
+				printf("distance = %d cm\n", distance);
 			}
 		}
+
 		if (waitKey(1) >= 0)  // break the loop
 			active = false;
 	}
