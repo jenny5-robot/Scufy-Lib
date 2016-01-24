@@ -185,7 +185,7 @@ int	main(int argc, const char** argv)
 		std::vector<Rect> faces;// create an array to store the faces found
 
 		// find and store the faces
-		face_classifier.detectMultiScale(grayFrame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(50, 50));
+		face_classifier.detectMultiScale(grayFrame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
 		CENTER_POINT center;
 

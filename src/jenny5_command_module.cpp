@@ -382,13 +382,13 @@ void t_jenny5_command_module::set_motor_state(int motor_index, int state)
 	motor_state[motor_index] = state;
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_create_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins)
+void t_jenny5_command_module::send_create_motors(int num_motors, int* step_pins, int* dir_pins, int* enable_pins)
 {
 	char s[100];
 	sprintf(s, "CM %d", num_motors);
 	char tmp_s[100];
 	for (int i = 0; i < num_motors; i++) {
-		sprintf(tmp_s, "%d %d %d", dir_pins[i], step_pins[i], enable_pins[i]);
+		sprintf(tmp_s, "%d %d %d", step_pins[i], dir_pins[i], enable_pins[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}
