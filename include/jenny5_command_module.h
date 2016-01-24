@@ -21,7 +21,9 @@ private:
 
 	char current_buffer[4096]; // I should not need this size
 
-	int motor_state[4]; // max 4 motors
+	int motor_state[4]; // max 4 motors (each motor occupy 3 pins ... so 4x3 = 12 digital pins = which arduino nano has)
+
+	int sonar_state[6]; // max 6 ultrasounds (each sonar occupy 2 pins ... so 6x2 = 12 digital pins = which arduino nano has)
 
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
@@ -38,11 +40,14 @@ public:
 	int get_data_from_serial(char *buffer, int buffer_size);
 
 	bool query_for_event(int event_type);
+	bool query_for_event(int event_type, int* param1);
 	bool query_for_event(int event_type, intptr_t param1);
+	bool query_for_event(int event_type, intptr_t param1, intptr_t *param2);
 	bool query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2);
 	bool query_for_event(int event_type, intptr_t param1, intptr_t param2);
 	
 	void send_create_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
+	void send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins);
 
 	void send_is_alive(void);
 
@@ -61,7 +66,7 @@ public:
 	
 	void send_attach_sensors(int motor_index, int num_potentiometers, int *potentiometers_index);
 	
-	void send_get_ultrasonic_distance(int sensor_index);
+	void send_get_sonar_distance(int sensor_index);
 	void send_get_button_status(int button_index);
 	void send_get_potentiometer_position(int sensor_index);
 	void send_get_infrared_distance(int sensor_index);
@@ -77,6 +82,9 @@ public:
 
 	int get_motor_state(int motor_index);
 	void set_motor_state(int motor_index, int state);
+
+	int get_sonar_state(int sonar_index);
+	void set_sonar_state(int sonar_index, int state);
 };
 //----------------------------------------------------------------
 #endif

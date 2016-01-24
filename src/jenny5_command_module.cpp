@@ -12,10 +12,12 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.01.21.0"); // year.month.day.build number
+	strcpy(version, "2016.01.24.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		motor_state[i] = COMMAND_DONE;
+	for (int i = 0; i < 6; i++)
+		sonar_state[i] = COMMAND_DONE;
 }
 //--------------------------------------------------------------
 t_jenny5_command_module::~t_jenny5_command_module(void)
@@ -93,7 +95,7 @@ void t_jenny5_command_module::send_set_motor_speed_and_acceleration(int motor_in
 	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_get_ultrasonic_distance(int sensor_index)
+void t_jenny5_command_module::send_get_sonar_distance(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "U%d#", sensor_index);
@@ -201,7 +203,7 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 		// can be more than 1 command in a string, so I have to check again for a letter
 		if ((tmp_str[i] >= 'A' && tmp_str[i] <= 'Z') || (tmp_str[i] >= 'a' && tmp_str[i] <= 'z')) {
 
-			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor was moved
+			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor finished movement
 				int motor_index, distance_to_go;
 				sscanf(tmp_str + i + 1, "%d%d", &motor_index, &distance_to_go);
 				i += 4;
@@ -241,7 +243,15 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 									i++;
 							}
 							else
-								i++;
+								if (tmp_str[i] == 'U' || tmp_str[i] == 'u') {// motor finished movement
+									int sonar_index, distance;
+									sscanf(tmp_str + i + 1, "%d%d", &sonar_index, &distance);
+									i += 4;
+									jenny5_event *e = new jenny5_event(SONAR_EVENT, sonar_index, distance, 0);
+									received_events.Add((void*)e);
+								}
+								else
+									i++;
 			// more events to add
 		}
 		else
@@ -313,11 +323,37 @@ bool t_jenny5_command_module::query_for_event(int event_type)
 	return false;
 }
 //--------------------------------------------------------------
+bool t_jenny5_command_module::query_for_event(int event_type, intptr_t *param1)
+{
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == event_type) {
+			*param1 = e->param1;
+			received_events.DeleteCurrent(node_p);
+			return true;
+		}
+	}
+	return false;
+}
+//--------------------------------------------------------------
 bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1) {
+			received_events.DeleteCurrent(node_p);
+			return true;
+		}
+	}
+	return false;
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1, intptr_t* param2)
+{
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == event_type && e->param1 == param1) {
+			*param2 = e->param2;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -394,5 +430,29 @@ void t_jenny5_command_module::send_create_motors(int num_motors, int* dir_pins, 
 	}
 	strcat(s, "#");
 	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins)
+{
+	char s[100];
+	sprintf(s, "CU %d", num_sonars);
+	char tmp_s[100];
+	for (int i = 0; i < num_sonars; i++) {
+		sprintf(tmp_s, "%d %d %d", trig_pins[i], echo_pins[i]);
+		strcat(s, " ");
+		strcat(s, tmp_s);
+	}
+	strcat(s, "#");
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+int t_jenny5_command_module::get_sonar_state(int sonar_index)
+{
+	return sonar_state[sonar_index];
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::set_sonar_state(int sonar_index, int state)
+{
+	sonar_state[sonar_index] = state;
 }
 //--------------------------------------------------------------
