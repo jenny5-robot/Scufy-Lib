@@ -61,7 +61,7 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(10, 115200)) {
+	if (!head_controller.connect(2, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -88,7 +88,7 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 	}
 	; // create cascade for face reco
 	// load haarcascade library
-	if (!face_classifier.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
+	if (!face_classifier.load("c:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
 		sprintf(error_string, "Cannot load haarcascade! Please place the file in the correct folder!");
 		return false;
 	}
@@ -100,6 +100,11 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 		sprintf(error_string, "Couldn't open head's video cam!");
 		head_controller.close_connection();
 		return false;
+	}
+	else {
+		Mat frame;
+		head_cam >> frame;
+		printf("Head video size: %dx%d\n", frame.rows, frame.cols);
 	}
 	return true;
 }
