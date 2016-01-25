@@ -39,6 +39,8 @@ typedef struct _CENTER_POINT
 
 #define DOES_NOTHING_SLEEP 10
 
+#define HEAD_RADIUS_TO_REVERT 70
+
 
 //----------------------------------------------------------------
 bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
@@ -64,12 +66,12 @@ bool init(t_jenny5_command_module &head_controller, t_jenny5_command_module &foo
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(10, 115200)) {
+	if (!head_controller.connect(2, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
 
-	if (!foot_controller.connect(9, 115200)) {
+	if (!foot_controller.connect(3, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' foot!");
 		return false;
 	}
@@ -110,7 +112,7 @@ bool init(t_jenny5_command_module &head_controller, t_jenny5_command_module &foo
 	}
 	; // create cascade for face reco
 	// load haarcascade library
-	if (!face_classifier.load("c:\\robots\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
+	if (!face_classifier.load("c:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
 		sprintf(error_string, "Cannot load haarcascade! Please place the file in the correct folder!");
 		return false;
 	}
@@ -189,8 +191,8 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &fo
 	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
 	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
 
-	foot_controller.send_set_motor_speed_and_acceleration(MOTOR_FOOT_LEFT, 400, 300);
-	foot_controller.send_set_motor_speed_and_acceleration(MOTOR_FOOT_RIGHT, 400, 300);
+	foot_controller.send_set_motor_speed_and_acceleration(MOTOR_FOOT_LEFT, 300, 100);
+	foot_controller.send_set_motor_speed_and_acceleration(MOTOR_FOOT_RIGHT, 300, 100);
 	return true;
 }
 //----------------------------------------------------------------
@@ -267,7 +269,8 @@ int	main(void)
 			if (center.x > frame.cols / 2 + TOLERANCE) {
 				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 				int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 8;
-				if (center.range < 60) {
+				
+				if (center.range < HEAD_RADIUS_TO_REVERT) {
 					// move forward
 					foot_controller.send_move_motor(MOTOR_FOOT_LEFT, num_steps_x);
 					foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
@@ -275,18 +278,19 @@ int	main(void)
 				}
 				else {
 					// move backward
-					
-
-					foot_controller.send_move_motor(MOTOR_FOOT_RIGHT, -num_steps_x);
+					foot_controller.send_move_motor(MOTOR_FOOT_RIGHT, num_steps_x);
 					foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
-					printf("foot: M%d %d# - sent\n", MOTOR_FOOT_RIGHT, -num_steps_x);
+					printf("foot: M%d %d# - sent\n", MOTOR_FOOT_RIGHT, num_steps_x);
 				}
+				
 			}
 			else
 				if (center.x < frame.cols / 2 - TOLERANCE) {
+					
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 					int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 8;
-					if (center.range < 60) {
+					
+					if (center.range < HEAD_RADIUS_TO_REVERT) {
 						// move forward
 						foot_controller.send_move_motor(MOTOR_FOOT_RIGHT, num_steps_x);
 						foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
@@ -294,14 +298,16 @@ int	main(void)
 					}
 					else {
 						// move backward
-						foot_controller.send_move_motor(MOTOR_FOOT_LEFT, -num_steps_x);
+						foot_controller.send_move_motor(MOTOR_FOOT_LEFT, num_steps_x);
 						foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
-						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_LEFT, -num_steps_x);
+						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_LEFT, num_steps_x);
 					}
+					
 				}
 				else {
+					
 					// face is in the center, so I move equaly with both motors
-					if (center.range < 60) {
+					if (center.range < HEAD_RADIUS_TO_REVERT) {
 						// move forward
 						foot_controller.send_move_motor(MOTOR_FOOT_LEFT, 100);
 						foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
@@ -321,6 +327,7 @@ int	main(void)
 						foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
 						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_RIGHT, 100);
 					}
+					
 				}
 
 			// vertical movement motor
