@@ -329,7 +329,7 @@ bool t_jenny5_command_module::query_for_event(int event_type)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, intptr_t *param1)
+bool t_jenny5_command_module::query_for_event(int event_type, int *param1)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -342,7 +342,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, intptr_t *param1)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1)
+bool t_jenny5_command_module::query_for_event(int event_type, int param1)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -354,7 +354,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1, intptr_t* param2)
+bool t_jenny5_command_module::query_for_event(int event_type, int param1, int* param2)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -367,7 +367,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1, i
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1, intptr_t param2)
+bool t_jenny5_command_module::query_for_event(int event_type, int param1, int param2)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -379,7 +379,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, intptr_t param1, i
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2)
+bool t_jenny5_command_module::query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2)
 {
 	bool event1_found = false;
 	bool event2_found = false;

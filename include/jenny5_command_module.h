@@ -41,10 +41,10 @@ public:
 
 	bool query_for_event(int event_type);
 	bool query_for_event(int event_type, int* param1);
-	bool query_for_event(int event_type, intptr_t param1);
-	bool query_for_event(int event_type, intptr_t param1, intptr_t *param2);
-	bool query_for_2_events(int event_type1, intptr_t param1_1, int event_type2, intptr_t param1_2);
-	bool query_for_event(int event_type, intptr_t param1, intptr_t param2);
+	bool query_for_event(int event_type, int param1);
+	bool query_for_event(int event_type, int param1, int *param2);
+	bool query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2);
+	bool query_for_event(int event_type, int param1, int param2);
 	
 	void send_create_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
 	void send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins);
