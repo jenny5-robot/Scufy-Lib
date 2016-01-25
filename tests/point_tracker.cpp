@@ -1,7 +1,7 @@
 #include "point_tracker.h"
 
 //-----------------------------------------------------------------------
-tracking_data get_offset_angles(int webcam_model_number, float image_ratio, int image_width, int image_height, Point position)
+tracking_data get_offset_angles(int webcam_model_number, double image_ratio, int image_width, int image_height, Point position)
 {
 	tracking_data deviation;
 
@@ -49,11 +49,11 @@ tracking_data get_offset_angles(int webcam_model_number, Point position)
 	return deviation;
 }
 //-----------------------------------------------------------------------
-float determine_offset_angle(int position, float field_of_view, int number_of_pixels)
+double determine_offset_angle(int position, double field_of_view, int number_of_pixels)
 {
-	float pixel_one_percent = (float)number_of_pixels / 100.0;
-	float fov_one_percent = (float)field_of_view / 100.0;
-	float offset_from_center = (position - number_of_pixels / 2.0) / pixel_one_percent; 
+	double pixel_one_percent = (double)number_of_pixels / 100.0;
+	double fov_one_percent = (double)field_of_view / 100.0;
+	double offset_from_center = (position - number_of_pixels / 2.0) / pixel_one_percent;
 	
 	return offset_from_center * fov_one_percent;
 }
