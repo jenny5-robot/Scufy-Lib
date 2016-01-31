@@ -62,7 +62,7 @@ bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 	return found_one;
 }
 //----------------------------------------------------------------
-bool init(t_jenny5_command_module &head_controller, t_jenny5_command_module &foot_controller, VideoCapture &head_cam, CascadeClassifier &face_classifier, char* error_string)
+bool connect(t_jenny5_command_module &head_controller, t_jenny5_command_module &foot_controller, VideoCapture &head_cam, CascadeClassifier &face_classifier, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
@@ -204,7 +204,7 @@ int	main(void)
 
 	// initialization
 	char error_string[1000];
-	if (!init(head_controller, foot_controller, head_cam, face_classifier, error_string)) {
+	if (!connect(head_controller, foot_controller, head_cam, face_classifier, error_string)) {
 		printf("%s\n", error_string);
 		printf("Press Enter...");
 		getchar();
@@ -388,6 +388,7 @@ int	main(void)
 	}
 
 	head_controller.close_connection();
+	foot_controller.close_connection();
 	return 0;
 }
 //----------------------------------------------------------------
