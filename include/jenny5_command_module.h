@@ -21,9 +21,11 @@ private:
 
 	char current_buffer[4096]; // I should not need this size
 
-	int motor_state[4]; // max 4 motors (each motor occupy 3 pins ... so 4x3 = 12 digital pins = which arduino nano has)
+	int motor_state[4]; // max 4 motors (each motor occupy 3 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
 
-	int sonar_state[6]; // max 6 ultrasounds (each sonar occupy 2 pins ... so 6x2 = 12 digital pins = which arduino nano has)
+	int sonar_state[6]; // max 6 ultrasounds (each sonar occupy 2 digital pins ... so 6x2 = 12 digital pins = which arduino nano has)
+
+	int potentiometer_state[4]; // if I have max 4 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
 
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
@@ -86,6 +88,9 @@ public:
 
 	int get_sonar_state(int sonar_index);
 	void set_sonar_state(int sonar_index, int state);
+
+	int get_potentiometer_state(int potentiometer_index);
+	void set_potentiometer_state(int potentiometer_index, int state);
 };
 //----------------------------------------------------------------
 #endif

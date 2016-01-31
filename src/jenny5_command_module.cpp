@@ -18,6 +18,8 @@ t_jenny5_command_module::t_jenny5_command_module(void)
 		motor_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 6; i++)
 		sonar_state[i] = COMMAND_DONE;
+	for (int i = 0; i < 4; i++)
+		potentiometer_state[i] = COMMAND_DONE;
 }
 //--------------------------------------------------------------
 t_jenny5_command_module::~t_jenny5_command_module(void)
@@ -480,5 +482,15 @@ int t_jenny5_command_module::get_sonar_state(int sonar_index)
 void t_jenny5_command_module::set_sonar_state(int sonar_index, int state)
 {
 	sonar_state[sonar_index] = state;
+}
+//--------------------------------------------------------------
+int t_jenny5_command_module::get_potentiometer_state(int potentiometer_index)
+{
+	return potentiometer_state[potentiometer_index];
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::set_potentiometer_state(int potentiometer_index, int new_state)
+{
+	potentiometer_state[potentiometer_index] = new_state;
 }
 //--------------------------------------------------------------
