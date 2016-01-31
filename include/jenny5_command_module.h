@@ -48,6 +48,7 @@ public:
 	
 	void send_create_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
 	void send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins);
+	void send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *home);
 
 	void send_is_alive(void);
 

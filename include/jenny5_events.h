@@ -12,6 +12,7 @@
 #define MOTOR_DISABLED_EVENT 6
 #define MOTORS_CONTROLLER_CREATED_EVENT 7
 #define SONARS_CONTROLLER_CREATED_EVENT 8
+#define POTENTIOMETERS_CONTROLLER_CREATED_EVENT 9
 
 //-----------------------------------------------------------------------
 class jenny5_event{

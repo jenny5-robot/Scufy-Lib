@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.01.24.0"); // year.month.day.build number
+	strcpy(version, "2016.01.31.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		motor_state[i] = COMMAND_DONE;
@@ -254,7 +254,13 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 											received_events.Add((void*)e);
 										}
 										else
-											i++;
+											if (tmp_str[i + 1] == 'P' || tmp_str[i + 1] == 'p') {// sonars controller created
+												i += 3;
+												jenny5_event *e = new jenny5_event(POTENTIOMETERS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+												received_events.Add((void*)e);
+											}
+											else
+												i++;
 								}
 								else// not an recognized event
 									i++;
@@ -445,6 +451,20 @@ void t_jenny5_command_module::send_create_sonars(int num_sonars, int* trig_pins,
 	char tmp_s[100];
 	for (int i = 0; i < num_sonars; i++) {
 		sprintf(tmp_s, "%d %d", trig_pins[i], echo_pins[i]);
+		strcat(s, " ");
+		strcat(s, tmp_s);
+	}
+	strcat(s, "#");
+	RS232_SendBuf(port_number, (unsigned char*)s, strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *_home)
+{
+	char s[100];
+	sprintf(s, "CP %d", num_potentiometers);
+	char tmp_s[100];
+	for (int i = 0; i < num_potentiometers; i++) {
+		sprintf(tmp_s, "%d %d %d %d", out_pins[i], _low[i], _high[i], _home[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}
