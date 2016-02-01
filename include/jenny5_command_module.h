@@ -27,6 +27,8 @@ private:
 
 	int potentiometer_state[4]; // if I have max 4 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
 
+	int infrared_state[4]; // I suppose that I don't have so many infrared sensors attached to 1 controller
+
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
 public:
@@ -51,6 +53,7 @@ public:
 	void send_create_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
 	void send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins);
 	void send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *home);
+	void send_create_infrareds(int num_infrareds, int* _pins);
 
 	void send_is_alive(void);
 
@@ -84,13 +87,16 @@ public:
 	void send_remove_attached_sensors(int motor_index);
 
 	int get_motor_state(int motor_index);
-	void set_motor_state(int motor_index, int state);
+	void set_motor_state(int motor_index, int new_state);
 
 	int get_sonar_state(int sonar_index);
-	void set_sonar_state(int sonar_index, int state);
+	void set_sonar_state(int sonar_index, int new_state);
 
 	int get_potentiometer_state(int potentiometer_index);
-	void set_potentiometer_state(int potentiometer_index, int state);
+	void set_potentiometer_state(int potentiometer_index, int new_state);
+
+	int get_infrared_state(int infrared_index);
+	void set_infrared_state(int infrared_index, int new_state);
 };
 //----------------------------------------------------------------
 #endif
