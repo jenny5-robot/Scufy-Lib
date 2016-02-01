@@ -268,7 +268,7 @@ int	main(void)
 			// send a command to the module so that the face is in the center of the image
 			if (center.x > frame.cols / 2 + TOLERANCE) {
 				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-				int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 8;
+				int num_steps_x = (int)(angle_offset.grades_from_center_x / 1.8 * 8);
 				
 				if (center.range < HEAD_RADIUS_TO_REVERT) {
 					// move forward
@@ -288,7 +288,7 @@ int	main(void)
 				if (center.x < frame.cols / 2 - TOLERANCE) {
 					
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-					int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 8;
+					int num_steps_x = (int)(angle_offset.grades_from_center_x / 1.8 * 8);
 					
 					if (center.range < HEAD_RADIUS_TO_REVERT) {
 						// move forward
@@ -334,7 +334,7 @@ int	main(void)
 			// send a command to the module so that the face is in the center of the image
 			if (center.y < frame.rows / 2 - TOLERANCE) {
 				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-				int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
+				int num_steps_y = (int)(angle_offset.grades_from_center_y / 1.8 * 16.0);
 
 				head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
 				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
@@ -343,13 +343,12 @@ int	main(void)
 			else
 				if (center.y > frame.rows / 2 + TOLERANCE) {
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-					int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
+					int num_steps_y = (int)(angle_offset.grades_from_center_y / 1.8 * 16.0);
 
 					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
 					head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 					printf("head: M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 				}
-
 		}
 
 		// now extract the executed moves from the queue ... otherwise they will just sit there and will occupy memory
