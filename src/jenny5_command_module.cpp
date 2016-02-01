@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.02.01.0"); // year.month.day.build number
+	strcpy(version, "2016.02.01.1"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		motor_state[i] = COMMAND_DONE;
@@ -498,13 +498,13 @@ void t_jenny5_command_module::send_create_potentiometers(int num_potentiometers,
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_create_infrareds(int num_infrareds, int* _pins)
+void t_jenny5_command_module::send_create_infrared_sensors(int num_infrared_sensors, int* _pins, int* _low)
 {
 	char s[100];
-	sprintf(s, "CI %d", num_infrareds);
+	sprintf(s, "CI %d", num_infrared_sensors);
 	char tmp_s[100];
-	for (int i = 0; i < num_infrareds; i++) {
-		sprintf(tmp_s, "%d", _pins[i]);
+	for (int i = 0; i < num_infrared_sensors; i++) {
+		sprintf(tmp_s, "%d %d", _pins[i], _low[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}
