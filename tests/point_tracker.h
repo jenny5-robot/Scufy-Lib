@@ -23,6 +23,10 @@ struct	tracking_data
 {
 	double grades_from_center_x;
 	double grades_from_center_y;
+
+	tracking_data() {
+		grades_from_center_x = grades_from_center_y = 0;
+	}
 };
 
 
