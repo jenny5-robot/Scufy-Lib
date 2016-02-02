@@ -5,8 +5,8 @@
 #include <opencv2\highgui\highgui.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 
-#include "jenny5_command_module.h"
-#include "jenny5_events.h"
+#include "../include/jenny5_command_module.h"
+#include "../include/jenny5_events.h"
 #include "point_tracker.h"
 //----------------------------------------------------------------
 

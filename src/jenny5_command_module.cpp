@@ -1,6 +1,6 @@
 
-#include "jenny5_command_module.h"
-#include "jenny5_events.h"
+#include "../include/jenny5_command_module.h"
+#include "../include/jenny5_events.h"
 #include <stdio.h>
 
 #ifdef _WIN32

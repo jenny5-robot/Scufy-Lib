@@ -3,8 +3,8 @@
 
 
 #include <stdio.h>
-#include "jenny5_command_module.h"
-#include "jenny5_events.h"
+#include "../include/jenny5_command_module.h"
+#include "../include/jenny5_events.h"
 
 // make sure that you have WIN32 defined in your windows project (preprocessor options)
 #ifdef WIN32
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	// empty the serial buffer
 	char sir[1000];
 	int num_read = 0;
-	num_read = head_controller.clear_data_from_serial(sir, 1000);
+	//num_read = head_controller.clear_data_from_serial(sir, 1000);
 	sir[num_read] = 0;
 	printf("Serial buffer = %s\n", sir);
 
