@@ -12,15 +12,19 @@
 //----------------------------------------------------------------
 class t_jenny5_command_module{
 private:
-
+	// version number of the library
 	char version[20];
 
+	// port number of the serial connection
 	int port_number;
 	
+	// a list with received events from Arduino
 	TLista received_events;
 
-	char current_buffer[4096]; // I should not need this size
+	// current buffer of characters received from Arduino
+	char current_buffer[4096]; // I should not need so much
 
+	// each motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
 	int motor_state[4]; // max 4 motors (each motor occupy 3 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
 
 	int sonar_state[6]; // max 6 ultrasounds (each sonar occupy 2 digital pins ... so 6x2 = 12 digital pins = which arduino nano has)
@@ -29,6 +33,7 @@ private:
 
 	int infrared_state[4]; // I suppose that I don't have so many infrared sensors attached to 1 controller
 
+	// parse the string for events
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
 public:
