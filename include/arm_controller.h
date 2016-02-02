@@ -2,15 +2,17 @@
 #define arm_controllerH
 
 #include "jenny5_command_module.h"
+#include "jenny5_events.h"
 #include <iostream>
 
 //----------------------------------------------------------------
 #define SHOULDER_SPIN 0
 #define SHOULDER_LIFT 1
 #define UPPER_ARM_ROTATE 2
-#define ELBOW_LIFT 0
+#define ELBOW_LIFT 1
 #define LOWER_ARM_ROTATE 3
 
+#define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
 //----------------------------------------------------------------
 class t_arm_controller {
@@ -19,6 +21,9 @@ private:
 public:
 	t_arm_controller(void);
 	~t_arm_controller(void);
+
+	bool connect();
+	bool setup();
 
 	void spin_shoulder(int num_steps);
 	void lift_shoulder(int num_steps);
