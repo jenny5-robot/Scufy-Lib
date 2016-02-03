@@ -186,10 +186,10 @@ void t_jenny5_command_module::send_get_potentiometer_parameters(int potentiomete
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_set_potentiometer_parameters(int potentiometer_index, int _min, int _max, int _home)
+void t_jenny5_command_module::send_set_potentiometer_parameters(int potentiometer_index, int _min, int _max, int _home, int _direction)
 {
 	char s[30];
-	sprintf(s, "SP%d %d %d %d#", potentiometer_index, _min, _max, _home);
+	sprintf(s, "SP%d %d %d %d %d#", potentiometer_index, _min, _max, _home, _direction);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
