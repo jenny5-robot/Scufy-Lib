@@ -10,6 +10,6 @@ int main(void) {
 	arm_controller.rotate_upper_arm(150, ELBOW_LIFT);
 	arm_controller.rotate_upper_arm(-300, UPPER_ARM_ROTATE);
 	arm_controller.rotate_upper_arm(300, UPPER_ARM_ROTATE);
-	arm_controller.wait_for_action(UPPER_ARM_ROTATE, 300);
+	arm_controller.wait_for_action(UPPER_ARM_ROTATE);
 	return 0;
 }

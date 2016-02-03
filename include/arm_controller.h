@@ -31,7 +31,7 @@ public:
 	void rotate_upper_arm(int num_steps, int wait_for);
 	void rotate_lower_arm(int num_steps, int wait_for);
 	void lift_elbow(int num_steps, int wait_for);
-	void wait_for_action(int wait_for, int num_steps);
+	void wait_for_action(int wait_for);
 };
 
 #endif
