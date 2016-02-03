@@ -19,7 +19,7 @@
 #define POTENTIOMETERS_CONTROLLER_CREATED_EVENT 10
 #define INFRARED_CONTROLLER_CREATED_EVENT 11
 
-#define SECONDS_UNTIL_TIMEOUT 3
+#define SECONDS_UNTIL_TIMEOUT 10
 
 //-----------------------------------------------------------------------
 class jenny5_event{

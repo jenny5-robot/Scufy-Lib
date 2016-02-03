@@ -32,4 +32,4 @@ public:
 
 };
 
-#endif //HEAD_CONTROLLER_H_
+#endif //HEAD_CONTROLLER_H

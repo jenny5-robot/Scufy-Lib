@@ -60,8 +60,6 @@ void t_head_controller::move_up(unsigned int num_steps) {
 
 	jenny5_event motor_done_event(MOTOR_DONE_EVENT);
 	head_motors_controller.wait_for_command_completion(motor_done_event);
-
-	std::cout << "test\n";
 }
 //----------------------------------------------------------------
 void t_head_controller::move_down(unsigned int num_steps) {

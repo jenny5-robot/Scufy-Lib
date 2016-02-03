@@ -364,7 +364,7 @@ bool t_jenny5_command_module::query_for_event(jenny5_event &event, int available
 		}
 		else if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1)) 
 		{
-			if (e->type == event.type && e->type == event.param1) {
+			if (e->type == event.type && e->param1 == event.param1) {
 				event.param2 = e->param2;
 				event.time = e->time;
 				received_events.DeleteCurrent(node_p);
@@ -395,9 +395,14 @@ bool t_jenny5_command_module::wait_for_command_completion(jenny5_event &event, i
 		if (!update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-		if (!event_success)
+		if (!event_success) {
 			if (query_for_event(event, available_info))  // have we received the event from Serial ?
 				event_success = true;
+				//for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+				//	jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+				//	std::cout << (int)e->type << " " << e->param1 << std::endl;
+				//}
+		}
 
 		if (event_success)
 			break;
