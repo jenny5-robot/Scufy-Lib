@@ -4,7 +4,6 @@
 //----------------------------------------------------------------
 t_arm_controller::t_arm_controller(void) {
 	if (connect()) {
-
 		printf("Connected...\n");
 	}
 	if (setup()) {
@@ -12,6 +11,7 @@ t_arm_controller::t_arm_controller(void) {
 	}
 }
 //----------------------------------------------------------------
+
 bool t_arm_controller::connect() {
 	//connect to serial ports
 	if (!upper_motors_controller.connect(2, 115200)) {
@@ -46,57 +46,71 @@ bool t_arm_controller::setup() {
 }
 //----------------------------------------------------------------
 
-void t_arm_controller::spin_shoulder(int num_steps) {
+void t_arm_controller::wait_for_action(int wait_for)
+{
+	if (wait_for != NO_WAIT)
+	{
+		jenny5_event motor_done_event(MOTOR_DONE_EVENT, wait_for);
+
+		if (wait_for == LOWER_ARM_ROTATE)
+		{
+			lower_motors_controller.wait_for_command_completion(motor_done_event);
+		}
+		else
+		{
+			upper_motors_controller.wait_for_command_completion(motor_done_event);
+		}
+	}
+}
+//----------------------------------------------------------------
+
+void t_arm_controller::spin_shoulder(int num_steps, int wait_for)
+{
+	wait_for_action(wait_for);
 	upper_motors_controller.send_move_motor(SHOULDER_SPIN, num_steps);
 	upper_motors_controller.set_motor_state(SHOULDER_SPIN, COMMAND_SENT);
 	printf("shoulder spin: M%d %d# - sent\n", SHOULDER_SPIN, num_steps);
-
-	jenny5_event motor_done_event(MOTOR_DONE_EVENT);
-	upper_motors_controller.wait_for_command_completion(motor_done_event);
 }
 //----------------------------------------------------------------
 
-void t_arm_controller::lift_shoulder(int num_steps) {
+void t_arm_controller::lift_shoulder(int num_steps, int wait_for)
+{
+	wait_for_action(wait_for);
 	upper_motors_controller.send_move_motor(SHOULDER_LIFT, num_steps);
 	upper_motors_controller.set_motor_state(SHOULDER_LIFT, COMMAND_SENT);
 	printf("shoulder lift: M%d %d# - sent\n", SHOULDER_LIFT, num_steps);
-
-	jenny5_event motor_done_event(MOTOR_DONE_EVENT);
-	upper_motors_controller.wait_for_command_completion(motor_done_event);
 }
 //----------------------------------------------------------------
 
-void t_arm_controller::rotate_upper_arm(int num_steps) {
+void t_arm_controller::rotate_upper_arm(int num_steps, int wait_for)
+{
+	wait_for_action(wait_for);
 	upper_motors_controller.send_move_motor(UPPER_ARM_ROTATE, num_steps);
 	upper_motors_controller.set_motor_state(UPPER_ARM_ROTATE, COMMAND_SENT);
 	printf("upper arm rotate: M%d %d# - sent\n", UPPER_ARM_ROTATE, num_steps);
-
-	jenny5_event motor_done_event(MOTOR_DONE_EVENT);
-	upper_motors_controller.wait_for_command_completion(motor_done_event);
 }
 //----------------------------------------------------------------
 
-void t_arm_controller::rotate_lower_arm(int num_steps) {
+void t_arm_controller::rotate_lower_arm(int num_steps, int wait_for)
+{
+	wait_for_action(wait_for);
 	lower_motors_controller.send_move_motor(LOWER_ARM_ROTATE, num_steps);
 	lower_motors_controller.set_motor_state(LOWER_ARM_ROTATE, COMMAND_SENT);
 	printf("lower arm rotate: M%d %d# - sent\n", LOWER_ARM_ROTATE, num_steps);
-
-	jenny5_event motor_done_event(MOTOR_DONE_EVENT);
-	lower_motors_controller.wait_for_command_completion(motor_done_event);
 }
 //----------------------------------------------------------------
 
-void t_arm_controller::lift_elbow(int num_steps) {
+void t_arm_controller::lift_elbow(int num_steps, int wait_for)
+{
+	wait_for_action(wait_for);
 	upper_motors_controller.send_move_motor(ELBOW_LIFT, num_steps);
 	upper_motors_controller.set_motor_state(ELBOW_LIFT, COMMAND_SENT);
 	printf("elbow lift: M%d %d# - sent\n", ELBOW_LIFT, num_steps);
-
-	jenny5_event motor_done_event(MOTOR_DONE_EVENT);
-	upper_motors_controller.wait_for_command_completion(motor_done_event);
 }
 //----------------------------------------------------------------
 
-t_arm_controller::~t_arm_controller(void) {
+t_arm_controller::~t_arm_controller(void)
+{
 	upper_motors_controller.close_connection();
 	lower_motors_controller.close_connection();
 }
