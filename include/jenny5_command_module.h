@@ -65,10 +65,14 @@ public:
 	// normally an application must call update_commands_from_serial
 	int get_data_from_serial(char *buffer, int buffer_size);
 
-	//DOCUMENT THIS STUFF!!!!!
+	// -search in the list of events for a particular event type
+	// -if found returns true and, event param will be updated with the
+	// found event, else false is returned.
 	bool query_for_event(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
-	//DOCUMENT THIS STUFF ALSO!
+	//-waits for the completion of the event passed as a parameter,
+	//also updates all the event data if it was found
+	//-if waits more than SECONDS_UNTIL_TIMEOUT times out and ends the program
 	bool wait_for_command_completion(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
 	//// search in the list of events for a particular event type

@@ -412,9 +412,8 @@ bool t_jenny5_command_module::wait_for_command_completion(jenny5_event &event, i
 			{
 				std::cout << "Event with CODE" << event.type << " timed-out.\n";
 				std::cout << "Exiting...\n";
-				exit(0);
+				exit(0); //TO_DELETE
 			}
-			Sleep(1000);
 		}
 	}
 	return true;
