@@ -43,6 +43,13 @@ public:
 		time(-1)
 	{}
 
+	jenny5_event(char _type, int _param1, int _param2) :
+		type(_type),
+		param1(_param1),
+		param2(_param2),
+		time(-1)
+	{}
+
 	jenny5_event(char _type, int _param1, int _param2, int _time)
 	{
 		type = _type;
