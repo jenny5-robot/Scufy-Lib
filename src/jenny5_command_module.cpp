@@ -349,95 +349,165 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 		return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type)
+bool t_jenny5_command_module::query_for_event(jenny5_event &event, int available_info)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next)
+	{
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-		if (e->type == event_type) {
-			received_events.DeleteCurrent(node_p);
-			return true;
-		}
-	}
-	return false;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, int *param1)
-{
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
-		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-		if (e->type == event_type) {
-			*param1 = e->param1;
-			received_events.DeleteCurrent(node_p);
-			return true;
-		}
-	}
-	return false;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, int param1)
-{
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
-		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-		if (e->type == event_type && e->param1 == param1) {
-			received_events.DeleteCurrent(node_p);
-			return true;
-		}
-	}
-	return false;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, int param1, int* param2)
-{
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
-		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-		if (e->type == event_type && e->param1 == param1) {
-			*param2 = e->param2;
-			received_events.DeleteCurrent(node_p);
-			return true;
-		}
-	}
-	return false;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_event(int event_type, int param1, int param2)
-{
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
-		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-		if (e->type == event_type && e->param1 == param1 && e->param2 == param2) {
-			received_events.DeleteCurrent(node_p);
-			return true;
-		}
-	}
-	return false;
-}
-//--------------------------------------------------------------
-bool t_jenny5_command_module::query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2)
-{
-	bool event1_found = false;
-	bool event2_found = false;
-
-	node_double_linked *node_p1 = NULL, *node_p2 = NULL;
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
-		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-		if (e->type == event_type1 && e->param1 == param1_1) {
-			event1_found = true;
-			node_p1 = node_p;
-		}
-		else
-			if (e->type == event_type2 && e->param2 == param1_2) {
-				event2_found = true;
-				node_p2 = node_p;
+		if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1 | EVENT_INFO_PARAM2))
+		{
+			if (e->type == event.type && e->type == event.param1 && e->type == event.param2) {
+				event.time = e->time;
+				received_events.DeleteCurrent(node_p);
+				return true;
 			}
+		}
+		else if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1)) 
+		{
+			if (e->type == event.type && e->type == event.param1) {
+				event.param2 = e->param2;
+				event.time = e->time;
+				received_events.DeleteCurrent(node_p);
+				return true;
+			}
+		}
+		else if (available_info == EVENT_INFO_TYPE)
+		{
+			if (e->type == event.type) {
+				event.param1 = e->param1;
+				event.param2 = e->param2;
+				event.time = e->time;
+				received_events.DeleteCurrent(node_p);
+				return true;
+			}
+		}
 	}
-
-	if (event1_found && event2_found) {
-		received_events.DeleteCurrent(node_p1);
-		received_events.DeleteCurrent(node_p2);
-		return true;
-	}
-	else
-		return false;
+	return false;
 }
+//--------------------------------------------------------------
+bool t_jenny5_command_module::wait_for_command_completion(jenny5_event &event, int available_info)
+{
+	clock_t start_time = clock();
+	bool event_success = false;
+
+	while (1) 
+	{
+		if (!update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+		if (!event_success)
+			if (query_for_event(event, available_info))  // have we received the event from Serial ?
+				event_success = true;
+
+		if (event_success)
+			break;
+
+		// measure the passed time 
+		clock_t end_time = clock();
+		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+
+		// if more than SECONDS_UNTIL_TIMEOUT seconds then game over
+		if (wait_time > SECONDS_UNTIL_TIMEOUT) {
+			if (!event_success)
+			{
+				std::cout << "Event with CODE" << event.type << " timed-out.\n";
+				std::cout << "Exiting...\n";
+				exit(0);
+			}
+			Sleep(1000);
+		}
+	}
+	return true;
+}
+//bool t_jenny5_command_module::query_for_event(int event_type)
+//{
+//	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+//		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+//		if (e->type == event_type) {
+//			received_events.DeleteCurrent(node_p);
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+////--------------------------------------------------------------
+//bool t_jenny5_command_module::query_for_event(int event_type, int *param1)
+//{
+//	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+//		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+//		if (e->type == event_type) {
+//			*param1 = e->param1;
+//			received_events.DeleteCurrent(node_p);
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+////--------------------------------------------------------------
+//bool t_jenny5_command_module::query_for_event(int event_type, int param1)
+//{
+//	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+//		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+//		if (e->type == event_type && e->param1 == param1) {
+//			received_events.DeleteCurrent(node_p);
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+////--------------------------------------------------------------
+//bool t_jenny5_command_module::query_for_event(int event_type, int param1, int* param2)
+//{
+//	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+//		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+//		if (e->type == event_type && e->param1 == param1) {
+//			*param2 = e->param2;
+//			received_events.DeleteCurrent(node_p);
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+////--------------------------------------------------------------
+//bool t_jenny5_command_module::query_for_event(int event_type, int param1, int param2)
+//{
+//	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+//		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+//		if (e->type == event_type && e->param1 == param1 && e->param2 == param2) {
+//			received_events.DeleteCurrent(node_p);
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+////--------------------------------------------------------------
+//bool t_jenny5_command_module::query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2)
+//{
+//	bool event1_found = false;
+//	bool event2_found = false;
+//
+//	node_double_linked *node_p1 = NULL, *node_p2 = NULL;
+//	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+//		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+//		if (e->type == event_type1 && e->param1 == param1_1) {
+//			event1_found = true;
+//			node_p1 = node_p;
+//		}
+//		else
+//			if (e->type == event_type2 && e->param2 == param1_2) {
+//				event2_found = true;
+//				node_p2 = node_p;
+//			}
+//	}
+//
+//	if (event1_found && event2_found) {
+//		received_events.DeleteCurrent(node_p1);
+//		received_events.DeleteCurrent(node_p2);
+//		return true;
+//	}
+//	else
+//		return false;
+//}
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_go_home_motor(int motor_index)
 {

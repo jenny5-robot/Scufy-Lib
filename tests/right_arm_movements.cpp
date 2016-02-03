@@ -1,4 +1,5 @@
 #include "../include/arm_controller.h"
+#include "../include/jenny5_events.h"
 
 //----------------------------------------------------------------
 int main(void) {

@@ -12,8 +12,6 @@
 #define ELBOW_LIFT 1
 #define LOWER_ARM_ROTATE 3
 
-#define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
-
 //----------------------------------------------------------------
 class t_arm_controller {
 private:

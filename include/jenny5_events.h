@@ -19,6 +19,8 @@
 #define POTENTIOMETERS_CONTROLLER_CREATED_EVENT 10
 #define INFRARED_CONTROLLER_CREATED_EVENT 11
 
+#define SECONDS_UNTIL_TIMEOUT 3
+
 //-----------------------------------------------------------------------
 class jenny5_event{
 public:
@@ -27,6 +29,13 @@ public:
 	int time;
 
 public:
+	jenny5_event(char _type) : 
+		type(_type),
+		param1(-1),
+		param2(-1),
+		time(-1)
+	{}
+
 	jenny5_event(char _type, int _param1, int _param2, int _time)
 	{
 		type = _type;

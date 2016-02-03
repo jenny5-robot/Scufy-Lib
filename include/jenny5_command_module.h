@@ -3,11 +3,18 @@
 
 #include "rs232.h"
 #include "lista_voidp.h"
+#include "../include/jenny5_events.h"
+
+#include <iostream>
+#include <time.h>
 
 #define COMMAND_NOT_SENT 0
 #define COMMAND_SENT 1
 #define COMMAND_DONE 2
 
+#define EVENT_INFO_TYPE 1
+#define EVENT_INFO_PARAM1 2
+#define EVENT_INFO_PARAM2 4
 
 //----------------------------------------------------------------
 class t_jenny5_command_module{
@@ -58,23 +65,29 @@ public:
 	// normally an application must call update_commands_from_serial
 	int get_data_from_serial(char *buffer, int buffer_size);
 
-	// search in the list of events for a particular event type
-	bool query_for_event(int event_type);
-	
-	// search in the list of events for a particular event type
-	bool query_for_event(int event_type, int* param1);
+	//DOCUMENT THIS STUFF!!!!!
+	bool query_for_event(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
-	// search in the list of events for a particular event type
-	bool query_for_event(int event_type, int param1);
+	//DOCUMENT THIS STUFF ALSO!
+	bool wait_for_command_completion(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
-	// search in the list of events for a particular event type
-	bool query_for_event(int event_type, int param1, int *param2);
+	//// search in the list of events for a particular event type
+	//bool query_for_event(int event_type);
+	//
+	//// search in the list of events for a particular event type
+	//bool query_for_event(int event_type, int* param1);
 
-	// search in the list of events for a particular event type
-	bool query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2);
+	//// search in the list of events for a particular event type
+	//bool query_for_event(int event_type, int param1);
 
-	// search in the list of events for a particular event type
-	bool query_for_event(int event_type, int param1, int param2);
+	//// search in the list of events for a particular event type
+	//bool query_for_event(int event_type, int param1, int *param2);
+
+	//// search in the list of events for a particular event type
+	//bool query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2);
+
+	//// search in the list of events for a particular event type
+	//bool query_for_event(int event_type, int param1, int param2);
 
 	// sends (to Arduino) a command for creating a motor controller
 	// several arrays of pin indecses for direction, step and enable must be specified
