@@ -4,10 +4,12 @@
 //----------------------------------------------------------------
 t_arm_controller::t_arm_controller(void) {
 	if (connect()) {
-		printf("Conected...\n");
+
+		printf("Connected...\n");
 	}
-	Sleep(1000);
-	setup();
+	if (setup()) {
+		printf("Setup complete...\n");
+	}
 }
 //----------------------------------------------------------------
 bool t_arm_controller::connect() {
@@ -42,18 +44,17 @@ bool t_arm_controller::connect() {
 		// measure the passed time 
 		clock_t end_time = clock();
 
-		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		double wait_time = (double) (end_time - start_time) / CLOCKS_PER_SEC;
 		// if more than 3 seconds then game over
 		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
 			if (!upper_motors_responded)
-				printf("Upper motors do not respond! Game over!\n");
+				printf("Head does not respond! Game over!\n");
 
 			if (!lower_motors_responded)
-				printf("Lower motors do not respond! Game over!\n");
+				printf("Foot does not respond! Game over!\n");
 			return false;
 		}
 	}
-	printf("Motors attached\n");
 	return true;
 }
 //----------------------------------------------------------------
