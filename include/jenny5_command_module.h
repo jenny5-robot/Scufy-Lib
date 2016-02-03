@@ -163,7 +163,7 @@ public:
 	void send_get_potentiometer_parameters(int potentiometer_index);
 
 	// sends (to Arduino) a command for setting parameters of a potentiometer
-	void send_set_potentiometer_parameters(int potentiometer_index, int min, int max, int home);
+	void send_set_potentiometer_parameters(int potentiometer_index, int min, int max, int home, int direction);
 	
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
 	void send_remove_attached_sensors(int motor_index);
