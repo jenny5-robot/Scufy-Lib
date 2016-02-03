@@ -1,8 +1,8 @@
 #ifndef POINT_TRACKER_H
 #define POINT_TRACKER_H
 
+#include "../../../opencv/sources/include/opencv2/opencv.hpp"
 
-#include "opencv2/core/utility.hpp"
 
 
 using namespace cv;
