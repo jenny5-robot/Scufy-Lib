@@ -214,7 +214,7 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 					int motor_index, distance_to_go;
 					sscanf(tmp_str + i + 2, "%d%d", &motor_index, &distance_to_go);
 					i += 5;
-					jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
+					jenny5_event *e = new jenny5_event(STEPPER_MOTOR_MOVE_DONE_EVENT, motor_index, distance_to_go, 0);
 					received_events.Add((void*)e);
 				}
 

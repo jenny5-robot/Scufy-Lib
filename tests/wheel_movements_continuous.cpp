@@ -353,7 +353,7 @@ int	main(void)
 
 		// now extract the executed moves from the queue ... otherwise they will just sit there and will occupy memory
 		if (head_controller.get_stepper_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
-			if (head_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
+			if (head_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
 				head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_HORIZONTAL);
 			}
@@ -361,7 +361,7 @@ int	main(void)
 
 		// now extract the moves done from the queue
 		if (head_controller.get_stepper_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_SENT) {// if a command has been sent
-			if (head_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
+			if (head_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
 				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_VERTICAL);
 			}
@@ -369,13 +369,13 @@ int	main(void)
 		//extract movements for foot
 		// now extract the moves done from the queue
 		if (foot_controller.get_stepper_motor_state(MOTOR_FOOT_LEFT) == COMMAND_SENT) {// if a command has been sent
-			if (foot_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_FOOT_LEFT)) { // have we received the event from Serial ?
+			if (foot_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_FOOT_LEFT)) { // have we received the event from Serial ?
 				foot_controller.set_stepper_motor_state(MOTOR_FOOT_LEFT, COMMAND_DONE);
 				printf("foot: M%d# - done\n", MOTOR_FOOT_LEFT);
 			}
 		}
 		if (foot_controller.get_stepper_motor_state(MOTOR_FOOT_RIGHT) == COMMAND_SENT) {// if a command has been sent
-			if (foot_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_FOOT_RIGHT)) { // have we received the event from Serial ?
+			if (foot_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_FOOT_RIGHT)) { // have we received the event from Serial ?
 				foot_controller.set_stepper_motor_state(MOTOR_FOOT_RIGHT, COMMAND_DONE);
 				printf("foot: M%d# - done\n", MOTOR_FOOT_RIGHT);
 			}
