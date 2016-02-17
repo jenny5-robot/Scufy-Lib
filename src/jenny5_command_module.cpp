@@ -217,18 +217,17 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 					jenny5_event *e = new jenny5_event(STEPPER_MOTOR_MOVE_DONE_EVENT, motor_index, distance_to_go, 0);
 					received_events.Add((void*)e);
 				}
-
-				else
-					i++;
-				/*
+				else				
 					if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motor finished movement
 						int motor_index, miliseconds_to_go;
 						sscanf(tmp_str + i + 2, "%d%d", &motor_index, &miliseconds_to_go);
 						i += 5;
-						jenny5_event *e = new jenny5_event(DC_MOTOR_DONE_EVENT, motor_index, miliseconds_to_go, 0);
+						jenny5_event *e = new jenny5_event(DC_MOTOR_MOVE_DONE_EVENT, motor_index, miliseconds_to_go, 0);
 						received_events.Add((void*)e);
 					}
-					*/
+					else
+						i++;
+
 			}
 			else
 				if (tmp_str[i] == 'U' || tmp_str[i] == 'u') {//sonar reading returned value
@@ -274,10 +273,15 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 										char motor_type = tmp_str[i + 1];
 										sscanf(tmp_str + i + 2, "%d", &motor_index);
 										i += 4;
-										if (motor_type == 'S' || motor_type == 's') {
+										if (motor_type == 'S' || motor_type == 's') { // stepper was disabled
 											jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
 											received_events.Add((void*)e);
 										}
+										else
+											if (motor_type == 'D' || motor_type == 'd') { // dc was disabled
+												jenny5_event *e = new jenny5_event(DC_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
+												received_events.Add((void*)e);
+											}
 									}
 									else
 										if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
@@ -287,7 +291,13 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 												received_events.Add((void*)e);
 											}
 											else
-												if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {// sonars controller created
+												if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motors controller created
+													i += 3;
+													jenny5_event *e = new jenny5_event(DC_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+													received_events.Add((void*)e);
+												}
+												else
+													if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {// sonars controller created
 													i += 3;
 													jenny5_event *e = new jenny5_event(SONARS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
 													received_events.Add((void*)e);
