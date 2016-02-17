@@ -12,10 +12,12 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.02.17.2"); // year.month.day.build number
+	strcpy(version, "2016.02.17.3"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
+	for (int i = 0; i < 3; i++)
+		dc_motor_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 6; i++)
 		sonar_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 4; i++)
@@ -134,7 +136,7 @@ void t_jenny5_command_module::send_get_motors_sensors_statistics(void)
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_disable_motor(int motor_index)
+void t_jenny5_command_module::send_disable_stepper_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "DS%d#", motor_index);
@@ -531,10 +533,10 @@ bool t_jenny5_command_module::query_for_2_events(int event_type1, int param1_1, 
 		return false;
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_go_stepper_home_motor(int motor_index)
+void t_jenny5_command_module::send_go_home_stepper_motor(int motor_index)
 {
 	char s[20];
-	sprintf(s, "H%d#", motor_index);
+	sprintf(s, "HS%d#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -555,6 +557,20 @@ void t_jenny5_command_module::send_create_stepper_motors(int num_motors, int* di
 	char tmp_s[100];
 	for (int i = 0; i < num_motors; i++) {
 		sprintf(tmp_s, "%d %d %d", dir_pins[i], step_pins[i], enable_pins[i]);
+		strcat(s, " ");
+		strcat(s, tmp_s);
+	}
+	strcat(s, "#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins)
+{
+	char s[100];
+	sprintf(s, "CD %d", num_motors);
+	char tmp_s[100];
+	for (int i = 0; i < num_motors; i++) {
+		sprintf(tmp_s, "%d %d %d %d", pwm_pins[i], dir1_pins[i], dir2_pins[i], enable_pins[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}
@@ -632,5 +648,70 @@ int t_jenny5_command_module::get_infrared_state(int infrared_index)
 void t_jenny5_command_module::set_infrared_state(int infrared_index, int new_state)
 {
 	infrared_state[infrared_index] = new_state;
+}
+//--------------------------------------------------------------
+// sends (to Arduino) a command for moving a DC motor for a given number of microseconds
+void t_jenny5_command_module::send_move_dc_motor(int motor_index, int num_miliseconds)
+{
+	char s[20];
+	sprintf(s, "MD%d %d#", motor_index, num_miliseconds);
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+// sends (to Arduino) a command for moving a DC motor to home position
+void t_jenny5_command_module::send_go_home_dc_motor(int motor_index)
+{
+	char s[20];
+	sprintf(s, "HD%d#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+// sends (to Arduino) a command for disabling a DC motor
+void t_jenny5_command_module::send_disable_dc_motor(int motor_index)
+{
+	char s[10];
+	sprintf(s, "DD%d#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+// sends (to Arduino) a command for setting the speed of a given DC motor
+void t_jenny5_command_module::send_set_dc_motor_speed(int motor_index, int motor_speed)
+{
+	char s[20];
+	sprintf(s, "SD%d %d#", motor_index, motor_speed);
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+// sends (to Arduino) a command for attaching several sensors to a given DC motor
+void t_jenny5_command_module::send_attach_sensors_to_dc_motor(int motor_index, int num_buttons, int *buttons_index)
+{
+	char s[64];
+	sprintf(s, "AD%d %d", motor_index, num_buttons);
+	for (int i = 0; i < num_buttons; i++) {
+		char tmp_str[64];
+		sprintf(s, " B%d#", buttons_index[i]);
+		strcat(s, tmp_str);
+	}
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+// sends (to Arduino) a command for reading removing all attached sensors of a motor
+void t_jenny5_command_module::send_remove_attached_sensors_from_dc_motor(int motor_index)
+{
+	char s[10];
+	sprintf(s, "AD%d 0#", motor_index);
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+// returns the state of a motor
+int t_jenny5_command_module::get_dc_motor_state(int motor_index)
+{
+	return dc_motor_state[motor_index];
+}
+//--------------------------------------------------------------
+// sets the state of a motor
+void t_jenny5_command_module::set_dc_motor_state(int motor_index, int new_state)
+{
+	dc_motor_state[motor_index] = new_state;
 }
 //--------------------------------------------------------------
