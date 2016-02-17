@@ -32,7 +32,7 @@ private:
 	char current_buffer[4096]; // I should not need so much
 
 	// each motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
-	int motor_state[4]; // max 4 motors (each motor occupy 3 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
+	int stepper_motor_state[4]; // max 4 motors (each motor occupy 3 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
 
 	int sonar_state[6]; // max 6 ultrasounds (each sonar occupy 2 digital pins ... so 6x2 = 12 digital pins = which arduino nano has)
 
@@ -97,49 +97,55 @@ public:
 	// several arrays of pin indecses for direction, step and enable must be specified
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
-	void send_create_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
+	void send_create_stepper_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
 	
 	// sends (to Arduino) a command for creating a sonar controller
+	// this method should be called once at the beginning of the program
+	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
 	void send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins);
 
 	// sends (to Arduino) a command for creating a potentiometer controller
+	// this method should be called once at the beginning of the program
+	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
 	void send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *home);
 
 	// sends (to Arduino) a command for creating an infrared controller
+	// this method should be called once at the beginning of the program
+	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
 	void send_create_infrared_sensors(int num_infrared_sensors, int* _pins, int *_low);
 
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
 	void send_is_alive(void);
 
 	// sends (to Arduino) a command for moving a motor to home position
-	void send_go_home_motor(int motor_index);
+	void send_go_stepper_home_motor(int motor_index);
 
 	// sends (to Arduino) a command for moving a motor with a given number of steps
-	void send_move_motor(int motor_index, int num_steps);
+	void send_move_stepper_motor(int motor_index, int num_steps);
 	
 	// sends (to Arduino) a command for moving two motors
-	void send_move_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2);
+	void send_move_stepper_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2);
 	
 	// sends (to Arduino) a command for moving three motors
-	void send_move_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3);
+	void send_move_stepper_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3);
 	
 	// sends (to Arduino) a command for moving four motors
-	void send_move_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4);
+	void send_move_stepper_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4);
 	
 	// sends (to Arduino) a command for moving multiple motors
-	void send_move_motor_array(int num_motors, int* motor_index, int *num_steps);
+	void send_move_stepper_motor_array(int num_motors, int* motor_index, int *num_steps);
 
 	// sends (to Arduino) a command for blocking a motor to current position
-	void send_lock_motor(int motor_index);
+	void send_lock_stepper_motor(int motor_index);
 	
 	// sends (to Arduino) a command for disabling a motor
 	void send_disable_motor(int motor_index);
 
 	// sends (to Arduino) a command for setting the speed and acceleration of a given motor
-	void send_set_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration);
+	void send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration);
 	
 	// sends (to Arduino) a command for attaching several sensors to a given motor
-	void send_attach_sensors(int motor_index, int num_potentiometers, int *potentiometers_index);
+	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index);
 	
 	// sends (to Arduino) a command for reading a sonar
 	void send_get_sonar_distance(int sensor_index);
@@ -166,13 +172,13 @@ public:
 	void send_set_potentiometer_parameters(int potentiometer_index, int min, int max, int home, int direction);
 	
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
-	void send_remove_attached_sensors(int motor_index);
+	void send_remove_attached_sensors_from_stepper_motor(int motor_index);
 
 	// returns the state of a motor
-	int get_motor_state(int motor_index);
+	int get_stepper_motor_state(int motor_index);
 
 	// sets the state of a motor
-	void set_motor_state(int motor_index, int new_state);
+	void set_stepper_motor_state(int motor_index, int new_state);
 
 	// returns the state of a sonar
 	int get_sonar_state(int sonar_index);

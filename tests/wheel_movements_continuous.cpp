@@ -134,7 +134,7 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &fo
 	int head_motors_dir_pins[2] = { 2, 5 };
 	int head_motors_step_pins[2] = { 3, 6 };
 	int head_motors_enable_pins[2] = { 4, 7 };
-	head_controller.send_create_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
+	head_controller.send_create_stepper_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
 
 	int head_sonars_trig_pins[1] = { 8 };
 	int head_sonars_echo_pins[1] = { 9 };
@@ -144,7 +144,7 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &fo
 	int foot_motors_dir_pins[4] = { 2, 11};
 	int foot_motors_step_pins[4] = { 3, 12};
 	int foot_motors_enable_pins[4] = { 4, 13};
-	foot_controller.send_create_motors(2, foot_motors_dir_pins, foot_motors_step_pins, foot_motors_enable_pins);
+	foot_controller.send_create_stepper_motors(2, foot_motors_dir_pins, foot_motors_step_pins, foot_motors_enable_pins);
 
 	clock_t start_time = clock();
 	bool head_motors_controler_created = false;
@@ -188,11 +188,11 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &fo
 		}
 	}
 	
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
 
-	foot_controller.send_set_motor_speed_and_acceleration(MOTOR_FOOT_LEFT, 300, 100);
-	foot_controller.send_set_motor_speed_and_acceleration(MOTOR_FOOT_RIGHT, 300, 100);
+	foot_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_FOOT_LEFT, 300, 100);
+	foot_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_FOOT_RIGHT, 300, 100);
 	return true;
 }
 //----------------------------------------------------------------
@@ -272,14 +272,14 @@ int	main(void)
 				
 				if (center.range < HEAD_RADIUS_TO_REVERT) {
 					// move forward
-					foot_controller.send_move_motor(MOTOR_FOOT_LEFT, num_steps_x);
-					foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
+					foot_controller.send_move_stepper_motor(MOTOR_FOOT_LEFT, num_steps_x);
+					foot_controller.set_stepper_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
 					printf("foot: M%d %d# - sent\n", MOTOR_FOOT_LEFT, num_steps_x);
 				}
 				else {
 					// move backward
-					foot_controller.send_move_motor(MOTOR_FOOT_RIGHT, num_steps_x);
-					foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
+					foot_controller.send_move_stepper_motor(MOTOR_FOOT_RIGHT, num_steps_x);
+					foot_controller.set_stepper_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
 					printf("foot: M%d %d# - sent\n", MOTOR_FOOT_RIGHT, num_steps_x);
 				}
 				
@@ -292,14 +292,14 @@ int	main(void)
 					
 					if (center.range < HEAD_RADIUS_TO_REVERT) {
 						// move forward
-						foot_controller.send_move_motor(MOTOR_FOOT_RIGHT, num_steps_x);
-						foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
+						foot_controller.send_move_stepper_motor(MOTOR_FOOT_RIGHT, num_steps_x);
+						foot_controller.set_stepper_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
 						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_RIGHT, num_steps_x);
 					}
 					else {
 						// move backward
-						foot_controller.send_move_motor(MOTOR_FOOT_LEFT, num_steps_x);
-						foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
+						foot_controller.send_move_stepper_motor(MOTOR_FOOT_LEFT, num_steps_x);
+						foot_controller.set_stepper_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
 						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_LEFT, num_steps_x);
 					}
 					
@@ -309,22 +309,22 @@ int	main(void)
 					// face is in the center, so I move equaly with both motors
 					if (center.range < HEAD_RADIUS_TO_REVERT) {
 						// move forward
-						foot_controller.send_move_motor(MOTOR_FOOT_LEFT, 100);
-						foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
+						foot_controller.send_move_stepper_motor(MOTOR_FOOT_LEFT, 100);
+						foot_controller.set_stepper_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
 						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_LEFT, 100);
 
-						foot_controller.send_move_motor(MOTOR_FOOT_RIGHT, -100);
-						foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
+						foot_controller.send_move_stepper_motor(MOTOR_FOOT_RIGHT, -100);
+						foot_controller.set_stepper_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
 						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_RIGHT, -100);
 					}
 					else {
 						// move backward
-						foot_controller.send_move_motor(MOTOR_FOOT_LEFT, -100);
-						foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
+						foot_controller.send_move_stepper_motor(MOTOR_FOOT_LEFT, -100);
+						foot_controller.set_stepper_motor_state(MOTOR_FOOT_LEFT, COMMAND_SENT);
 						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_LEFT, -100);
 
-						foot_controller.send_move_motor(MOTOR_FOOT_RIGHT, 100);
-						foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
+						foot_controller.send_move_stepper_motor(MOTOR_FOOT_RIGHT, 100);
+						foot_controller.set_stepper_motor_state(MOTOR_FOOT_RIGHT, COMMAND_SENT);
 						printf("foot: M%d %d# - sent\n", MOTOR_FOOT_RIGHT, 100);
 					}
 					
@@ -336,8 +336,8 @@ int	main(void)
 				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 				int num_steps_y = (int)(angle_offset.grades_from_center_y / 1.8 * 16.0);
 
-				head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
-				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+				head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
+				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 				printf("head: M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 			}
 			else
@@ -345,38 +345,38 @@ int	main(void)
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 					int num_steps_y = (int)(angle_offset.grades_from_center_y / 1.8 * 16.0);
 
-					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
-					head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+					head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
+					head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 					printf("head: M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 				}
 		}
 
 		// now extract the executed moves from the queue ... otherwise they will just sit there and will occupy memory
-		if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
+		if (head_controller.get_stepper_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
 			if (head_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
-				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
+				head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_HORIZONTAL);
 			}
 		}
 
 		// now extract the moves done from the queue
-		if (head_controller.get_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_SENT) {// if a command has been sent
+		if (head_controller.get_stepper_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_SENT) {// if a command has been sent
 			if (head_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
-				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
+				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_VERTICAL);
 			}
 		}
 		//extract movements for foot
 		// now extract the moves done from the queue
-		if (foot_controller.get_motor_state(MOTOR_FOOT_LEFT) == COMMAND_SENT) {// if a command has been sent
+		if (foot_controller.get_stepper_motor_state(MOTOR_FOOT_LEFT) == COMMAND_SENT) {// if a command has been sent
 			if (foot_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_FOOT_LEFT)) { // have we received the event from Serial ?
-				foot_controller.set_motor_state(MOTOR_FOOT_LEFT, COMMAND_DONE);
+				foot_controller.set_stepper_motor_state(MOTOR_FOOT_LEFT, COMMAND_DONE);
 				printf("foot: M%d# - done\n", MOTOR_FOOT_LEFT);
 			}
 		}
-		if (foot_controller.get_motor_state(MOTOR_FOOT_RIGHT) == COMMAND_SENT) {// if a command has been sent
+		if (foot_controller.get_stepper_motor_state(MOTOR_FOOT_RIGHT) == COMMAND_SENT) {// if a command has been sent
 			if (foot_controller.query_for_event(STEPPER_MOTOR_DONE_EVENT, MOTOR_FOOT_RIGHT)) { // have we received the event from Serial ?
-				foot_controller.set_motor_state(MOTOR_FOOT_RIGHT, COMMAND_DONE);
+				foot_controller.set_stepper_motor_state(MOTOR_FOOT_RIGHT, COMMAND_DONE);
 				printf("foot: M%d# - done\n", MOTOR_FOOT_RIGHT);
 			}
 		}
