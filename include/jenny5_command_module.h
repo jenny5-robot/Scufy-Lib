@@ -76,22 +76,22 @@ public:
 	bool wait_for_command_completion(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
 	//// search in the list of events for a particular event type
-	//bool query_for_event(int event_type);
+	bool query_for_event(int event_type);
 	//
 	//// search in the list of events for a particular event type
-	//bool query_for_event(int event_type, int* param1);
+	bool query_for_event(int event_type, int* param1);
 
 	//// search in the list of events for a particular event type
-	//bool query_for_event(int event_type, int param1);
+	bool query_for_event(int event_type, int param1);
 
 	//// search in the list of events for a particular event type
-	//bool query_for_event(int event_type, int param1, int *param2);
+	bool query_for_event(int event_type, int param1, int *param2);
 
 	//// search in the list of events for a particular event type
-	//bool query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2);
+	bool query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2);
 
 	//// search in the list of events for a particular event type
-	//bool query_for_event(int event_type, int param1, int param2);
+	bool query_for_event(int event_type, int param1, int param2);
 
 	// sends (to Arduino) a command for creating a motor controller
 	// several arrays of pin indecses for direction, step and enable must be specified
