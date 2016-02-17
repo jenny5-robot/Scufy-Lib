@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.02.17.1"); // year.month.day.build number
+	strcpy(version, "2016.02.17.2"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -53,21 +53,21 @@ void t_jenny5_command_module::close_connection(void)
 void t_jenny5_command_module::send_move_stepper_motor(int motor_index, int num_steps)
 {
 	char s[20];
-	sprintf(s, "M%d %d#", motor_index, num_steps);
+	sprintf(s, "MS%d %d#", motor_index, num_steps);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_move_stepper_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
 {
 	char s[30];
-	sprintf(s, "M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
+	sprintf(s, "MS%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_move_stepper_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
 {
 	char s[63];
-	sprintf(s, "M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
+	sprintf(s, "MS%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -75,7 +75,7 @@ void t_jenny5_command_module::send_move_stepper_motor4(int motor_index1, int num
 {
 
 	char s[63];
-	sprintf(s, "M%d %d M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
+	sprintf(s, "MS%d %d M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -86,7 +86,7 @@ void t_jenny5_command_module::send_move_stepper_motor_array(int num_motors, int*
 	for (int i = 0; i < num_motors; i++) {
 		char tmp_str[20];
 
-		sprintf(tmp_str, "M%d %d#", motor_index[i], num_steps[i]);
+		sprintf(tmp_str, "MS%d %d#", motor_index[i], num_steps[i]);
 		strcat(s, tmp_str);
 	}
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
@@ -95,7 +95,7 @@ void t_jenny5_command_module::send_move_stepper_motor_array(int num_motors, int*
 void t_jenny5_command_module::send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
 {
 	char s[20];
-	sprintf(s, "SM%d %d %d#", motor_index, motor_speed, motor_acceleration);
+	sprintf(s, "SS%d %d %d#", motor_index, motor_speed, motor_acceleration);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -137,7 +137,7 @@ void t_jenny5_command_module::send_get_motors_sensors_statistics(void)
 void t_jenny5_command_module::send_disable_motor(int motor_index)
 {
 	char s[10];
-	sprintf(s, "D%d#", motor_index);
+	sprintf(s, "DS%d#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -156,7 +156,7 @@ int t_jenny5_command_module::get_data_from_serial(char *buffer, int buffer_size)
 void t_jenny5_command_module::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index)
 {
 	char s[64];
-	sprintf(s, "A%d %d", motor_index, num_potentiometers);
+	sprintf(s, "AS%d %d", motor_index, num_potentiometers);
 	for (int i = 0; i < num_potentiometers; i++) {
 		char tmp_str[64];
 		sprintf(s, " P%d#", potentiometers_index[i]);
@@ -168,14 +168,14 @@ void t_jenny5_command_module::send_attach_sensors_to_stepper_motor(int motor_ind
 void t_jenny5_command_module::send_remove_attached_sensors_from_stepper_motor(int motor_index)
 {
 	char s[10];
-	sprintf(s, "A%d 0#", motor_index);
+	sprintf(s, "AS%d 0#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_get_motor_parameters(int motor_index)
 {
 	char s[10];
-	sprintf(s, "GM%d#", motor_index);
+	sprintf(s, "GS%d#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -208,11 +208,25 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 		if ((tmp_str[i] >= 'A' && tmp_str[i] <= 'Z') || (tmp_str[i] >= 'a' && tmp_str[i] <= 'z')) {
 
 			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor finished movement
-				int motor_index, distance_to_go;
-				sscanf(tmp_str + i + 1, "%d%d", &motor_index, &distance_to_go);
-				i += 4;
-				jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
-				received_events.Add((void*)e);
+				if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// stepper motor finished movement
+					int motor_index, distance_to_go;
+					sscanf(tmp_str + i + 2, "%d%d", &motor_index, &distance_to_go);
+					i += 5;
+					jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
+					received_events.Add((void*)e);
+				}
+
+				else
+					i++;
+				/*
+					if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motor finished movement
+						int motor_index, miliseconds_to_go;
+						sscanf(tmp_str + i + 2, "%d%d", &motor_index, &miliseconds_to_go);
+						i += 5;
+						jenny5_event *e = new jenny5_event(DC_MOTOR_DONE_EVENT, motor_index, miliseconds_to_go, 0);
+						received_events.Add((void*)e);
+					}
+					*/
 			}
 			else
 				if (tmp_str[i] == 'U' || tmp_str[i] == 'u') {//sonar reading returned value
@@ -255,14 +269,17 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 								else
 									if (tmp_str[i] == 'D' || tmp_str[i] == 'd') {// motor was disabled
 										int motor_index;
-										sscanf(tmp_str + i + 1, "%d", &motor_index);
-										i += 3;
-										jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
-										received_events.Add((void*)e);
+										char motor_type = tmp_str[i + 1];
+										sscanf(tmp_str + i + 2, "%d", &motor_index);
+										i += 4;
+										if (motor_type == 'S' || motor_type == 's') {
+											jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
+											received_events.Add((void*)e);
+										}
 									}
 									else
 										if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
-											if (tmp_str[i + 1] == 'M' || tmp_str[i + 1] == 'm') {// motors controller created
+											if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// stepper motors controller created
 												i += 3;
 												jenny5_event *e = new jenny5_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
 												received_events.Add((void*)e);
@@ -534,7 +551,7 @@ void t_jenny5_command_module::set_stepper_motor_state(int motor_index, int state
 void t_jenny5_command_module::send_create_stepper_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins)
 {
 	char s[100];
-	sprintf(s, "CM %d", num_motors);
+	sprintf(s, "CS %d", num_motors);
 	char tmp_s[100];
 	for (int i = 0; i < num_motors; i++) {
 		sprintf(tmp_s, "%d %d %d", dir_pins[i], step_pins[i], enable_pins[i]);
