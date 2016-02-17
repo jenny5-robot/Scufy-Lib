@@ -211,7 +211,7 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 				int motor_index, distance_to_go;
 				sscanf(tmp_str + i + 1, "%d%d", &motor_index, &distance_to_go);
 				i += 4;
-				jenny5_event *e = new jenny5_event(MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
+				jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DONE_EVENT, motor_index, distance_to_go, 0);
 				received_events.Add((void*)e);
 			}
 			else
@@ -249,7 +249,7 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 									int motor_index;
 									sscanf(tmp_str + i + 1, "%d", &motor_index);
 									i += 3;
-									jenny5_event *e = new jenny5_event(MOTOR_LOCKED_EVENT, motor_index, 0, 0);
+									jenny5_event *e = new jenny5_event(STEPPER_MOTOR_LOCKED_EVENT, motor_index, 0, 0);
 									received_events.Add((void*)e);
 								}
 								else
@@ -257,14 +257,14 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 										int motor_index;
 										sscanf(tmp_str + i + 1, "%d", &motor_index);
 										i += 3;
-										jenny5_event *e = new jenny5_event(MOTOR_DISABLED_EVENT, motor_index, 0, 0);
+										jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
 										received_events.Add((void*)e);
 									}
 									else
 										if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
 											if (tmp_str[i + 1] == 'M' || tmp_str[i + 1] == 'm') {// motors controller created
 												i += 3;
-												jenny5_event *e = new jenny5_event(MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+												jenny5_event *e = new jenny5_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
 												received_events.Add((void*)e);
 											}
 											else
