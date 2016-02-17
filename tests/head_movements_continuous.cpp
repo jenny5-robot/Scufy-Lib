@@ -115,7 +115,7 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 	int head_motors_dir_pins[2] = { 2, 5 };
 	int head_motors_step_pins[2] = { 3, 6 };
 	int head_motors_enable_pins[2] = { 4, 7 };
-	head_controller.send_create_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
+	head_controller.send_create_stepper_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
 
 	int head_sonars_trig_pins[1] = { 8 };
 	int head_sonars_echo_pins[1] = { 9 };
@@ -131,7 +131,7 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 		if (!head_controller.update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-		if (head_controller.query_for_event(MOTORS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
+		if (head_controller.query_for_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 			motors_controller_created = true;
 		
 		if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
@@ -155,8 +155,8 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 	}
 	
 
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
-	head_controller.send_set_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
 
 	return true;
 }
@@ -241,8 +241,8 @@ int	main(int argc, const char** argv)
 				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 				int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
 
-				head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
-				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+				head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
+				head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 				printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 			}
 			else
@@ -250,8 +250,8 @@ int	main(int argc, const char** argv)
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 					int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
 
-					head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
-					head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
+					head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
+					head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 					printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 				}
 				else {
@@ -265,8 +265,8 @@ int	main(int argc, const char** argv)
 				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 				int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
 
-				head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
-				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+				head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
+				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 				printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 			}
 			else
@@ -274,25 +274,25 @@ int	main(int argc, const char** argv)
 					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
 					int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
 
-					head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
-					head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+					head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
+					head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 					printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 				}
 
 		}
 
 		// now extract the executed moves from the queue ... otherwise they will just stay there
-		if (head_controller.get_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
-			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
-				head_controller.set_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
+		if (head_controller.get_stepper_motor_state(MOTOR_HEAD_HORIZONTAL) == COMMAND_SENT) {// if a command has been sent
+			if (head_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_HEAD_HORIZONTAL)) { // have we received the event from Serial ?
+				head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_HORIZONTAL);
 			}
 		}
 
 		// now extract the moves done from the queue
-		if (head_controller.get_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_SENT) {// if a command has been sent
-			if (head_controller.query_for_event(MOTOR_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
-				head_controller.set_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
+		if (head_controller.get_stepper_motor_state(MOTOR_HEAD_VERTICAL) == COMMAND_SENT) {// if a command has been sent
+			if (head_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_HEAD_VERTICAL)) { // have we received the event from Serial ?
+				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_DONE);
 				printf("M%d# - done\n", MOTOR_HEAD_VERTICAL);
 			}
 		}
