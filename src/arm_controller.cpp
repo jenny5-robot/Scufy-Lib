@@ -36,13 +36,21 @@ bool t_arm_controller::setup() {
 	int upper_arm_motors_enable_pins[4] = { 4, 7, 10, 13 };
 	upper_motors_controller.send_create_stepper_motors(4, upper_arm_motors_dir_pins, upper_arm_motors_step_pins, upper_arm_motors_enable_pins);
 
-	int lower_arm_motors_dir_pins[1] = { 5 };
-	int lower_arm_motors_step_pins[1] = { 6 };
-	int lower_arm_motors_enable_pins[1] = { 7 };
+	int lower_arm_motors_dir_pins[1] = { 2 };
+	int lower_arm_motors_step_pins[1] = { 3 };
+	int lower_arm_motors_enable_pins[1] = { 4 };
+
+	int gripper_motors_pwm_pins[1] = { 5 };
+	int gripper_motors_dir1_pins[1] = { 6 };
+	int gripper_motors_dir2_pins[1] = { 7 };
+	int gripper_enable_pins[1] = { 8 };
 	lower_motors_controller.send_create_stepper_motors(1, lower_arm_motors_dir_pins, lower_arm_motors_step_pins, lower_arm_motors_enable_pins);
+	//lower_motors_controller.send_create_dc_motors(1, gripper_motors_pwm_pins, gripper_motors_dir1_pins, gripper_motors_dir2_pins, gripper_enable_pins);
 
 	jenny5_event create_upper_motors_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT);
-	return upper_motors_controller.wait_for_command_completion(create_upper_motors_event);
+	jenny5_event create_lower_motors_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT);
+	return upper_motors_controller.wait_for_command_completion(create_upper_motors_event) &&
+		lower_motors_controller.wait_for_command_completion(create_lower_motors_event);
 }
 //----------------------------------------------------------------
 
