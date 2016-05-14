@@ -62,14 +62,14 @@ void t_jenny5_command_module::send_move_stepper_motor(int motor_index, int num_s
 void t_jenny5_command_module::send_move_stepper_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
 {
 	char s[30];
-	sprintf(s, "MS%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
+	sprintf(s, "MS%d %d MS%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_move_stepper_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
 {
 	char s[63];
-	sprintf(s, "MS%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
+	sprintf(s, "MS%d %d MS%d %d MS%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -77,7 +77,7 @@ void t_jenny5_command_module::send_move_stepper_motor4(int motor_index1, int num
 {
 
 	char s[63];
-	sprintf(s, "MS%d %d M%d %d M%d %d M%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
+	sprintf(s, "MS%d %d MS%d %d MS%d %d MS%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
