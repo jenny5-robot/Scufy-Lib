@@ -39,9 +39,9 @@ private:
 
 	int sonar_state[6]; // max 6 ultrasounds (each sonar occupy 2 digital pins ... so 6x2 = 12 digital pins = which arduino nano has)
 
-	int potentiometer_state[4]; // if I have max 4 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
+	int potentiometer_state[6]; // if I have max 6 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
 
-	int infrared_state[4]; // I suppose that I don't have so many infrared sensors attached to 1 controller
+	int infrared_state[6]; // I suppose that I don't have so many infrared sensors attached to 1 controller
 
 	// parse the string for events
 	void parse_and_queue_commands(char* tmp_str, int str_length);
@@ -121,7 +121,7 @@ public:
 	// sends (to Arduino) a command for creating an infrared controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
-	void send_create_infrared_sensors(int num_infrared_sensors, int* _pins, int *_low);
+	void send_create_infrared_sensors(int num_infrared_sensors, int* out_pins, int *_min, int *_max, int *_home, int *_dir);
 
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
 	void send_is_alive(void);
@@ -155,7 +155,7 @@ public:
 	void send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration);
 	
 	// sends (to Arduino) a command for attaching several sensors to a given motor
-	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index);
+	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index);
 
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
 	void send_remove_attached_sensors_from_stepper_motor(int motor_index);
@@ -196,7 +196,7 @@ public:
 	void send_get_potentiometer_position(int sensor_index);
 
 	// sends (to Arduino) a command for reading a infrared value
-	void send_get_infrared_distance(int sensor_index);
+	void send_get_infrared_signal_strength(int sensor_index);
 
 	// sends (to Arduino) a command for reading parameters of a motor; debug purposes
 	void send_get_motors_sensors_statistics(void);
