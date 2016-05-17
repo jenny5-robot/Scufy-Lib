@@ -32,7 +32,7 @@ typedef struct _CENTER_POINT
 
 #define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
-#define TOLERANCE 10
+#define TOLERANCE 20
 
 #define DOES_NOTHING_SLEEP 10
 
@@ -60,8 +60,8 @@ bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, CascadeClassifier &face_classifier, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
-	
-	if (!head_controller.connect(13, 115200)) {
+
+	if (!head_controller.connect(2, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -88,11 +88,10 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 	}
 	; // create cascade for face reco
 	// load haarcascade library
-	if (!face_classifier.load("haarcascade_frontalface_alt.xml")) {
+	if (!face_classifier.load("c:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml")) {
 		sprintf(error_string, "Cannot load haarcascade! Please place the file in the correct folder!");
 		return false;
 	}
-	
 	// connect to video camera
 
 	head_cam.open(0);			// link it to the device [0 = default cam] (USBcam is default 'cause I disabled the onbord one IRRELEVANT!)
@@ -123,19 +122,10 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 
 	head_controller.send_create_sonars(1, head_sonars_trig_pins, head_sonars_echo_pins);
 
-	int head_infrared_pins[2] = { 0, 1 };
-	int head_infrared_min[2] = { 100, 100 };
-	int head_infrared_max[2] = { 650, 800 };
-	int head_infrared_home[2] = { 470, 400 };
-	int head_infrared_dir[2] = { 1, 1 };
-
-	head_controller.send_create_infrared_sensors(2, head_infrared_pins, head_infrared_min, head_infrared_max, head_infrared_home, head_infrared_dir);
-
 	clock_t start_time = clock();
 
 	bool motors_controller_created = false;
 	bool sonars_controller_created = false;
-	bool infrareds_controller_created = false;
 
 	while (1) {
 		if (!head_controller.update_commands_from_serial())
@@ -147,10 +137,7 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 		if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 			sonars_controller_created = true;
 
-		if (head_controller.query_for_event(INFRARED_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
-			infrareds_controller_created = true;
-
-		if (motors_controller_created && sonars_controller_created && infrareds_controller_created)
+		if (motors_controller_created && sonars_controller_created)
 			break;
 
 		// measure the passed time 
@@ -163,20 +150,13 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 				sprintf(error_string, "Cannot create head's motors controller! Game over!");
 			if (!sonars_controller_created)
 				sprintf(error_string, "Cannot create head's sonars controller! Game over!");
-			if (!infrareds_controller_created)
-				sprintf(error_string, "Cannot create head's infrared controller! Game over!");
 			return false;
 		}
 	}
 	
 
-	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1500, 500);
-	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1500, 500);
-
-	int infrared_index_m1[1] = {0};
-	int infrared_index_m2[1] = {1};
-	head_controller.send_attach_sensors_to_stepper_motor(0, 0, NULL, 1, infrared_index_m1);
-	head_controller.send_attach_sensors_to_stepper_motor(1, 0, NULL, 1, infrared_index_m2);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1000, 50);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1000, 50);
 
 	return true;
 }
@@ -186,7 +166,7 @@ int	main(int argc, const char** argv)
 	t_jenny5_command_module head_controller;
 	VideoCapture head_cam;
 	CascadeClassifier face_classifier;
-	
+
 	// initialization
 	char error_string[1000];
 	if (!init(head_controller, head_cam, face_classifier, error_string)) {
@@ -207,8 +187,6 @@ int	main(int argc, const char** argv)
 	}
 	else
 		printf("Setup succceded.\n");
-
-
 	
 	Mat frame; // images used in the proces
 	Mat grayFrame;
@@ -231,13 +209,13 @@ int	main(int argc, const char** argv)
 		// find and store the faces
 		face_classifier.detectMultiScale(grayFrame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(50, 50));
 
-		CENTER_POINT head_center;
+		CENTER_POINT center;
 
-		bool face_found = biggest_face(faces, head_center);
+		bool face_found = biggest_face(faces, center);
 
 		if (face_found) {
-			Point p1(head_center.x - head_center.range, head_center.y - head_center.range);
-			Point p2(head_center.x + head_center.range, head_center.y + head_center.range);
+			Point p1(center.x - center.range, center.y - center.range);
+			Point p2(center.x + center.range, center.y + center.range);
 			// draw an outline for the faces
 			rectangle(frame, p1, p2, cvScalar(0, 255, 0, 0), 1, 8, 0);
 		}
@@ -257,22 +235,22 @@ int	main(int argc, const char** argv)
 
 		if (face_found) {// 
 			// horizontal movement motor
-			
-			// send a command to the module so that the face is in the center of the image
-			if (head_center.x < frame.cols / 2 - TOLERANCE) {
-				tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
-				int num_steps_x = angle_offset.degrees_from_center_x / 1.8 * 27.0;
 
-				head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, num_steps_x);
+			// send a command to the module so that the face is in the center of the image
+			if (center.x < frame.cols / 2 - TOLERANCE) {
+				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+				int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
+
+				head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
 				head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 				printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 			}
 			else
-				if (head_center.x > frame.cols / 2 + TOLERANCE) {
-					tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
-					int num_steps_x = angle_offset.degrees_from_center_x / 1.8 * 27.0;
+				if (center.x > frame.cols / 2 + TOLERANCE) {
+					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+					int num_steps_x = angle_offset.grades_from_center_x / 1.8 * 16.0;
 
-					head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, num_steps_x);
+					head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, -num_steps_x);
 					head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 					printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 				}
@@ -280,27 +258,27 @@ int	main(int argc, const char** argv)
 					// face is in the center, so I do not move
 					Sleep(DOES_NOTHING_SLEEP);
 				}
-				
+
 			// vertical movement motor
 			// send a command to the module so that the face is in the center of the image
-			if (head_center.y < frame.rows / 2 - TOLERANCE) {
-				tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
-				int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
+			if (center.y < frame.rows / 2 - TOLERANCE) {
+				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+				int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
 
-				head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
+				head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
 				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 				printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 			}
 			else
-				if (head_center.y > frame.rows / 2 + TOLERANCE) {
-					tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
-					int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
+				if (center.y > frame.rows / 2 + TOLERANCE) {
+					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
+					int num_steps_y = angle_offset.grades_from_center_y / 1.8 * 16.0;
 
-					head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
+					head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, -num_steps_y);
 					head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 					printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 				}
-				
+
 		}
 
 		// now extract the executed moves from the queue ... otherwise they will just stay there
