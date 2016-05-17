@@ -123,6 +123,11 @@ public:
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
 	void send_create_infrared_sensors(int num_infrared_sensors, int* out_pins, int *_min, int *_max, int *_home, int *_dir);
 
+	// sends (to Arduino) a command for creating a buttons controller
+	// this method should be called once at the beginning of the program
+	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	void send_create_buttons(int num_buttons_sensors, int* out_pins, int *_dir);
+
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
 	void send_is_alive(void);
 
@@ -155,7 +160,7 @@ public:
 	void send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration);
 	
 	// sends (to Arduino) a command for attaching several sensors to a given motor
-	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index);
+	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index);
 
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
 	void send_remove_attached_sensors_from_stepper_motor(int motor_index);
@@ -190,7 +195,7 @@ public:
 	void send_get_sonar_distance(int sensor_index);
 	
 	// sends (to Arduino) a command for a button state
-	void send_get_button_status(int button_index);
+	void send_get_button_state(int button_index);
 
 	// sends (to Arduino) a command for reading a potentiometer position
 	void send_get_potentiometer_position(int sensor_index);
