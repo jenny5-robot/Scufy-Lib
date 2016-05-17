@@ -161,12 +161,12 @@ void t_jenny5_command_module::send_attach_sensors_to_stepper_motor(int motor_ind
 	sprintf(s, "AS%d %d", motor_index, num_potentiometers + num_infrared);
 	for (int i = 0; i < num_potentiometers; i++) {
 		char tmp_str[64];
-		sprintf(s, " P%d#", potentiometers_index[i]);
+		sprintf(tmp_str, " P%d#", potentiometers_index[i]);
 		strcat(s, tmp_str);
 	}
 	for (int i = 0; i < num_infrared; i++) {
 		char tmp_str[64];
-		sprintf(s, " I%d#", infrared_index[i]);
+		sprintf(tmp_str, " I%d#", infrared_index[i]);
 		strcat(s, tmp_str);
 	}
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
