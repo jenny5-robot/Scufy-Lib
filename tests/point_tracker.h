@@ -21,11 +21,11 @@ using namespace cv;
 
 struct	tracking_data
 {
-	double grades_from_center_x;
-	double grades_from_center_y;
+	double degrees_from_center_x;
+	double degrees_from_center_y;
 
 	tracking_data() {
-		grades_from_center_x = grades_from_center_y = 0;
+		degrees_from_center_x = degrees_from_center_y = 0;
 	}
 };
 
