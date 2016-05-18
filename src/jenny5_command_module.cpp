@@ -108,7 +108,7 @@ void t_jenny5_command_module::send_get_sonar_distance(int sensor_index)
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_get_button_status(int button_index)
+void t_jenny5_command_module::send_get_button_state(int button_index)
 {
 	char s[20];
 	sprintf(s, "B%d#", button_index);
@@ -155,20 +155,27 @@ int t_jenny5_command_module::get_data_from_serial(char *buffer, int buffer_size)
 	return RS232_PollComport(port_number, (unsigned char*)buffer, buffer_size);
 }
 //--------------------------------------------------------------
-void t_jenny5_command_module::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index)
+void t_jenny5_command_module::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index)
 {
-	char s[64];
+	char s[63];
 	sprintf(s, "AS%d %d", motor_index, num_potentiometers + num_infrared);
 	for (int i = 0; i < num_potentiometers; i++) {
-		char tmp_str[64];
+		char tmp_str[63];
 		sprintf(tmp_str, " P%d#", potentiometers_index[i]);
 		strcat(s, tmp_str);
 	}
 	for (int i = 0; i < num_infrared; i++) {
-		char tmp_str[64];
+		char tmp_str[63];
 		sprintf(tmp_str, " I%d#", infrared_index[i]);
 		strcat(s, tmp_str);
 	}
+
+	for (int i = 0; i < num_buttons; i++) {
+		char tmp_str[63];
+		sprintf(tmp_str, " B%d#", buttons_index[i]);
+		strcat(s, tmp_str);
+	}
+
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -320,6 +327,12 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 															received_events.Add((void*)e);
 														}
 														else
+															if (tmp_str[i + 1] == 'B' || tmp_str[i + 1] == 'b') {// infrared controller created
+																i += 3;
+																jenny5_event *e = new jenny5_event(BUTTONS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+																received_events.Add((void*)e);
+															}
+															else
 															i++;
 										}
 										else// not an recognized event
