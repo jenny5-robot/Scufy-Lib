@@ -459,14 +459,14 @@ HANDLE Cport[16];
 int RS232_OpenComport(int comport_number, int baudrate, const char *mode)
 {
 
-	char comports[16][10] = { "\\\\.\\COM1", "\\\\.\\COM2", "\\\\.\\COM3", "\\\\.\\COM4",
+	char comports[17][10] = { "\\\\.\\COM1", "\\\\.\\COM2", "\\\\.\\COM3", "\\\\.\\COM4",
 		"\\\\.\\COM5", "\\\\.\\COM6", "\\\\.\\COM7", "\\\\.\\COM8",
 		"\\\\.\\COM9", "\\\\.\\COM10", "\\\\.\\COM11", "\\\\.\\COM12",
-		"\\\\.\\COM13", "\\\\.\\COM14", "\\\\.\\COM15", "\\\\.\\COM16" };
+		"\\\\.\\COM13", "\\\\.\\COM14", "\\\\.\\COM15", "\\\\.\\COM16", "\\\\.\\COM17" };
 
 	char mode_str[128];
 
-  if((comport_number>15)||(comport_number<0))
+  if((comport_number>16)||(comport_number<0))
   {
     printf("illegal comport number\n");
     return(1);
