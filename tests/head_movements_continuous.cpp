@@ -61,7 +61,7 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(16, 115200)) {
+	if (!head_controller.connect(15, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -263,6 +263,8 @@ int	main(int argc, const char** argv)
 				head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, num_steps_x);
 				head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 				printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
+
+			//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 			}
 			else
 				if (head_center.x > frame.cols / 2 + TOLERANCE) {
@@ -272,6 +274,8 @@ int	main(int argc, const char** argv)
 					head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, num_steps_x);
 					head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 					printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
+
+				//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 				}
 				else {
 					// face is in the center, so I do not move
@@ -287,6 +291,7 @@ int	main(int argc, const char** argv)
 				head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
 				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 				printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
+			//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 			}
 			else
 				if (head_center.y > frame.rows / 2 + TOLERANCE) {
@@ -296,6 +301,7 @@ int	main(int argc, const char** argv)
 					head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
 					head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
 					printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
+			//		head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 				}
 
 		}

@@ -352,6 +352,7 @@ bool t_jenny5_command_module::update_commands_from_serial(void)
 	tmp_buffer[received_size] = 0;
 	if (received_size) {
 		strcpy(current_buffer + strlen(current_buffer), tmp_buffer);
+	//	printf("%s\n", current_buffer);
 
 		size_t buffer_length = strlen(current_buffer);
 		for (size_t i = 0; i < buffer_length; i++)
