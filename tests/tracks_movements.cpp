@@ -4,7 +4,6 @@
 
 #include "../include/jenny5_command_module.h"
 #include "../include/jenny5_events.h"
-#include "point_tracker.h"
 //----------------------------------------------------------------
 
 #ifdef WIN32
@@ -130,7 +129,8 @@ bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_TRACKS_RIGHT, 1300, 500);
 	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_LIDAR, 50, 50);
 
-	tracks_controller.send_attach_sensors_to_stepper_motor(MOTOR_LIDAR, 0, NULL, 0, NULL, 1, 0);
+	int buttons_index[1] = { 0 };
+	tracks_controller.send_attach_sensors_to_stepper_motor(MOTOR_LIDAR, 0, NULL, 0, NULL, 1, buttons_index);
 
 	return true;
 }
@@ -299,7 +299,7 @@ int	main(void)
 		}
 		*/
 
-		if (waitKey(1) >= 0)  // break the loop
+		if (GetAsyncKeyState(VK_ESCAPE))  // break the loop
 			active = false;
 	}
 

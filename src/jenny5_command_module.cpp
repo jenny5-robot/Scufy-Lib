@@ -158,7 +158,7 @@ int t_jenny5_command_module::get_data_from_serial(char *buffer, int buffer_size)
 void t_jenny5_command_module::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index)
 {
 	char s[63];
-	sprintf(s, "AS%d %d", motor_index, num_potentiometers + num_infrared);
+	sprintf(s, "AS%d %d", motor_index, num_potentiometers + num_infrared + num_buttons);
 	for (int i = 0; i < num_potentiometers; i++) {
 		char tmp_str[63];
 		sprintf(tmp_str, " P%d#", potentiometers_index[i]);
