@@ -14,11 +14,11 @@ t_arm_controller::t_arm_controller(void) {
 
 bool t_arm_controller::connect() {
 	//connect to serial ports
-	if (!upper_motors_controller.connect(2, 115200)) {
+	if (!upper_motors_controller.connect(3, 115200)) {
 		std::cout << ("Error attaching to Jenny 5' upper arm motors!\n");
 	}
 
-	if (!lower_motors_controller.connect(3, 115200)) {
+	if (!lower_motors_controller.connect(2, 115200)) {
 		std::cout << ("Error attaching to Jenny 5' lower arm motors!\n");
 	}
 
@@ -39,12 +39,12 @@ bool t_arm_controller::setup() {
 	int lower_arm_motors_dir_pins[1] = { 2 };
 	int lower_arm_motors_step_pins[1] = { 3 };
 	int lower_arm_motors_enable_pins[1] = { 4 };
+	lower_motors_controller.send_create_stepper_motors(1, lower_arm_motors_dir_pins, lower_arm_motors_step_pins, lower_arm_motors_enable_pins);
 
 	int gripper_motors_pwm_pins[1] = { 5 };
 	int gripper_motors_dir1_pins[1] = { 6 };
 	int gripper_motors_dir2_pins[1] = { 7 };
 	int gripper_enable_pins[1] = { 8 };
-	lower_motors_controller.send_create_stepper_motors(1, lower_arm_motors_dir_pins, lower_arm_motors_step_pins, lower_arm_motors_enable_pins);
 	//lower_motors_controller.send_create_dc_motors(1, gripper_motors_pwm_pins, gripper_motors_dir1_pins, gripper_motors_dir2_pins, gripper_enable_pins);
 
 	jenny5_event create_upper_motors_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT);
