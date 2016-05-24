@@ -31,6 +31,10 @@ using namespace std;
 
 #define HEAD_RADIUS_TO_REVERT 70
 
+#define lidar_step 1
+#define lidar_skip_margins 10 // steps from margin
+#define lidar_num_steps (100 - 2 * lidar_skip_margins) / lidar_step
+
 
 //----------------------------------------------------------------
 bool connect(t_jenny5_command_module &tracks_controller, char* error_string)
@@ -135,7 +139,7 @@ bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 	return true;
 }
 //----------------------------------------------------------------
-bool init(t_jenny5_command_module &tracks_controller, char* error_string)
+bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, char* error_string)
 {
 	// must home the LIDAR
 	tracks_controller.send_go_home_stepper_motor(MOTOR_LIDAR);
@@ -165,6 +169,62 @@ bool init(t_jenny5_command_module &tracks_controller, char* error_string)
 			return false;
 		}
 	}
+	// I have been able to home it.
+	// now I skip steps from margin
+
+	bool skipped_margins = false;
+	tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, lidar_skip_margins);
+	while (1) {
+		if (!tracks_controller.update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+		if (!skipped_margins)
+			if (tracks_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_LIDAR))  // have we received the event from Serial ?
+				skipped_margins = true;
+
+		if (skipped_margins)
+			break;
+
+		// measure the passed time 
+		clock_t end_time = clock();
+
+		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		// if more than 5 seconds and no home
+		if (wait_time > 5) {
+			if (!skipped_margins)
+				sprintf(error_string, "Cannot skip LIDAR margins! Game over!");
+			return false;
+		}
+	}
+
+	// now fill the distances array
+	for (int i = 0; i < lidar_num_steps; i++) {
+		tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, lidar_step);
+		while (1) {
+			if (!tracks_controller.update_commands_from_serial())
+				Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+			if (!skipped_margins)
+				if (tracks_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_LIDAR))  // have we received the event from Serial ?
+					skipped_margins = true;
+
+			if (skipped_margins) {
+				lidar_distances[i] = 0; //?????????
+				break;
+			}
+
+			// measure the passed time 
+			clock_t end_time = clock();
+
+			double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+			// if more than 1 seconds and no home
+			if (wait_time > 1) {
+				if (!skipped_margins)
+					sprintf(error_string, "Cannot make LIDAR step! Game over!");
+				return false;
+			}
+		}
+	}
 
 	return true;
 }
@@ -172,7 +232,9 @@ bool init(t_jenny5_command_module &tracks_controller, char* error_string)
 int	main(void)
 {
 	t_jenny5_command_module tracks_controller;
-	
+
+	int lidar_distances[lidar_num_steps];
+
 	
 	// initialization
 	char error_string[1000];
@@ -207,6 +269,8 @@ int	main(void)
 
 
 	bool active = true;
+
+	
 	
 	while (active){        // starting infinit loop
 	
