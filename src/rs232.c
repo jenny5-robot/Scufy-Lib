@@ -466,6 +466,9 @@ int RS232_OpenComport(int comport_number, int baudrate, const char *mode)
 
 	char mode_str[128];
 
+	  DCB port_settings;
+		COMMTIMEOUTS Cptimeouts;
+
   if((comport_number>16)||(comport_number<0))
   {
     printf("illegal comport number\n");
@@ -506,7 +509,7 @@ int RS232_OpenComport(int comport_number, int baudrate, const char *mode)
                    break;
     default      : printf("invalid baudrate\n");
                    return(1);
-                   break;
+			   //    break;
   }
 
   if(strlen(mode) != 3)
@@ -527,7 +530,7 @@ int RS232_OpenComport(int comport_number, int baudrate, const char *mode)
               break;
     default : printf("invalid number of data-bits '%c'\n", mode[0]);
               return(1);
-              break;
+		   //   break;
   }
 
   switch(mode[1])
@@ -543,7 +546,7 @@ int RS232_OpenComport(int comport_number, int baudrate, const char *mode)
               break;
     default : printf("invalid parity '%c'\n", mode[1]);
               return(1);
-              break;
+//              break;
   }
 
   switch(mode[2])
@@ -554,7 +557,7 @@ int RS232_OpenComport(int comport_number, int baudrate, const char *mode)
               break;
     default : printf("invalid number of stop bits '%c'\n", mode[2]);
               return(1);
-              break;
+		   //   break;
   }
 
   strcat(mode_str, " dtr=on rts=on");
@@ -579,7 +582,7 @@ http://technet.microsoft.com/en-us/library/cc732236.aspx
     return(1);
   }
 
-  DCB port_settings;
+
   memset(&port_settings, 0, sizeof(port_settings));  /* clear the new struct  */
   port_settings.DCBlength = sizeof(port_settings);
 
@@ -597,7 +600,7 @@ http://technet.microsoft.com/en-us/library/cc732236.aspx
     return(1);
   }
 
-  COMMTIMEOUTS Cptimeouts;
+
 
   Cptimeouts.ReadIntervalTimeout         = MAXDWORD;
   Cptimeouts.ReadTotalTimeoutMultiplier  = 0;
