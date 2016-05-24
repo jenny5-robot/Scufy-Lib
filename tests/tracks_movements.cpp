@@ -88,7 +88,7 @@ bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 	tracks_controller.send_create_stepper_motors(3, tracks_motors_dir_pins, tracks_motors_step_pins, tracks_motors_enable_pins);
 
 	int lidar_stop_buttons_pins[1] = { 12 };
-	int lidar_stop_buttons_dir[1] = { 1 };
+	int lidar_stop_buttons_dir[1] = { -1 };
 
 	tracks_controller.send_create_buttons(1, lidar_stop_buttons_pins, lidar_stop_buttons_dir);
 
@@ -143,7 +143,7 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 {
 	// must home the LIDAR
 	tracks_controller.send_go_home_stepper_motor(MOTOR_LIDAR);
-
+	printf("LIDAR motor home started ...");
 	clock_t start_time = clock();
 	bool lidar_homed = false;
 
@@ -169,11 +169,14 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 			return false;
 		}
 	}
+
+	printf("DONE\n");
 	// I have been able to home it.
 	// now I skip steps from margin
-
+	printf("LIDAR motor skip margins started ...");
 	bool skipped_margins = false;
 	tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, lidar_skip_margins);
+	start_time = clock();
 	while (1) {
 		if (!tracks_controller.update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
@@ -196,19 +199,23 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 			return false;
 		}
 	}
+	printf("DONE\n");
 
+	printf("Fill initial array of distances ...");
 	// now fill the distances array
 	for (int i = 0; i < lidar_num_steps; i++) {
 		tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, lidar_step);
+		bool made_step = false;
+		start_time = clock();
 		while (1) {
 			if (!tracks_controller.update_commands_from_serial())
 				Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-			if (!skipped_margins)
+			if (!made_step)
 				if (tracks_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_LIDAR))  // have we received the event from Serial ?
-					skipped_margins = true;
+					made_step = true;
 
-			if (skipped_margins) {
+			if (made_step) {
 				lidar_distances[i] = 0; //?????????
 				break;
 			}
@@ -219,12 +226,13 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 			double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 			// if more than 1 seconds and no home
 			if (wait_time > 1) {
-				if (!skipped_margins)
+				if (!made_step)
 					sprintf(error_string, "Cannot make LIDAR step! Game over!");
 				return false;
 			}
 		}
 	}
+	printf("DONE\n");
 
 	return true;
 }
@@ -258,7 +266,7 @@ int	main(void)
 		printf("Setup succceded.\n");
 	
 	//  init
-	if (!init(tracks_controller, error_string)) {
+	if (!init(tracks_controller, lidar_distances, error_string)) {
 		printf("%s\n", error_string);
 		printf("Press Enter...");
 		getchar();
@@ -268,10 +276,9 @@ int	main(void)
 		printf("Init succceded.\n");
 
 
+	printf("Now running the main loop. Press Escape when want to exit!\n");
 	bool active = true;
 
-	
-	
 	while (active){        // starting infinit loop
 	
 /*
