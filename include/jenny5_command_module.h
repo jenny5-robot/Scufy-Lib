@@ -3,7 +3,7 @@
 
 #include "rs232.h"
 #include "lista_voidp.h"
-#include "../include/jenny5_events.h"
+#include "jenny5_events.h"
 
 #include <iostream>
 #include <time.h>
@@ -73,27 +73,27 @@ public:
 	// found event, else false is returned.
 	bool query_for_event(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
-	//-waits for the completion of the event passed as a parameter,
-	//also updates all the event data if it was found
-	//-if waits more than SECONDS_UNTIL_TIMEOUT times out and ends the program
+	// waits for the completion of the event passed as a parameter,
+	// also updates all the event data if it was found
+	// if waits more than SECONDS_UNTIL_TIMEOUT times out and ends the program
 	bool wait_for_command_completion(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
-	//// search in the list of events for a particular event type
+	// search in the list of events for a particular event type
 	bool query_for_event(int event_type);
 	//
-	//// search in the list of events for a particular event type
+	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int* param1);
 
-	//// search in the list of events for a particular event type
+	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int param1);
 
-	//// search in the list of events for a particular event type
+	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int param1, int *param2);
 
-	//// search in the list of events for a particular event type
+	// search in the list of events for a particular event type
 	bool query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2);
 
-	//// search in the list of events for a particular event type
+	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int param1, int param2);
 
 	// sends (to Arduino) a command for creating a stepper motor controller
