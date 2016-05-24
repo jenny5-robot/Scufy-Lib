@@ -31,7 +31,7 @@ using namespace std;
 
 #define HEAD_RADIUS_TO_REVERT 70
 
-#define lidar_step 1
+#define lidar_step 2
 #define lidar_skip_margins 10 // steps from margin
 #define lidar_num_steps (100 - 2 * lidar_skip_margins) / lidar_step
 
@@ -131,7 +131,7 @@ bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 	
 	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_TRACKS_LEFT, 1300, 500);
 	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_TRACKS_RIGHT, 1300, 500);
-	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_LIDAR, 50, 50);
+	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_LIDAR, 75, 75);
 
 	int buttons_index[1] = { 0 };
 	tracks_controller.send_attach_sensors_to_stepper_motor(MOTOR_LIDAR, 0, NULL, 0, NULL, 1, buttons_index);
