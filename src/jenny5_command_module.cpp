@@ -1,6 +1,6 @@
 
-#include "../include/jenny5_command_module.h"
-#include "../include/jenny5_events.h"
+#include "jenny5_command_module.h"
+#include "jenny5_events.h"
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.05.11.0"); // year.month.day.build number
+	strcpy(version, "2016.05.24.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
