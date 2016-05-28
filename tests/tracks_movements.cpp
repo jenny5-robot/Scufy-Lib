@@ -1,9 +1,10 @@
 #include <iostream>
 #include <time.h>
 
+#include "jenny5_command_module.h"
+#include "jenny5_events.h"
+#include "tera_ranger_one_controller.h"
 
-#include "../include/jenny5_command_module.h"
-#include "../include/jenny5_events.h"
 //----------------------------------------------------------------
 
 #ifdef WIN32
@@ -31,13 +32,14 @@ using namespace std;
 
 #define HEAD_RADIUS_TO_REVERT 70
 
-#define lidar_step 2
-#define lidar_skip_margins 10 // steps from margin
-#define lidar_num_steps (100 - 2 * lidar_skip_margins) / lidar_step
+#define LIDAR_STEPS_RANGE 100
+#define LIDAR_STEP 2
+#define LIDAR_SKIP_MARGINS 10 // steps from margin
+#define LIDAR_NUM_STEPS (LIDAR_STEPS_RANGE - 2 * LIDAR_SKIP_MARGINS) / LIDAR_STEP
 
 
 //----------------------------------------------------------------
-bool connect(t_jenny5_command_module &tracks_controller, char* error_string)
+bool connect(t_jenny5_command_module &tracks_controller, t_teraranger_one_controller& tera_ranger_one, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
@@ -46,17 +48,22 @@ bool connect(t_jenny5_command_module &tracks_controller, char* error_string)
 		return false;
 	}
 
+	if (!tera_ranger_one.connect(3, 115200)) {
+		sprintf(error_string, "Error attaching to Jenny 5' LIDAR!");
+		return false;
+	}
+
 	// now wait to see if I have been connected
 	// wait for no more than 3 seconds. If it takes more it means that something is not right, so we have to abandon it
 	clock_t start_time = clock();
-	
+
 	bool tracks_responded = false;
 
 	while (1) {
 		if (!tracks_controller.update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-		
+
 		if (!tracks_responded)
 			if (tracks_controller.query_for_event(IS_ALIVE_EVENT, 0))  // have we received the event from Serial ?
 				tracks_responded = true;
@@ -82,9 +89,9 @@ bool connect(t_jenny5_command_module &tracks_controller, char* error_string)
 //----------------------------------------------------------------
 bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 {
-	int tracks_motors_dir_pins[3] = { 2, 8, 5};
-	int tracks_motors_step_pins[3] = { 3, 9, 6};
-	int tracks_motors_enable_pins[3] = { 4, 10, 7};
+	int tracks_motors_dir_pins[3] = { 2, 8, 5 };
+	int tracks_motors_step_pins[3] = { 3, 9, 6 };
+	int tracks_motors_enable_pins[3] = { 4, 10, 7 };
 	tracks_controller.send_create_stepper_motors(3, tracks_motors_dir_pins, tracks_motors_step_pins, tracks_motors_enable_pins);
 
 	int lidar_stop_buttons_pins[1] = { 12 };
@@ -93,7 +100,7 @@ bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 	tracks_controller.send_create_buttons(1, lidar_stop_buttons_pins, lidar_stop_buttons_dir);
 
 	clock_t start_time = clock();
-	
+
 	bool tracks_motors_controler_created = false;
 	bool lidar_stop_buttons_controller_created = false;
 
@@ -128,7 +135,7 @@ bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 			return false;
 		}
 	}
-	
+
 	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_TRACKS_LEFT, 1300, 500);
 	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_TRACKS_RIGHT, 1300, 500);
 	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_LIDAR, 75, 75);
@@ -139,7 +146,7 @@ bool setup(t_jenny5_command_module &tracks_controller, char* error_string)
 	return true;
 }
 //----------------------------------------------------------------
-bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, char* error_string)
+bool init(t_jenny5_command_module &tracks_controller, t_teraranger_one_controller& tera_ranger_one, int * lidar_distances, char* error_string)
 {
 	// must home the LIDAR
 	tracks_controller.send_go_home_stepper_motor(MOTOR_LIDAR);
@@ -175,7 +182,7 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 	// now I skip steps from margin
 	printf("LIDAR motor skip margins started ...");
 	bool skipped_margins = false;
-	tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, lidar_skip_margins);
+	tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, LIDAR_SKIP_MARGINS);
 	start_time = clock();
 	while (1) {
 		if (!tracks_controller.update_commands_from_serial())
@@ -203,8 +210,8 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 
 	printf("Fill initial array of distances ...");
 	// now fill the distances array
-	for (int i = 0; i < lidar_num_steps; i++) {
-		tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, lidar_step);
+	for (int i = 0; i < LIDAR_NUM_STEPS; i++) {
+		tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, LIDAR_STEP);
 		bool made_step = false;
 		start_time = clock();
 		while (1) {
@@ -216,9 +223,31 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 					made_step = true;
 
 			if (made_step) {
-				lidar_distances[i] = 0; //?????????
-				break;
+				if (tera_ranger_one.get_state() == COMMAND_DONE) {// I ping the sonar only if no ping was sent before
+					tera_ranger_one.send_request_distance();
+					tera_ranger_one.set_state(COMMAND_SENT);
+					//printf("TR# - sent\n");
+				}
+
+				if (!tera_ranger_one.update_commands_from_serial())
+					Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+								  // read to see if there is any distance received from sonar
+				if (tera_ranger_one.get_state() == COMMAND_SENT) {// if a command has been sent
+					int distance;
+					if (tera_ranger_one.query_for_distance(distance)) { // have we received the event from Serial ?
+						tera_ranger_one.set_state(COMMAND_DONE);
+						lidar_distances[i] = distance;
+				//		printf("LIDAR distance = %d cm\n", distance);
+					}
+				}
+
+				if (GetAsyncKeyState(VK_ESCAPE))  // break the loop
+					break;
 			}
+
+			break;
+
 
 			// measure the passed time 
 			clock_t end_time = clock();
@@ -240,13 +269,14 @@ bool init(t_jenny5_command_module &tracks_controller, int * lidar_distances, cha
 int	main(void)
 {
 	t_jenny5_command_module tracks_controller;
+	t_teraranger_one_controller tera_ranger_one;
 
-	int lidar_distances[lidar_num_steps];
+	int lidar_distances[LIDAR_NUM_STEPS];
 
-	
+
 	// initialization
 	char error_string[1000];
-	if (!connect(tracks_controller, error_string)) {
+	if (!connect(tracks_controller, tera_ranger_one, error_string)) {
 		printf("%s\n", error_string);
 		printf("Press Enter...");
 		getchar();
@@ -264,9 +294,9 @@ int	main(void)
 	}
 	else
 		printf("Setup succceded.\n");
-	
+
 	//  init
-	if (!init(tracks_controller, lidar_distances, error_string)) {
+	if (!init(tracks_controller, tera_ranger_one, lidar_distances, error_string)) {
 		printf("%s\n", error_string);
 		printf("Press Enter...");
 		getchar();
@@ -279,102 +309,49 @@ int	main(void)
 	printf("Now running the main loop. Press Escape when want to exit!\n");
 	bool active = true;
 
-	while (active){        // starting infinit loop
-	
-/*
-		if (face_found) {// 
-			// horizontal movement motor
+	int lidar_motor_position = LIDAR_NUM_STEPS - 1;
+	int lidar_motor_direction = -1;
+	//int index_distance_vector = ;
 
-			// send a command to the module so that the face is in the center of the image
-			if (center.x > frame.cols / 2 + TOLERANCE) {
-				tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-				int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8);
-				
-				if (center.range < HEAD_RADIUS_TO_REVERT) {
-					// move forward
-					tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_LEFT, num_steps_x);
-					tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_LEFT, COMMAND_SENT);
-					printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_LEFT, num_steps_x);
-				}
-				else {
-					// move backward
-					tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_RIGHT, num_steps_x);
-					tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_RIGHT, COMMAND_SENT);
-					printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_RIGHT, num_steps_x);
-				}
-				
+	while (active) {        // starting infinit loop
+		tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, LIDAR_STEP * lidar_motor_direction);
+		bool made_step = false;
+
+		if (!tracks_controller.update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+		if (!made_step)
+			if (tracks_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_LIDAR))  // have we received the event from Serial ?
+				made_step = true;
+
+		if (made_step) {
+			if (tera_ranger_one.get_state() == COMMAND_DONE) {// I ping the sonar only if no ping was sent before
+				tera_ranger_one.send_request_distance();
+				tera_ranger_one.set_state(COMMAND_SENT);
+				//printf("TR# - sent\n");
 			}
-			else
-				if (center.x < frame.cols / 2 - TOLERANCE) {
-					
-					tracking_data angle_offset = get_offset_angles(920, Point(center.x, center.y));
-					int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8);
-					
-					if (center.range < HEAD_RADIUS_TO_REVERT) {
-						// move forward
-						tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_RIGHT, num_steps_x);
-						tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_RIGHT, COMMAND_SENT);
-						printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_RIGHT, num_steps_x);
-					}
-					else {
-						// move backward
-						tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_LEFT, num_steps_x);
-						tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_LEFT, COMMAND_SENT);
-						printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_LEFT, num_steps_x);
-					}
-					
+			// read to see if there is any distance received from sonar
+			if (tera_ranger_one.get_state() == COMMAND_SENT) {// if a command has been sent
+				int distance;
+				if (tera_ranger_one.query_for_distance(distance)) { // have we received the event from Serial ?
+					tera_ranger_one.set_state(COMMAND_DONE);
+					lidar_distances[lidar_motor_position] = distance;
+					//		printf("LIDAR distance = %d cm\n", distance);
+					if (lidar_motor_position == 0 && lidar_motor_direction == -1)
+						lidar_motor_direction = 1;
+					else
+						if (lidar_motor_position == LIDAR_NUM_STEPS - 1 && lidar_motor_direction == 1)
+							lidar_motor_direction = -1;
 				}
-				else {
-					
-					// face is in the center, so I move equaly with both motors
-					if (center.range < HEAD_RADIUS_TO_REVERT) {
-						// move forward
-						tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_LEFT, 100);
-						tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_LEFT, COMMAND_SENT);
-						printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_LEFT, 100);
-
-						tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_RIGHT, -100);
-						tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_RIGHT, COMMAND_SENT);
-						printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_RIGHT, -100);
-					}
-					else {
-						// move backward
-						tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_LEFT, -100);
-						tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_LEFT, COMMAND_SENT);
-						printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_LEFT, -100);
-
-						tracks_controller.send_move_stepper_motor(MOTOR_TRACKS_RIGHT, 100);
-						tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_RIGHT, COMMAND_SENT);
-						printf("foot: M%d %d# - sent\n", MOTOR_TRACKS_RIGHT, 100);
-					}
-					
-				}
-
-			
-		}
-		*/
-		/*
-		//extract movements for foot
-		// now extract the moves done from the queue
-		if (tracks_controller.get_stepper_motor_state(MOTOR_TRACKS_LEFT) == COMMAND_SENT) {// if a command has been sent
-			if (tracks_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_TRACKS_LEFT)) { // have we received the event from Serial ?
-				tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_LEFT, COMMAND_DONE);
-				printf("foot: M%d# - done\n", MOTOR_TRACKS_LEFT);
 			}
 		}
-		if (tracks_controller.get_stepper_motor_state(MOTOR_TRACKS_RIGHT) == COMMAND_SENT) {// if a command has been sent
-			if (tracks_controller.query_for_event(STEPPER_MOTOR_MOVE_DONE_EVENT, MOTOR_TRACKS_RIGHT)) { // have we received the event from Serial ?
-				tracks_controller.set_stepper_motor_state(MOTOR_TRACKS_RIGHT, COMMAND_DONE);
-				printf("foot: M%d# - done\n", MOTOR_TRACKS_RIGHT);
-			}
-		}
-		*/
-
 		if (GetAsyncKeyState(VK_ESCAPE))  // break the loop
-			active = false;
+			break;
 	}
 
 	tracks_controller.close_connection();
+	tera_ranger_one.close_connection();
+
 	return 0;
 }
 //----------------------------------------------------------------
