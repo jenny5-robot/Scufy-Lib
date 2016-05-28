@@ -33,7 +33,7 @@ using namespace std;
 #define HEAD_RADIUS_TO_REVERT 70
 
 #define LIDAR_STEPS_RANGE 100
-#define LIDAR_STEP 2
+#define LIDAR_STEP 1
 #define LIDAR_SKIP_MARGINS 10 // steps from margin
 #define LIDAR_NUM_STEPS (LIDAR_STEPS_RANGE - 2 * LIDAR_SKIP_MARGINS) / LIDAR_STEP
 
@@ -48,7 +48,7 @@ bool connect(t_jenny5_command_module &tracks_controller, t_teraranger_one_contro
 		return false;
 	}
 
-	if (!tera_ranger_one.connect(3, 115200)) {
+	if (!tera_ranger_one.connect(6, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' LIDAR!");
 		return false;
 	}
@@ -209,10 +209,12 @@ bool init(t_jenny5_command_module &tracks_controller, t_teraranger_one_controlle
 	printf("DONE\n");
 
 	printf("Fill initial array of distances ...");
+	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_LIDAR, 1000, 500);
 	// now fill the distances array
 	for (int i = 0; i < LIDAR_NUM_STEPS; i++) {
 		tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, LIDAR_STEP);
 		bool made_step = false;
+		bool tera_ranger_responded = false;
 		start_time = clock();
 		while (1) {
 			if (!tracks_controller.update_commands_from_serial())
@@ -226,7 +228,8 @@ bool init(t_jenny5_command_module &tracks_controller, t_teraranger_one_controlle
 				if (tera_ranger_one.get_state() == COMMAND_DONE) {// I ping the sonar only if no ping was sent before
 					tera_ranger_one.send_request_distance();
 					tera_ranger_one.set_state(COMMAND_SENT);
-					//printf("TR# - sent\n");
+					tera_ranger_responded = false;
+					printf("TR# - sent\n");
 				}
 
 				if (!tera_ranger_one.update_commands_from_serial())
@@ -238,15 +241,16 @@ bool init(t_jenny5_command_module &tracks_controller, t_teraranger_one_controlle
 					if (tera_ranger_one.query_for_distance(distance)) { // have we received the event from Serial ?
 						tera_ranger_one.set_state(COMMAND_DONE);
 						lidar_distances[i] = distance;
-				//		printf("LIDAR distance = %d cm\n", distance);
+						printf("LIDAR distance [%d] = %d cm\n", i, distance);
+						tera_ranger_responded = true;
+						break;
 					}
 				}
 
-				if (GetAsyncKeyState(VK_ESCAPE))  // break the loop
-					break;
+			//	if (GetAsyncKeyState(VK_ESCAPE))  // break the loop
+				//	break;
 			}
 
-			break;
 
 
 			// measure the passed time 
@@ -254,10 +258,16 @@ bool init(t_jenny5_command_module &tracks_controller, t_teraranger_one_controlle
 
 			double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 			// if more than 1 seconds and no home
-			if (wait_time > 1) {
-				if (!made_step)
+			if (wait_time > 0.5) {
+				if (!made_step) {
 					sprintf(error_string, "Cannot make LIDAR step! Game over!");
-				return false;
+					return false;
+				}
+				if (!tera_ranger_responded) {
+					lidar_distances[i] = 0;
+					printf("LIDAR distance = %d cm\n", 0);
+					break;
+				}
 			}
 		}
 	}
@@ -283,7 +293,7 @@ int	main(void)
 		return -1;
 	}
 	else
-		printf("Initialization succceded.\n");
+		printf("Connection succceded.\n");
 
 	// setup
 	if (!setup(tracks_controller, error_string)) {
@@ -296,23 +306,28 @@ int	main(void)
 		printf("Setup succceded.\n");
 
 	//  init
+	clock_t start_time = clock();
 	if (!init(tracks_controller, tera_ranger_one, lidar_distances, error_string)) {
 		printf("%s\n", error_string);
 		printf("Press Enter...");
 		getchar();
 		return -1;
 	}
-	else
-		printf("Init succceded.\n");
+	else {
+		printf("First step succceded.\n");
+		clock_t end_time = clock();
 
+		double run_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		printf("First step time = %lf\n", run_time);
+	}
 
 	printf("Now running the main loop. Press Escape when want to exit!\n");
 	bool active = true;
 
 	int lidar_motor_position = LIDAR_NUM_STEPS - 1;
 	int lidar_motor_direction = -1;
-	//int index_distance_vector = ;
-
+	
+	
 	while (active) {        // starting infinit loop
 		tracks_controller.send_move_stepper_motor(MOTOR_LIDAR, LIDAR_STEP * lidar_motor_direction);
 		bool made_step = false;
@@ -330,28 +345,35 @@ int	main(void)
 				tera_ranger_one.set_state(COMMAND_SENT);
 				//printf("TR# - sent\n");
 			}
+			
+			if (!tera_ranger_one.update_commands_from_serial())
+				Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
 			// read to see if there is any distance received from sonar
 			if (tera_ranger_one.get_state() == COMMAND_SENT) {// if a command has been sent
 				int distance;
 				if (tera_ranger_one.query_for_distance(distance)) { // have we received the event from Serial ?
 					tera_ranger_one.set_state(COMMAND_DONE);
 					lidar_distances[lidar_motor_position] = distance;
-					//		printf("LIDAR distance = %d cm\n", distance);
-					if (lidar_motor_position == 0 && lidar_motor_direction == -1)
+					printf("LIDAR distance [%d] = %d cm\n", lidar_motor_position, distance);
+					if (lidar_motor_position == LIDAR_SKIP_MARGINS && lidar_motor_direction == -1)
 						lidar_motor_direction = 1;
 					else
 						if (lidar_motor_position == LIDAR_NUM_STEPS - 1 && lidar_motor_direction == 1)
 							lidar_motor_direction = -1;
+					lidar_motor_position += lidar_motor_direction;
 				}
 			}
 		}
 		if (GetAsyncKeyState(VK_ESCAPE))  // break the loop
 			break;
 	}
-
+	
 	tracks_controller.close_connection();
 	tera_ranger_one.close_connection();
 
+	printf("Press Enter!");
+	getchar();
 	return 0;
 }
 //----------------------------------------------------------------
