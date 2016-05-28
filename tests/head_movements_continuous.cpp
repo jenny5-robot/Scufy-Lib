@@ -111,7 +111,7 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 //----------------------------------------------------------------
 bool setup(t_jenny5_command_module &head_controller, char* error_string)
 {
-	
+
 	int head_motors_dir_pins[2] = { 2, 5 };
 	int head_motors_step_pins[2] = { 3, 6 };
 	int head_motors_enable_pins[2] = { 4, 7 };
@@ -127,7 +127,7 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 	int head_infrared_max[2] = { 650, 800 };
 	int head_infrared_home[2] = { 470, 400 };
 	int head_infrared_dir[2] = { 1, 1 };
-	
+
 	head_controller.send_create_infrared_sensors(2, head_infrared_pins, head_infrared_min, head_infrared_max, head_infrared_home, head_infrared_dir);
 
 	clock_t start_time = clock();
@@ -142,7 +142,7 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 
 		if (head_controller.query_for_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 			motors_controller_created = true;
-		
+
 		if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 			sonars_controller_created = true;
 
@@ -158,7 +158,7 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 		// if more than 3 seconds then game over
 		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
-			if (!motors_controller_created) 
+			if (!motors_controller_created)
 				sprintf(error_string, "Cannot create head's motors controller! Game over!");
 			if (!sonars_controller_created)
 				sprintf(error_string, "Cannot create head's sonars controller! Game over!");
@@ -167,7 +167,7 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 			return false;
 		}
 	}
-	
+
 
 	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1500, 500);
 	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1500, 500);
@@ -250,7 +250,7 @@ int	main(int argc, const char** argv)
 	}
 	else
 		printf("Setup succceded.\n");
-	
+
 
 	//  init
 	if (!init(head_controller, error_string)) {
@@ -268,7 +268,7 @@ int	main(int argc, const char** argv)
 
 	namedWindow("Head camera", WINDOW_AUTOSIZE); // window to display the results
 
-	bool active = true; 
+	bool active = true;
 	while (active)        // starting infinit loop
 	{
 		if (!head_controller.update_commands_from_serial())
@@ -320,7 +320,7 @@ int	main(int argc, const char** argv)
 				head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 				printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 
-			//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
+				//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 			}
 			else
 				if (head_center.x > frame.cols / 2 + TOLERANCE) {
@@ -331,34 +331,34 @@ int	main(int argc, const char** argv)
 					head_controller.set_stepper_motor_state(MOTOR_HEAD_HORIZONTAL, COMMAND_SENT);
 					printf("M%d %d# - sent\n", MOTOR_HEAD_HORIZONTAL, num_steps_x);
 
-				//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
+					//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 				}
 				else {
 					// face is in the center, so I do not move
 					Sleep(DOES_NOTHING_SLEEP);
 				}
 
-			// vertical movement motor
-			// send a command to the module so that the face is in the center of the image
-			if (head_center.y < frame.rows / 2 - TOLERANCE) {
-				tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
-				int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
-
-				head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
-				head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-				printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
-			//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
-			}
-			else
-				if (head_center.y > frame.rows / 2 + TOLERANCE) {
+				// vertical movement motor
+				// send a command to the module so that the face is in the center of the image
+				if (head_center.y < frame.rows / 2 - TOLERANCE) {
 					tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 					int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
 
 					head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
 					head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-					printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
-			//		head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
+					printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
+					//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 				}
+				else
+					if (head_center.y > frame.rows / 2 + TOLERANCE) {
+						tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
+						int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
+
+						head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
+						head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
+						printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
+						//		head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
+					}
 
 		}
 
@@ -377,7 +377,8 @@ int	main(int argc, const char** argv)
 				printf("M%d# - done\n", MOTOR_HEAD_VERTICAL);
 			}
 		}
-// read to see if there is any distance received from sonar
+
+		// read to see if there is any distance received from sonar
 		if (head_controller.get_sonar_state(0) == COMMAND_SENT) {// if a command has been sent
 			int distance;
 			if (head_controller.query_for_event(SONAR_EVENT, 0, &distance)) { // have we received the event from Serial ?
