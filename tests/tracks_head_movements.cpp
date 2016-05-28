@@ -218,8 +218,8 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &tr
 	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_HORIZONTAL, 0, NULL, 1, infrared_index_m1, 0, NULL);
 	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_VERTICAL, 0, NULL, 1, infrared_index_m2, 0, NULL);
 
-	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_LEFT, 300, 100);
-	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_RIGHT, 300, 100);
+	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_LEFT, 1500, 500);
+	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_RIGHT, 1500, 500);
 	return true;
 }
 //----------------------------------------------------------------
