@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.05.24.0"); // year.month.day.build number
+	strcpy(version, "2016.06.14.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -266,10 +266,20 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 							received_events.Add((void*)e);
 						}
 						else
-							if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection
-								jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
-								received_events.Add((void*)e);
-								i += 2;
+							if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection or tera ranger one read
+								if (tmp_str[i + 1] == 'R' || tmp_str[i + 1] == 'r') { // tera ranger one
+									int distance;
+									int num_read;
+									sscanf(tmp_str + i + 2, "%d%n", &distance, &num_read);
+									jenny5_event *e = new jenny5_event(TERA_RANGER_ONE_EVENT, distance, 0, 0);
+									received_events.Add((void*)e);
+									i += 2 + num_read + 1;
+								}
+								else { // test connection
+									jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
+									received_events.Add((void*)e);
+									i += 2;
+								}
 							}
 							else
 								if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {// motor was locked
@@ -333,7 +343,13 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 																received_events.Add((void*)e);
 															}
 															else
-															i++;
+																if (tmp_str[i + 1] == 'T' || tmp_str[i + 1] == 't') {// tera ranger one controller created
+																	i += 3;
+																	jenny5_event *e = new jenny5_event(TERA_RANGER_ONE_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+																	received_events.Add((void*)e);
+																}
+																else
+																	i++;
 										}
 										else// not an recognized event
 											i++;
@@ -756,5 +772,32 @@ int t_jenny5_command_module::get_dc_motor_state(int motor_index)
 void t_jenny5_command_module::set_dc_motor_state(int motor_index, int new_state)
 {
 	dc_motor_state[motor_index] = new_state;
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_create_tera_ranger_one(void)
+{
+	char s[10];
+	sprintf(s, "CT#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+// returns the state of the tera ranger one sensor
+int t_jenny5_command_module::get_tera_ranger_one_state(int infrared_index)
+{
+	return tera_ranger_one_state;
+}
+//--------------------------------------------------------------
+// sets the state of the tera ranger one sensor
+void t_jenny5_command_module::set_tera_ranger_one_state(int infrared_index, int new_state)
+{
+	tera_ranger_one_state = new_state;
+}
+//--------------------------------------------------------------
+// sends (to Arduino) a command for reading the Tera Ranger One sensor
+void t_jenny5_command_module::send_get_tera_ranger_one_distance(void)
+{
+	char s[10];
+	sprintf(s, "TR#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------

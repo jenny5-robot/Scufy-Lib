@@ -43,6 +43,8 @@ private:
 
 	int infrared_state[6]; // I suppose that I don't have so many infrared sensors attached to 1 controller
 
+	int tera_ranger_one_state;
+
 	// parse the string for events
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
@@ -128,6 +130,11 @@ public:
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
 	void send_create_buttons(int num_buttons_sensors, int* out_pins, int *_dir);
 
+	// sends (to Arduino) a command for creating a tera ranger one controller
+	// this method should be called once at the beginning of the program
+	// only one sensor is permited per Arduino board
+	void send_create_tera_ranger_one(void);
+
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
 	void send_is_alive(void);
 
@@ -203,6 +210,11 @@ public:
 	// sends (to Arduino) a command for reading a infrared value
 	void send_get_infrared_signal_strength(int sensor_index);
 
+	// sends (to Arduino) a command for reading the Tera Ranger One sensor
+	void send_get_tera_ranger_one_distance(void);
+
+
+	// DEBUG SENSORS
 	// sends (to Arduino) a command for reading parameters of a motor; debug purposes
 	void send_get_motors_sensors_statistics(void);
 
@@ -216,6 +228,7 @@ public:
 	void send_set_potentiometer_parameters(int potentiometer_index, int min, int max, int home, int direction);
 	
 
+	// STATE
 	// returns the state of a sonar
 	int get_sonar_state(int sonar_index);
 
@@ -233,6 +246,12 @@ public:
 
 	// sets the state of an infrared sensor
 	void set_infrared_state(int infrared_index, int new_state);
+
+	// returns the state of the tera ranger one sensor
+	int get_tera_ranger_one_state(int infrared_index);
+
+	// sets the state of the tera ranger one sensor
+	void set_tera_ranger_one_state(int infrared_index, int new_state);
 };
 //----------------------------------------------------------------
 #endif
