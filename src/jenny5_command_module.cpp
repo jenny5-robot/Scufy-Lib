@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.06.14.0"); // year.month.day.build number
+	strcpy(version, "2016.07.27.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -221,15 +221,33 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 		// can be more than 1 command in a string, so I have to check again for a letter
 		if ((tmp_str[i] >= 'A' && tmp_str[i] <= 'Z') || (tmp_str[i] >= 'a' && tmp_str[i] <= 'z')) {
 
-			if (tmp_str[i] == 'M' || tmp_str[i] == 'm') {// motor finished movement
-				if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// stepper motor finished movement
-					int motor_index, distance_to_go;
-					sscanf(tmp_str + i + 2, "%d%d", &motor_index, &distance_to_go);
-					i += 5;
+			if (tmp_str[i] == 'S' || tmp_str[i] == 's') {// stepper motor finished movement
+				if (tmp_str[i + 1] == 'M' || tmp_str[i + 1] == 'm') {// stepper motor finished movement
+					int motor_index, distance_to_go, num_consumed;
+					sscanf(tmp_str + i + 2, "%d%d%n", &motor_index, &distance_to_go, &num_consumed);
+					i += 2 + num_consumed;
 					jenny5_event *e = new jenny5_event(STEPPER_MOTOR_MOVE_DONE_EVENT, motor_index, distance_to_go, 0);
 					received_events.Add((void*)e);
 				}
-				else				
+				else
+					if (tmp_str[i + 1] == 'L' || tmp_str[i + 1] == 'l') {// motor was locked
+						int motor_index;
+						sscanf(tmp_str + i + 2, "%d", &motor_index);
+						i += 3;
+						jenny5_event *e = new jenny5_event(STEPPER_MOTOR_LOCKED_EVENT, motor_index, 0, 0);
+						received_events.Add((void*)e);
+					}
+					else
+						if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// motor was disabled
+							int motor_index;
+							sscanf(tmp_str + i + 2, "%d", &motor_index);
+							i += 3;
+
+							jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
+							received_events.Add((void*)e);
+						}
+						
+					/*
 					if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motor finished movement
 						int motor_index, miliseconds_to_go;
 						sscanf(tmp_str + i + 2, "%d%d", &motor_index, &miliseconds_to_go);
@@ -237,6 +255,7 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 						jenny5_event *e = new jenny5_event(DC_MOTOR_MOVE_DONE_EVENT, motor_index, miliseconds_to_go, 0);
 						received_events.Add((void*)e);
 					}
+					*/
 					else
 						i++;
 
@@ -281,30 +300,14 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 									i += 2;
 								}
 							}
-							else
-								if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {// motor was locked
-									int motor_index;
-									sscanf(tmp_str + i + 1, "%d", &motor_index);
-									i += 3;
-									jenny5_event *e = new jenny5_event(STEPPER_MOTOR_LOCKED_EVENT, motor_index, 0, 0);
-									received_events.Add((void*)e);
-								}
-								else
-									if (tmp_str[i] == 'D' || tmp_str[i] == 'd') {// motor was disabled
-										int motor_index;
-										char motor_type = tmp_str[i + 1];
-										sscanf(tmp_str + i + 2, "%d", &motor_index);
-										i += 4;
-										if (motor_type == 'S' || motor_type == 's') { // stepper was disabled
-											jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
-											received_events.Add((void*)e);
-										}
-										else
+								/*
+
 											if (motor_type == 'D' || motor_type == 'd') { // dc was disabled
 												jenny5_event *e = new jenny5_event(DC_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
 												received_events.Add((void*)e);
 											}
-									}
+											*/
+									
 									else
 										if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
 											if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// stepper motors controller created
