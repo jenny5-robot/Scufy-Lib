@@ -135,6 +135,11 @@ public:
 	// only one sensor is permited per Arduino board
 	void send_create_tera_ranger_one(void);
 
+	// sends (to Arduino) a command for creating a tera ranger one LIDAR controller
+	// this method should be called once at the beginning of the program
+	// only one sensor is permited per Arduino board
+	void send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin);
+
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
 	void send_is_alive(void);
 
@@ -213,6 +218,11 @@ public:
 	// sends (to Arduino) a command for reading the Tera Ranger One sensor
 	void send_get_tera_ranger_one_distance(void);
 
+	// sends (to Arduino) a command for starting the LIDAR rotation
+	void send_LIDAR_go(void);
+
+	// sends (to Arduino) a command for stopping LIDAR rotation
+	void send_LIDAR_stop(void);
 
 	// DEBUG SENSORS
 	// sends (to Arduino) a command for reading parameters of a motor; debug purposes

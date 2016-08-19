@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.07.27.0"); // year.month.day.build number
+	strcpy(version, "2016.08.19.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -55,21 +55,21 @@ void t_jenny5_command_module::close_connection(void)
 void t_jenny5_command_module::send_move_stepper_motor(int motor_index, int num_steps)
 {
 	char s[20];
-	sprintf(s, "MS%d %d#", motor_index, num_steps);
+	sprintf(s, "SM%d %d#", motor_index, num_steps);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_move_stepper_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
 {
 	char s[30];
-	sprintf(s, "MS%d %d MS%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
+	sprintf(s, "SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_move_stepper_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
 {
 	char s[63];
-	sprintf(s, "MS%d %d MS%d %d MS%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
+	sprintf(s, "SM%d %d SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -77,7 +77,7 @@ void t_jenny5_command_module::send_move_stepper_motor4(int motor_index1, int num
 {
 
 	char s[63];
-	sprintf(s, "MS%d %d MS%d %d MS%d %d MS%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
+	sprintf(s, "SM%d %d SM%d %d SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -88,7 +88,7 @@ void t_jenny5_command_module::send_move_stepper_motor_array(int num_motors, int*
 	for (int i = 0; i < num_motors; i++) {
 		char tmp_str[20];
 
-		sprintf(tmp_str, "MS%d %d#", motor_index[i], num_steps[i]);
+		sprintf(tmp_str, "SM%d %d#", motor_index[i], num_steps[i]);
 		strcat(s, tmp_str);
 	}
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
@@ -139,14 +139,14 @@ void t_jenny5_command_module::send_get_motors_sensors_statistics(void)
 void t_jenny5_command_module::send_disable_stepper_motor(int motor_index)
 {
 	char s[10];
-	sprintf(s, "DS%d#", motor_index);
+	sprintf(s, "SD%d#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
 void t_jenny5_command_module::send_lock_stepper_motor(int motor_index)
 {
 	char s[10];
-	sprintf(s, "L%d#", motor_index);
+	sprintf(s, "SL%d#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -300,6 +300,14 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 									i += 2;
 								}
 							}
+							else
+								if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {//infrared reading returned value
+									int motor_position, distance;
+									sscanf(tmp_str + i + 1, "%d%d", &motor_position, &distance);
+									i += 4;
+									jenny5_event *e = new jenny5_event(LIDAR_EVENT, motor_position, distance, 0);
+									received_events.Add((void*)e);
+								}
 								/*
 
 											if (motor_type == 'D' || motor_type == 'd') { // dc was disabled
@@ -352,7 +360,13 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 																	received_events.Add((void*)e);
 																}
 																else
-																	i++;
+																	if (tmp_str[i + 1] == 'L' || tmp_str[i + 1] == 'l') {// tera ranger one controller created
+																		i += 3;
+																		jenny5_event *e = new jenny5_event(LIDAR_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+																		received_events.Add((void*)e);
+																	}
+																	else
+																		i++;
 										}
 										else// not an recognized event
 											i++;
@@ -784,6 +798,14 @@ void t_jenny5_command_module::send_create_tera_ranger_one(void)
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
+void t_jenny5_command_module::send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin)
+{
+	char s[30];
+	sprintf(s, "CL# %d %d %d %ld", dir_pin, step_pin, enable_pin, ir_pin);
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+
 // returns the state of the tera ranger one sensor
 int t_jenny5_command_module::get_tera_ranger_one_state(int infrared_index)
 {
@@ -801,6 +823,21 @@ void t_jenny5_command_module::send_get_tera_ranger_one_distance(void)
 {
 	char s[10];
 	sprintf(s, "TR#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_LIDAR_go(void)
+{
+	char s[10];
+	sprintf(s, "LG#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_LIDAR_stop(void)
+{
+	char s[10];
+	sprintf(s, "LS#");
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
