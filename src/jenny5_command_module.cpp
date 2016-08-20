@@ -822,7 +822,7 @@ void t_jenny5_command_module::send_create_tera_ranger_one(void)
 void t_jenny5_command_module::send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin)
 {
 	char s[30];
-	sprintf(s, "CL# %d %d %d %ld", dir_pin, step_pin, enable_pin, ir_pin);
+	sprintf(s, "CL %d %d %d %d#", dir_pin, step_pin, enable_pin, ir_pin);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
