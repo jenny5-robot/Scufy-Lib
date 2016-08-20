@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.08.19.0"); // year.month.day.build number
+	strcpy(version, "2016.08.20.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -523,6 +523,20 @@ bool t_jenny5_command_module::query_for_event(int event_type, int *param1)
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
 			*param1 = e->param1;
+			received_events.DeleteCurrent(node_p);
+			return true;
+		}
+	}
+	return false;
+}
+//--------------------------------------------------------------
+bool t_jenny5_command_module::query_for_event(int event_type, int *param1, int *param2)
+{
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == event_type) {
+			*param1 = e->param1;
+			*param2 = e->param2;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}

@@ -82,9 +82,12 @@ public:
 
 	// search in the list of events for a particular event type
 	bool query_for_event(int event_type);
-	//
+	
 	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int* param1);
+
+	// search in the list of events for a particular event type
+	bool query_for_event(int event_type, int *param1, int *param2);
 
 	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int param1);
