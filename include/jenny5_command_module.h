@@ -141,6 +141,7 @@ public:
 	// sends (to Arduino) a command for creating a tera ranger one LIDAR controller
 	// this method should be called once at the beginning of the program
 	// only one sensor is permited per Arduino board
+	// only 1 LIDAR per Arduino board is possible due to the use of SDA and SLC pins for the signal
 	void send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin);
 
 	// sends (to Arduino) a command (T#) for testing if the connection is alive

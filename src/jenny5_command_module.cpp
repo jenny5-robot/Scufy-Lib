@@ -301,20 +301,14 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 								}
 							}
 							else
-								if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {//infrared reading returned value
+								if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {//LIDAR reading returned value
 									int motor_position, distance;
-									sscanf(tmp_str + i + 1, "%d%d", &motor_position, &distance);
-									i += 4;
-									jenny5_event *e = new jenny5_event(LIDAR_EVENT, motor_position, distance, 0);
+									int num_consumed;
+									sscanf(tmp_str + i + 1, "%d%d%n", &motor_position, &distance, &num_consumed);
+									i += 2 + num_consumed;
+									jenny5_event *e = new jenny5_event(LIDAR_READ_EVENT, motor_position, distance, 0);
 									received_events.Add((void*)e);
 								}
-								/*
-
-											if (motor_type == 'D' || motor_type == 'd') { // dc was disabled
-												jenny5_event *e = new jenny5_event(DC_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
-												received_events.Add((void*)e);
-											}
-											*/
 									
 									else
 										if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
@@ -360,7 +354,7 @@ void t_jenny5_command_module::parse_and_queue_commands(char* tmp_str, int str_le
 																	received_events.Add((void*)e);
 																}
 																else
-																	if (tmp_str[i + 1] == 'L' || tmp_str[i + 1] == 'l') {// tera ranger one controller created
+																	if (tmp_str[i + 1] == 'L' || tmp_str[i + 1] == 'l') {// LIDAR controller created
 																		i += 3;
 																		jenny5_event *e = new jenny5_event(LIDAR_CONTROLLER_CREATED_EVENT, 0, 0, 0);
 																		received_events.Add((void*)e);
@@ -439,15 +433,17 @@ bool t_jenny5_command_module::query_for_event(jenny5_event &event, int available
 		{
 			if (e->type == event.type && e->type == event.param1 && e->type == event.param2) {
 				event.time = e->time;
+				delete e;
 				received_events.DeleteCurrent(node_p);
 				return true;
 			}
 		}
-		else if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1)) 
+		else if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1))
 		{
 			if (e->type == event.type && e->param1 == event.param1) {
 				event.param2 = e->param2;
 				event.time = e->time;
+				delete e;
 				received_events.DeleteCurrent(node_p);
 				return true;
 			}
@@ -458,6 +454,7 @@ bool t_jenny5_command_module::query_for_event(jenny5_event &event, int available
 				event.param1 = e->param1;
 				event.param2 = e->param2;
 				event.time = e->time;
+				delete e;
 				received_events.DeleteCurrent(node_p);
 				return true;
 			}
@@ -510,6 +507,7 @@ bool t_jenny5_command_module::query_for_event(int event_type)
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
+		  delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -523,6 +521,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, int *param1)
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
 			*param1 = e->param1;
+								delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -537,6 +536,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, int *param1, int *
 		if (e->type == event_type) {
 			*param1 = e->param1;
 			*param2 = e->param2;
+								delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -549,6 +549,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, int param1)
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1) {
+							delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -562,6 +563,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, int param1, int* p
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1) {
 			*param2 = e->param2;
+								delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -574,6 +576,7 @@ bool t_jenny5_command_module::query_for_event(int event_type, int param1, int pa
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1 && e->param2 == param2) {
+							delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -601,6 +604,10 @@ bool t_jenny5_command_module::query_for_2_events(int event_type1, int param1_1, 
 	}
 
 	if (event1_found && event2_found) {
+jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p1);
+delete e;
+e = (jenny5_event*)received_events.GetCurrentInfo(node_p2);
+delete e;
 		received_events.DeleteCurrent(node_p1);
 		received_events.DeleteCurrent(node_p2);
 		return true;
