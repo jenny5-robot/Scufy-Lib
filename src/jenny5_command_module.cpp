@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.08.20.0"); // year.month.day.build number
+	strcpy(version, "2016.08.20.1"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -858,7 +858,14 @@ void t_jenny5_command_module::send_LIDAR_go(void)
 void t_jenny5_command_module::send_LIDAR_stop(void)
 {
 	char s[10];
-	sprintf(s, "LS#");
+	sprintf(s, "LH#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+void t_jenny5_command_module::send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration)
+{
+	char s[20];
+	sprintf(s, "LS %d %d#", motor_speed, motor_acceleration);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------

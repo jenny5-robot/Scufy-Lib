@@ -228,6 +228,9 @@ public:
 	// sends (to Arduino) a command for stopping LIDAR rotation
 	void send_LIDAR_stop(void);
 
+	// sends (to Arduino) a command for setting the speed and acceleration of the LIDAR motor
+	void send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration);
+
 	// DEBUG SENSORS
 	// sends (to Arduino) a command for reading parameters of a motor; debug purposes
 	void send_get_motors_sensors_statistics(void);
