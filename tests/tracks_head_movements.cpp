@@ -72,7 +72,7 @@ bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 	return found_one;
 }
 //----------------------------------------------------------------
-bool connect(t_jenny5_command_module &head_controller, t_jenny5_command_module &tracks_controller, VideoCapture &head_cam, CascadeClassifier &face_classifier, char* error_string)
+bool connect(t_jenny5_command_module &head_controller, t_jenny5_command_module &tracks_controller, VideoCapture &head_cam, CascadeClassifier &face_detector, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
@@ -127,7 +127,7 @@ bool connect(t_jenny5_command_module &head_controller, t_jenny5_command_module &
 
 	; // create cascade for face reco
 	// load haarcascade library
-	if (!face_classifier.load("haarcascade_frontalface_alt.xml")) {
+	if (!face_detector.load("haarcascade_frontalface_alt.xml")) {
 		sprintf(error_string, "Cannot load haarcascade! Please place the file in the correct folder!");
 		return false;
 	}
@@ -297,11 +297,11 @@ int	main(void)
 {
 	t_jenny5_command_module head_controller, tracks_controller;
 	VideoCapture head_cam;
-	CascadeClassifier face_classifier;
+	CascadeClassifier face_detector;
 
 	// initialization
 	char error_string[1000];
-	if (!connect(head_controller, tracks_controller, head_cam, face_classifier, error_string)) {
+	if (!connect(head_controller, tracks_controller, head_cam, face_detector, error_string)) {
 		printf("%s\n", error_string);
 		printf("Press Enter to terminate ...");
 		getchar();
@@ -385,7 +385,7 @@ int	main(void)
 		std::vector<Rect> faces;// create an array to store the faces found
 
 		// find and store the faces
-		face_classifier.detectMultiScale(gray_frame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
+		face_detector.detectMultiScale(gray_frame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
 		CENTER_POINT head_center;
 
