@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_command_module::t_jenny5_command_module(void)
 {
-	strcpy(version, "2016.08.20.1"); // year.month.day.build number
+	strcpy(version, "2016.09.15.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 4; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -619,7 +619,7 @@ delete e;
 void t_jenny5_command_module::send_go_home_stepper_motor(int motor_index)
 {
 	char s[20];
-	sprintf(s, "HS%d#", motor_index);
+	sprintf(s, "SH%d#", motor_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
