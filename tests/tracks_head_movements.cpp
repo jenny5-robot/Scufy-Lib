@@ -1,3 +1,6 @@
+#define _USE_MATH_DEFINES
+
+#include <math.h>
 #include <iostream>
 #include <time.h>
 
@@ -43,6 +46,12 @@ typedef struct _CENTER_POINT
 
 #define TRACKS_MOTOR_REDUCTION 5
 
+#define LIDAR_NUM_STEPS 200
+
+double scale_factor = 5.0;
+int lidar_distances[LIDAR_NUM_STEPS];
+
+
 //----------------------------------------------------------------
 bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 {
@@ -67,12 +76,12 @@ bool connect(t_jenny5_command_module &head_controller, t_jenny5_command_module &
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(4, 115200)) {
+	if (!head_controller.connect(3, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
 
-	if (!tracks_controller.connect(3, 115200)) {
+	if (!tracks_controller.connect(2, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' tracks!");
 		return false;
 	}
@@ -107,7 +116,7 @@ bool connect(t_jenny5_command_module &head_controller, t_jenny5_command_module &
 			  sprintf(error_string, "Head does not respond! Game over!");
 
 			if (!tracks_responded)
-				sprintf(error_string, "tracks does not respond! Game over!");
+				sprintf(error_string, "Tracks do not respond! Game over!");
 			return false;
 		}
 	}
@@ -142,10 +151,10 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &tr
 	int head_motors_enable_pins[2] = { 4, 7 };
 	head_controller.send_create_stepper_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
 
-	int head_sonars_trig_pins[1] = { 8 };
-	int head_sonars_echo_pins[1] = { 9 };
+//	int head_sonars_trig_pins[1] = { 8 };
+	//int head_sonars_echo_pins[1] = { 9 };
 
-	head_controller.send_create_sonars(1, head_sonars_trig_pins, head_sonars_echo_pins);
+	//head_controller.send_create_sonars(1, head_sonars_trig_pins, head_sonars_echo_pins);
 
 	int head_infrared_pins[2] = { 0, 1 };
 	int head_infrared_min[2] = { 100, 100 };
@@ -155,17 +164,20 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &tr
 
 	head_controller.send_create_infrared_sensors(2, head_infrared_pins, head_infrared_min, head_infrared_max, head_infrared_home, head_infrared_dir);
 
-	int tracks_motors_dir_pins[3] = { 2, 8, 5 };
-	int tracks_motors_step_pins[3] = { 3, 9, 6 };
-	int tracks_motors_enable_pins[3] = { 4, 10, 7 };
+	int tracks_motors_dir_pins[3] = { 2, 8};
+	int tracks_motors_step_pins[3] = { 3, 9};
+	int tracks_motors_enable_pins[3] = { 4, 10};
 	tracks_controller.send_create_stepper_motors(3, tracks_motors_dir_pins, tracks_motors_step_pins, tracks_motors_enable_pins);
 
+	tracks_controller.send_create_LIDAR(5, 6, 7, 11);// dir, step, enable, IR_pin
 
 	clock_t start_time = clock();
 	bool head_motors_controler_created = false;
 	bool tracks_motors_controler_created = false;
-	bool head_sonars_controller_created = false;
+	//bool head_sonars_controller_created = false;
 	bool infrareds_controller_created = false;
+	bool lidar_controller_created = false;
+
 
 	while (1) {
 		if (!head_controller.update_commands_from_serial() && !tracks_controller.update_commands_from_serial())
@@ -179,13 +191,17 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &tr
 			if (tracks_controller.query_for_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 				tracks_motors_controler_created = true;
 
-		if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
-			head_sonars_controller_created = true;
+		//if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
+			//head_sonars_controller_created = true;
 
 		if (head_controller.query_for_event(INFRARED_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 			infrareds_controller_created = true;
 
-		if (head_motors_controler_created && tracks_motors_controler_created && head_sonars_controller_created && infrareds_controller_created)
+		if (!lidar_controller_created)
+			if (tracks_controller.query_for_event(LIDAR_CONTROLLER_CREATED_EVENT))  // have we received the event from Serial ?
+				lidar_controller_created = true;
+
+		if (head_motors_controler_created && tracks_motors_controler_created && lidar_controller_created && /*head_sonars_controller_created && */infrareds_controller_created)
 			break;
 
 		// measure the passed time 
@@ -200,11 +216,14 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &tr
 			if (!tracks_motors_controler_created)
 				sprintf(error_string, "Cannot create tracks's motor controller! Game over!");
 
-			if (!head_sonars_controller_created)
-				sprintf(error_string, "Cannot create head's sonars controller! Game over!");
+			//if (!head_sonars_controller_created)
+				//sprintf(error_string, "Cannot create head's sonars controller! Game over!");
 
 			if (!infrareds_controller_created)
 				sprintf(error_string, "Cannot create head's infrared controller! Game over!");
+
+			if (!lidar_controller_created)
+				sprintf(error_string, "Cannot create LIDAR controller! Game over!");
 
 			return false;
 		}
@@ -277,7 +296,7 @@ int	main(void)
 	char error_string[1000];
 	if (!connect(head_controller, tracks_controller, head_cam, face_classifier, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate ...");
 		getchar();
 		return -1;
 	}
@@ -287,7 +306,7 @@ int	main(void)
 	// setup
 	if (!setup(head_controller, tracks_controller, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate ...");
 		getchar();
 		return -1;
 	}
@@ -297,33 +316,69 @@ int	main(void)
 	//  init
 	if (!init(head_controller, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate ...");
 		getchar();
 		return -1;
 	}
 	else
 		printf("Init succceded.\n");
 
-	Mat frame; // images used in the proces
-	Mat grayFrame;
+	tracks_controller.send_set_LIDAR_motor_speed_and_acceleration(30, 100);
+	tracks_controller.send_LIDAR_go();
+
+	namedWindow("LIDAR map", WINDOW_AUTOSIZE);
+	// draw the robot
+	int w = 600;
+	Mat lidar_map_image = Mat::zeros(w, w, CV_8UC3);
+	Point center(w / 2, w / 2);
+	circle(lidar_map_image, center, 20.0, Scalar(0, 255, 0), 1, 8);
+	// finish drawing robot
+
+	Mat cam_frame; // images used in the proces
+	Mat gray_frame;
 
 	namedWindow("Head camera", WINDOW_AUTOSIZE); // window to display the results
 
 	bool active = true; 
 	while (active)        // starting infinit loop
 	{
-		if (!head_controller.update_commands_from_serial())
-			Sleep(DOES_NOTHING_SLEEP); // no new data from serial ... we make a little pause so that we don't kill the processor
+		if (!head_controller.update_commands_from_serial() && !tracks_controller.update_commands_from_serial())
+			Sleep(DOES_NOTHING_SLEEP); // no new data from serial ... we take a little break so that we don't kill the processor
+		else {
+			// extract all data from LIDAR 
+			int motor_position, distance;
+			bool at_least_one_new_LIDAR_distance = false;
+			while (tracks_controller.query_for_event(LIDAR_READ_EVENT, &motor_position, &distance)) {  // have we received the event from Serial ?
 
-		head_cam >> frame; // put captured-image frame in frame
+																									  // delete old distance
+				Point old_p;
+				old_p.x = -lidar_distances[motor_position] / scale_factor * sin(motor_position / 100.0 * M_PI - M_PI / 2);
+				old_p.y = -lidar_distances[motor_position] / scale_factor * cos(motor_position / 100.0 * M_PI - M_PI / 2);
+				circle(lidar_map_image, center + old_p, 5.0, Scalar(0, 0, 0), 1, 8);
 
-		cvtColor(frame, grayFrame, CV_BGR2GRAY); // convert to gray and equalize
-		equalizeHist(grayFrame, grayFrame);
+				// draw the new point
+				lidar_distances[motor_position] = distance;
+				Point new_p;
+				new_p.x = -distance / scale_factor * sin(motor_position / 100.0 * M_PI - M_PI / 2);
+				new_p.y = -distance / scale_factor * cos(motor_position / 100.0 * M_PI - M_PI / 2);
+				circle(lidar_map_image, center + new_p, 5.0, Scalar(0, 0, 255), 1, 8);
+				cout << "Motor position = " << motor_position << " LIDAR distance = " << distance << endl;
+
+				at_least_one_new_LIDAR_distance = true;
+			}
+
+			if (at_least_one_new_LIDAR_distance)
+			  imshow("LIDAR map", lidar_map_image);
+		}
+		head_cam >> cam_frame; // put captured-image frame in frame
+
+		cvtColor(cam_frame, gray_frame, CV_BGR2GRAY); // convert to gray and equalize
+		equalizeHist(gray_frame, gray_frame);
 
 		std::vector<Rect> faces;// create an array to store the faces found
 
 		// find and store the faces
-		face_classifier.detectMultiScale(grayFrame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
+		face_classifier.detectMultiScale(gray_frame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
 		CENTER_POINT head_center;
 
@@ -333,7 +388,7 @@ int	main(void)
 			Point p1(head_center.x - head_center.range, head_center.y - head_center.range);
 			Point p2(head_center.x + head_center.range, head_center.y + head_center.range);
 			// draw an outline for the faces
-			rectangle(frame, p1, p2, cvScalar(0, 255, 0, 0), 1, 8, 0);
+			rectangle(cam_frame, p1, p2, cvScalar(0, 255, 0, 0), 1, 8, 0);
 		}
 		else {
 			Sleep(DOES_NOTHING_SLEEP); // no face found
@@ -341,13 +396,13 @@ int	main(void)
 			//head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, 0);
 		}
 
-		imshow("Head camera", frame); // display the result
+		imshow("Head camera", cam_frame); // display the result
 
 		if (face_found) {// 
 						 // horizontal movement motor
 
 						 // send a command to the module so that the face is in the center of the image
-			if (head_center.x > frame.cols / 2 + TOLERANCE) {
+			if (head_center.x > cam_frame.cols / 2 + TOLERANCE) {
 				tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 				int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8) * TRACKS_MOTOR_REDUCTION;
 
@@ -360,7 +415,7 @@ int	main(void)
 
 			}
 			else
-				if (head_center.x < frame.cols / 2 - TOLERANCE) {
+				if (head_center.x < cam_frame.cols / 2 - TOLERANCE) {
 
 					tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 					int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8) * TRACKS_MOTOR_REDUCTION;
@@ -399,7 +454,7 @@ int	main(void)
 
 				// vertical movement motor
 				// send a command to the module so that the face is in the center of the image
-				if (head_center.y < frame.rows / 2 - TOLERANCE) {
+				if (head_center.y < cam_frame.rows / 2 - TOLERANCE) {
 					tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 					int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
 
@@ -409,7 +464,7 @@ int	main(void)
 					//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 				}
 				else
-					if (head_center.y > frame.rows / 2 + TOLERANCE) {
+					if (head_center.y > cam_frame.rows / 2 + TOLERANCE) {
 						tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 						int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
 
