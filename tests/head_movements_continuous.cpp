@@ -61,7 +61,7 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(4, 115200)) {
+	if (!head_controller.connect(9, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -234,7 +234,7 @@ int	main(int argc, const char** argv)
 	char error_string[1000];
 	if (!init(head_controller, head_cam, face_classifier, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate ...");
 		getchar();
 		return -1;
 	}
@@ -244,7 +244,7 @@ int	main(int argc, const char** argv)
 	// setup
 	if (!setup(head_controller, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate ...");
 		getchar();
 		return -1;
 	}
@@ -255,7 +255,7 @@ int	main(int argc, const char** argv)
 	//  init
 	if (!init(head_controller, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate ...");
 		getchar();
 		return -1;
 	}
@@ -292,7 +292,7 @@ int	main(int argc, const char** argv)
 			Point p1(head_center.x - head_center.range, head_center.y - head_center.range);
 			Point p2(head_center.x + head_center.range, head_center.y + head_center.range);
 			// draw an outline for the faces
-			rectangle(frame, p1, p2, cvScalar(0, 255, 0, 0), 1, 8, 0);
+			rectangle(frame, Point(300, 300), Point(500, 400), cvScalar(0, 255, 0, 0), 1, 8, 0);
 		}
 		else {
 			Sleep(DOES_NOTHING_SLEEP); // no face found
