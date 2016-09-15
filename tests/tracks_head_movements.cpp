@@ -277,13 +277,20 @@ bool init(t_jenny5_command_module &head_controller, char* error_string)
 			if (!vertical_motor_homed)
 				sprintf(error_string, "Cannot home vertical motor! Game over!");
 			if (!horizontal_motor_homed)
-				sprintf(error_string, "Cannot home vertical motor! Game over!");
+				sprintf(error_string, "Cannot home horizontal motor! Game over!");
 			return false;
 		}
 	}
 
 	printf("DONE\n");
 	return true;
+}
+//----------------------------------------------------------------
+bool ahead_clear(int *lidar_distances)
+{
+	if (lidar_distances[50] > 1000)
+		return true;
+	return false;
 }
 //----------------------------------------------------------------
 int	main(void)
@@ -398,8 +405,7 @@ int	main(void)
 
 		imshow("Head camera", cam_frame); // display the result
 
-		if (face_found) {// 
-						 // horizontal movement motor
+		if (face_found) {
 
 						 // send a command to the module so that the face is in the center of the image
 			if (head_center.x > cam_frame.cols / 2 + TOLERANCE) {
@@ -431,13 +437,16 @@ int	main(void)
 					// face is in the center, so I move equaly with both motors
 					if (head_center.range < HEAD_RADIUS_TO_REVERT) {
 						// move forward
-						tracks_controller.send_move_stepper_motor(MOTOR_tracks_LEFT, 1000);
-						tracks_controller.set_stepper_motor_state(MOTOR_tracks_LEFT, COMMAND_SENT);
-						printf("tracks: M%d %d# - sent\n", MOTOR_tracks_LEFT, 1000);
+						// only if LIDAR distance to the front point is very far from the robot
+						if (ahead_clear(lidar_distances)) {
+							tracks_controller.send_move_stepper_motor(MOTOR_tracks_LEFT, 1000);
+							tracks_controller.set_stepper_motor_state(MOTOR_tracks_LEFT, COMMAND_SENT);
+							printf("tracks: M%d %d# - sent\n", MOTOR_tracks_LEFT, 1000);
 
-						tracks_controller.send_move_stepper_motor(MOTOR_tracks_RIGHT, -1000);
-						tracks_controller.set_stepper_motor_state(MOTOR_tracks_RIGHT, COMMAND_SENT);
-						printf("tracks: M%d %d# - sent\n", MOTOR_tracks_RIGHT, -1000);
+							tracks_controller.send_move_stepper_motor(MOTOR_tracks_RIGHT, -1000);
+							tracks_controller.set_stepper_motor_state(MOTOR_tracks_RIGHT, COMMAND_SENT);
+							printf("tracks: M%d %d# - sent\n", MOTOR_tracks_RIGHT, -1000);
+						}
 					}
 					else {
 						// move backward
