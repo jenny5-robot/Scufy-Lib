@@ -38,7 +38,7 @@ typedef struct _CENTER_POINT
 
 #define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
-#define TOLERANCE 20
+#define TOLERANCE 150
 
 #define DOES_NOTHING_SLEEP 10
 
@@ -50,6 +50,9 @@ typedef struct _CENTER_POINT
 
 double scale_factor = 5.0;
 int lidar_distances[LIDAR_NUM_STEPS];
+
+#define MOTOR_FULL_SPEED 1500
+#define MOTOR_FULL_TORQUE_SPEED 500
 
 
 //----------------------------------------------------------------
@@ -76,12 +79,12 @@ bool connect(t_jenny5_command_module &head_controller, t_jenny5_command_module &
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(3, 115200)) { // real - 1
+	if (!head_controller.connect(2, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
 
-	if (!tracks_controller.connect(2, 115200)) {
+	if (!tracks_controller.connect(3, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' tracks!");
 		return false;
 	}
@@ -229,16 +232,16 @@ bool setup(t_jenny5_command_module &head_controller, t_jenny5_command_module &tr
 		}
 	}
 	
-	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1500, 500);
-	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1500, 500);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, MOTOR_FULL_SPEED, 500);
+	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, MOTOR_FULL_SPEED, 500);
 
 	int infrared_index_m1[1] = { 0 };
 	int infrared_index_m2[1] = { 1 };
 	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_HORIZONTAL, 0, NULL, 1, infrared_index_m1, 0, NULL);
 	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_VERTICAL, 0, NULL, 1, infrared_index_m2, 0, NULL);
 
-	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_LEFT, 1500, 500);
-	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_RIGHT, 1500, 500);
+	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_LEFT, MOTOR_FULL_SPEED, 500);
+	tracks_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_RIGHT, MOTOR_FULL_SPEED, 500);
 	return true;
 }
 //----------------------------------------------------------------
@@ -370,7 +373,7 @@ int	main(void)
 				new_p.x = -distance / scale_factor * sin(motor_position / 100.0 * M_PI - M_PI / 2);
 				new_p.y = -distance / scale_factor * cos(motor_position / 100.0 * M_PI - M_PI / 2);
 				circle(lidar_map_image, center + new_p, 5.0, Scalar(0, 0, 255), 1, 8);
-				cout << "Motor position = " << motor_position << " LIDAR distance = " << distance << endl;
+				//cout << "Motor position = " << motor_position << " LIDAR distance = " << distance << endl;
 
 				at_least_one_new_LIDAR_distance = true;
 			}
@@ -408,8 +411,9 @@ int	main(void)
 
 		if (face_found) {
 
-						 // send a command to the module so that the face is in the center of the image
+			// send a command to the module so that the face is in the center of the image
 			if (head_center.x > cam_frame.cols / 2 + TOLERANCE) {
+
 				tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 				int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8) * TRACKS_MOTOR_REDUCTION;
 
@@ -520,6 +524,19 @@ int	main(void)
 			active = false;
 	}
 
+	// stops all motors
+	head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, 0);
+	head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, 0);
+
+	head_controller.send_disable_stepper_motor(MOTOR_HEAD_VERTICAL);
+	head_controller.send_disable_stepper_motor(MOTOR_HEAD_HORIZONTAL);
+
+	tracks_controller.send_move_stepper_motor(MOTOR_tracks_LEFT, 0);
+	tracks_controller.send_move_stepper_motor(MOTOR_tracks_RIGHT, 0);
+
+	tracks_controller.send_LIDAR_stop();
+
+	// close connection
 	head_controller.close_connection();
 	tracks_controller.close_connection();
 	return 0;
