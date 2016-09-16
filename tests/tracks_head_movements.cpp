@@ -286,11 +286,12 @@ bool init(t_jenny5_command_module &head_controller, char* error_string)
 	return true;
 }
 //----------------------------------------------------------------
-bool ahead_clear(int *lidar_distances)
+bool clear_ahead(int *lidar_distances)
 {
-	if (lidar_distances[50] > 1000)
-		return true;
-	return false;
+	for (int i = 40; i < 60; i++)
+	if (lidar_distances[i] < 800)
+		return false;
+	return true;
 }
 //----------------------------------------------------------------
 int	main(void)
@@ -438,7 +439,7 @@ int	main(void)
 					if (head_center.range < HEAD_RADIUS_TO_REVERT) {
 						// move forward
 						// only if LIDAR distance to the front point is very far from the robot
-						if (ahead_clear(lidar_distances)) {
+						if (clear_ahead(lidar_distances)) {
 							tracks_controller.send_move_stepper_motor(MOTOR_tracks_LEFT, 1000);
 							tracks_controller.set_stepper_motor_state(MOTOR_tracks_LEFT, COMMAND_SENT);
 							printf("tracks: M%d %d# - sent\n", MOTOR_tracks_LEFT, 1000);
