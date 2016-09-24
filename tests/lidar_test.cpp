@@ -33,17 +33,15 @@ using namespace cv;
 
 #define LIDAR_NUM_STEPS 200
 
-double scale_factor = 5.0;
+double scale_factor = 0.1;
 int lidar_distances[LIDAR_NUM_STEPS];
-
-
 
 //----------------------------------------------------------------
 bool connect(t_jenny5_command_module &lidar_controller, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!lidar_controller.connect(10, 115200)) { // real number - 1
+	if (!lidar_controller.connect(3, 115200)) { // real number - 1
 		sprintf(error_string, "Error attaching to Jenny 5' LIDAR!");
 		return false;
 	}
@@ -115,8 +113,8 @@ bool setup(t_jenny5_command_module &LIDAR_controller, char* error_string)
 //----------------------------------------------------------------
 struct t_user_data
 {
-	Mat *image;
-	int w;
+	Mat *lidar_image;
+	int image_width;
 };
 //----------------------------------------------------------------
 static void on_mouse(int event, int x, int y, int flags, void *userdata)
@@ -125,34 +123,45 @@ static void on_mouse(int event, int x, int y, int flags, void *userdata)
 		int delta = getMouseWheelDelta(flags);
 
 		t_user_data* user_data = (t_user_data*)userdata;
-		Point center(user_data->w / 2, user_data->w / 2);
+		Point center(user_data->image_width / 2, user_data->image_width / 2);
 		for (int i = 0; i < LIDAR_NUM_STEPS; i++) {
 			Point old_p;
-			old_p.x = -lidar_distances[i] / scale_factor * sin(i / 100.0 * M_PI - M_PI / 2);
-			old_p.y = -lidar_distances[i] / scale_factor * cos(i / 100.0 * M_PI - M_PI / 2);
-			circle(*(user_data->image), center + old_p, 5.0, Scalar(0, 0, 0), 1, 8);
+			old_p.x = -lidar_distances[i] * scale_factor * sin(i / 100.0 * M_PI - M_PI / 2);
+			old_p.y = -lidar_distances[i] * scale_factor * cos(i / 100.0 * M_PI - M_PI / 2);
+			circle(*(user_data->lidar_image), center + old_p, 5.0, Scalar(0, 0, 0), 1, 8);
 		}
 		char text[100];
-		sprintf(text, "%lfx", scale_factor);
-		int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
-		double fontScale = 1;
-		int thickness = 1;
-		cv::Point textOrg(10, 130);
+		sprintf(text, "scale = %.2lf", scale_factor);
+		int font_face = FONT_HERSHEY_SCRIPT_SIMPLEX;
+		cv::Point text_position(10, 25);
 
-		cv::putText(*(user_data->image), text, textOrg, fontFace, fontScale, Scalar::all(0), thickness, 8);
-		
-		scale_factor *= delta / 120.0;
+		cv::putText(*(user_data->lidar_image), text, text_position, font_face, 1, Scalar::all(0), 1, 8);
+		// delete the robot
+		rectangle(*user_data->lidar_image, Point(center.x - 175 * scale_factor, center.y), Point(center.x + scale_factor * 175, center.y + 600 * scale_factor), Scalar(0, 0, 0));
+
+
+		if (delta > 0)
+			scale_factor += 0.01;
+		else
+			if (delta < 0)
+				scale_factor -= 0.01;
+			
+		if (scale_factor < 0.01)
+			scale_factor = 0.01;
 
 		for (int i = 0; i < LIDAR_NUM_STEPS; i++) {
 				// draw the new point
 			Point new_p;
-			new_p.x = -lidar_distances[i] / scale_factor * sin(i / 100.0 * M_PI - M_PI / 2);
-			new_p.y = -lidar_distances[i] / scale_factor * cos(i / 100.0 * M_PI - M_PI / 2);
-			circle(*(user_data->image), center + new_p, 5.0, Scalar(0, 0, 255), 1, 8);
+			new_p.x = -lidar_distances[i] * scale_factor * sin(i / 100.0 * M_PI - M_PI / 2);
+			new_p.y = -lidar_distances[i] * scale_factor * cos(i / 100.0 * M_PI - M_PI / 2);
+			circle(*(user_data->lidar_image), center + new_p, 5.0, Scalar(0, 0, 255), 1, 8);
 		}
 
-		sprintf(text, "%lfx", scale_factor);
-		cv::putText(*(user_data->image), text, textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
+		// robot
+		rectangle(*user_data->lidar_image, Point(center.x - 175 * scale_factor, center.y), Point(center.x + scale_factor * 175, center.y + 600 * scale_factor), Scalar(0, 255, 0));
+
+		sprintf(text, "scale = %.2lf", scale_factor);
+		cv::putText(*user_data->lidar_image, text, text_position, font_face, 1, Scalar::all(255), 1, 8);
 	}
 }
 //----------------------------------------------------------------
@@ -169,7 +178,7 @@ int	main(void)
 	// setup
 	if (!connect(LIDAR_controller, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate...");
 		getchar();
 		return -1;
 	}
@@ -179,7 +188,7 @@ int	main(void)
 	// setup
 	if (!setup(LIDAR_controller, error_string)) {
 		printf("%s\n", error_string);
-		printf("Press Enter...");
+		printf("Press Enter to terminate...");
 		getchar();
 		return -1;
 	}
@@ -191,30 +200,29 @@ int	main(void)
 
 	namedWindow("LIDAR map", WINDOW_AUTOSIZE);
 
-	int w = 600;
-	Mat image = Mat::zeros(w, w, CV_8UC3);
-	Point center(w / 2, w / 2);
-	circle(image, center, 20.0, Scalar(0, 255, 0), 1, 8);
+	int image_width = 600;
+	Mat lidar_image = Mat::zeros(image_width, image_width, CV_8UC3);
+	Point center(image_width / 2, image_width / 2);
+	//LIDAR
+	circle(lidar_image, center, 10.0, Scalar(0, 255, 0), 1, 8);
+    // robot
+	rectangle(lidar_image, Point(center.x - 175 * scale_factor , center.y), Point(center.x + scale_factor * 175, center.y + 600 * scale_factor), Scalar(0, 255, 0));
 
 	t_user_data user_data;
 
-	user_data.image = &image;
-	user_data.w = w;
+	user_data.lidar_image = &lidar_image;
+	user_data.image_width = image_width;
 
 	setMouseCallback("LIDAR map", on_mouse, &user_data);
 	
 	char text[100];
-	sprintf(text, "%lf", scale_factor);
-	int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
-	double fontScale = 1;
-	int thickness = 1;
-	cv::Point textOrg(10, 130);
-	cv::putText(image, text, textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
-
+	sprintf(text, "scale = %.2lf", scale_factor);
+	int font_face = FONT_HERSHEY_SCRIPT_SIMPLEX;
+	cv::Point text_position(10, 25);
+	cv::putText(lidar_image, text, text_position, font_face, 1, Scalar::all(255), 1, 8);
 
 	printf("Now running the main loop. Press Escape when want to exit!\n");
 	bool active = true;
-
 
 	while (active) {        // starting infinit loop
 		
@@ -226,20 +234,20 @@ int	main(void)
 			
 // delete old distance
 			Point old_p;
-			old_p.x = -lidar_distances[motor_position] / scale_factor * sin(motor_position / 100.0 * M_PI - M_PI / 2);
-			old_p.y = -lidar_distances[motor_position] / scale_factor * cos(motor_position / 100.0 * M_PI - M_PI / 2);
-			circle(image, center + old_p, 5.0, Scalar(0, 0, 0), 1, 8);
+			old_p.x = -lidar_distances[motor_position] * scale_factor * sin(motor_position / 100.0 * M_PI - M_PI / 2);
+			old_p.y = -lidar_distances[motor_position] * scale_factor * cos(motor_position / 100.0 * M_PI - M_PI / 2);
+			circle(lidar_image, center + old_p, 5.0, Scalar(0, 0, 0), 1, 8);
 
 // draw the new point
 			lidar_distances[motor_position] = distance;
 			Point new_p;
-			new_p.x = - distance / scale_factor * sin(motor_position / 100.0 * M_PI - M_PI / 2);
-			new_p.y = - distance / scale_factor * cos(motor_position / 100.0 * M_PI - M_PI / 2);
-			circle(image, center + new_p, 5.0, Scalar(0, 0, 255), 1, 8);
+			new_p.x = - distance * scale_factor * sin(motor_position / 100.0 * M_PI - M_PI / 2);
+			new_p.y = - distance * scale_factor * cos(motor_position / 100.0 * M_PI - M_PI / 2);
+			circle(lidar_image, center + new_p, 5.0, Scalar(0, 0, 255), 1, 8);
 			cout << "Motor position = " << motor_position << " LIDAR distance = " << distance << endl;
 		}
 
-		imshow("LIDAR map", image);
+		imshow("LIDAR map", lidar_image);
 		
 		if (waitKey(1) >= 0)  // break the loop
 			active = false;

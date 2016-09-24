@@ -1,3 +1,6 @@
+// last update : 2016.09.16.0 // year.month.day.build number
+// MIT License
+
 #include <iostream>
 #include <time.h>
 
@@ -61,7 +64,7 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(9, 115200)) { // real - 1
+	if (!head_controller.connect(2, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -263,8 +266,8 @@ int	main(int argc, const char** argv)
 		printf("Init succceded.\n");
 
 
-	Mat frame; // images used in the proces
-	Mat grayFrame;
+	Mat cam_frame; // images used in the proces
+	Mat gray_frame;
 
 	namedWindow("Head camera", WINDOW_AUTOSIZE); // window to display the results
 
@@ -274,15 +277,15 @@ int	main(int argc, const char** argv)
 		if (!head_controller.update_commands_from_serial())
 			Sleep(DOES_NOTHING_SLEEP); // no new data from serial ... we make a little pause so that we don't kill the processor
 
-		head_cam >> frame; // put captured-image frame in frame
+		head_cam >> cam_frame; // put captured-image frame in frame
 
-		cvtColor(frame, grayFrame, CV_BGR2GRAY); // convert to gray and equalize
-		equalizeHist(grayFrame, grayFrame);
+		cvtColor(cam_frame, gray_frame, CV_BGR2GRAY); // convert to gray and equalize
+		equalizeHist(gray_frame, gray_frame);
 
 		std::vector<Rect> faces;// create an array to store the faces found
 
 		// find and store the faces
-		face_classifier.detectMultiScale(grayFrame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(50, 50));
+		face_classifier.detectMultiScale(gray_frame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(50, 50));
 
 		CENTER_POINT head_center;
 
@@ -292,7 +295,7 @@ int	main(int argc, const char** argv)
 			Point p1(head_center.x - head_center.range, head_center.y - head_center.range);
 			Point p2(head_center.x + head_center.range, head_center.y + head_center.range);
 			// draw an outline for the faces
-			rectangle(frame, Point(300, 300), Point(500, 400), cvScalar(0, 255, 0, 0), 1, 8, 0);
+			rectangle(cam_frame, Point(300, 300), Point(500, 400), cvScalar(0, 255, 0, 0), 1, 8, 0);
 		}
 		else {
 			Sleep(DOES_NOTHING_SLEEP); // no face found
@@ -300,7 +303,7 @@ int	main(int argc, const char** argv)
 			//head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, 0);
 		}
 
-		imshow("Head camera", frame); // display the result
+		imshow("Head camera", cam_frame); // display the result
 
 		if (head_controller.get_sonar_state(0) == COMMAND_DONE) {// I ping the sonar only if no ping was sent before
 			head_controller.send_get_sonar_distance(0);
@@ -312,7 +315,7 @@ int	main(int argc, const char** argv)
 			// horizontal movement motor
 
 			// send a command to the module so that the face is in the center of the image
-			if (head_center.x < frame.cols / 2 - TOLERANCE) {
+			if (head_center.x < cam_frame.cols / 2 - TOLERANCE) {
 				tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 				int num_steps_x = angle_offset.degrees_from_center_x / 1.8 * 27.0;
 
@@ -323,7 +326,7 @@ int	main(int argc, const char** argv)
 				//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 			}
 			else
-				if (head_center.x > frame.cols / 2 + TOLERANCE) {
+				if (head_center.x > cam_frame.cols / 2 + TOLERANCE) {
 					tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 					int num_steps_x = angle_offset.degrees_from_center_x / 1.8 * 27.0;
 
@@ -340,7 +343,7 @@ int	main(int argc, const char** argv)
 
 				// vertical movement motor
 				// send a command to the module so that the face is in the center of the image
-				if (head_center.y < frame.rows / 2 - TOLERANCE) {
+				if (head_center.y < cam_frame.rows / 2 - TOLERANCE) {
 					tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 					int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
 
@@ -350,7 +353,7 @@ int	main(int argc, const char** argv)
 					//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 				}
 				else
-					if (head_center.y > frame.rows / 2 + TOLERANCE) {
+					if (head_center.y > cam_frame.rows / 2 + TOLERANCE) {
 						tracking_data angle_offset = get_offset_angles(920, Point(head_center.x, head_center.y));
 						int num_steps_y = angle_offset.degrees_from_center_y / 1.8 * 27.0;
 
