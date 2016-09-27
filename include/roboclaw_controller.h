@@ -16,6 +16,7 @@
 #define ROBOCLAW_CONTROLLER_H
 
 #include "rs232.h"
+#include <inttypes.h>
 //-------------------------------------------------------------
 enum {
 	M1FORWARD = 0,
@@ -144,6 +145,11 @@ public:
 	void drive_backward_M1(unsigned char speed);
 	void drive_backward_M2(unsigned char speed);
 	void read_motor_currents(double &current_motor_1, double &current_motor_2);
+
+	// The duty value is signed and the range is - 32768 to + 32767(eg. + -100 % duty).
+	// The accel value range is 0 to 655359(eg maximum acceleration rate is - 100 % to 100 % in 100ms).
+	void drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
+	void drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
 
 };
 //-------------------------------------------------------------

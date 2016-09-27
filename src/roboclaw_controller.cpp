@@ -27,28 +27,9 @@ uint16_t CRC16(unsigned char *packet, int nBytes)
 	return crc;
 }
 //--------------------------------------------------------------
-void write_n(uint8_t cnt, ...)
-{
-	uint8_t crc = 0;
-
-	//send data with crc
-	va_list marker;
-	va_start(marker, cnt);     /* Initialize variable arguments. */
-	for (uint8_t index = 0; index<cnt; index++) {
-		uint8_t data = va_arg(marker, uint16_t);
-		crc += data;
-	//	write(data);
-	}
-	va_end(marker);              /* Reset variable arguments.      */
-	crc &= 0x7F;
-	//write(crc & 0x7F);
-}
-
-//--------------------------------------------------------------
 t_roboclaw_controller::t_roboclaw_controller(void)
 {
-	strcpy(library_version, "2016.09.22.0"); // year.month.day.build number
-
+	strcpy(library_version, "2016.09.27.0"); // year.month.day.build number
 }
 //--------------------------------------------------------------
 t_roboclaw_controller::~t_roboclaw_controller(void)
@@ -197,6 +178,52 @@ void t_roboclaw_controller::read_motor_currents(double &current_motor_1, double 
 
 	current_motor_1 = (double)(s[0] << 8 | s[1]) / 100.0;
 	current_motor_2 = (double)(s[2] << 8 | s[3]) / 100.0;
+
+}
+//--------------------------------------------------------------
+void t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
+{
+	unsigned char buffer[10];
+	buffer[0] = 0x80; // port
+	buffer[1] = M1DUTYACCEL;    // command
+
+	buffer[2] = duty >> 8;
+	buffer[3] = duty;
+
+	buffer[4] = accel >> 8;
+	buffer[5] = accel;
+
+	buffer[6] = accel >> 8;
+	buffer[7] = accel;
+
+	uint16_t crc = CRC16(buffer, 8);
+	buffer[8] = crc >> 8;
+	buffer[9] = crc;
+
+	RS232_SendBuf(port_number, buffer, 10);
+
+}
+//--------------------------------------------------------------
+void t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
+{
+	unsigned char buffer[10];
+	buffer[0] = 0x80; // port
+	buffer[1] = M2DUTYACCEL;    // command
+
+	buffer[2] = duty >> 8;
+	buffer[3] = duty;
+
+	buffer[4] = accel >> 8;
+	buffer[5] = accel;
+
+	buffer[6] = accel >> 8;
+	buffer[7] = accel;
+
+	uint16_t crc = CRC16(buffer, 8);
+	buffer[8] = crc >> 8;
+	buffer[9] = crc;
+
+	RS232_SendBuf(port_number, buffer, 10);
 
 }
 //--------------------------------------------------------------

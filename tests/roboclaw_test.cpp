@@ -14,7 +14,7 @@ int main(void)
 	t_roboclaw_controller roboclaw;
 
 	// connect
-	if (!roboclaw.connect(18, 38400)) { // real - 1
+	if (!roboclaw.connect(19, 38400)) { // real - 1
 		printf("Cannot connect! Game over.");
 		getchar();
 		return 1;
@@ -41,7 +41,12 @@ int main(void)
 
 	// move motor 2 forward
 	Sleep(10);
-	roboclaw.drive_forward_M1(10);
+	//roboclaw.drive_forward_M1(10);
+
+	roboclaw.drive_M1_with_signed_duty_and_acceleration(-3000, 1);
+	Sleep(5);
+	// read the result
+	roboclaw.read_result((unsigned char*)buffer, 100);
 	
 	while (1) {
 		if (GetAsyncKeyState(VK_ESCAPE))
