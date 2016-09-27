@@ -144,12 +144,24 @@ public:
 	void drive_forward_M2(unsigned char speed);
 	void drive_backward_M1(unsigned char speed);
 	void drive_backward_M2(unsigned char speed);
+
 	void read_motor_currents(double &current_motor_1, double &current_motor_2);
 
 	// The duty value is signed and the range is - 32768 to + 32767(eg. + -100 % duty).
 	// The accel value range is 0 to 655359(eg maximum acceleration rate is - 100 % to 100 % in 100ms).
 	void drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
+
+	// The duty value is signed and the range is - 32768 to + 32767(eg. + -100 % duty).
+	// The accel value range is 0 to 655359(eg maximum acceleration rate is - 100 % to 100 % in 100ms).
 	void drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
+
+	// Set Motor 1 Maximum Current Limit. Current value is in 10ma units.
+	//  To calculate multiply current limit by 100.
+	void set_M1_max_current_limit(double c_max);
+
+	// Set Motor 1 Maximum Current Limit. Current value is in 10ma units.
+	//  To calculate multiply current limit by 100.
+	void set_M2_max_current_limit(double c_max);
 
 };
 //-------------------------------------------------------------

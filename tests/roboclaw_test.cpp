@@ -43,6 +43,12 @@ int main(void)
 	Sleep(10);
 	//roboclaw.drive_forward_M1(10);
 
+	// set current limit
+	roboclaw.set_M1_max_current_limit(4);
+	Sleep(5);
+	// read the result
+	roboclaw.read_result((unsigned char*)buffer, 100);
+
 	roboclaw.drive_M1_with_signed_duty_and_acceleration(-3000, 1);
 	Sleep(5);
 	// read the result

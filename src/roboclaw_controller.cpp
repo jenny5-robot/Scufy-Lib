@@ -227,3 +227,56 @@ void t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t d
 
 }
 //--------------------------------------------------------------
+void t_roboclaw_controller::set_M1_max_current_limit(double c_max)
+{
+	unsigned char buffer[12];
+	buffer[0] = 0x80; // port
+	buffer[1] = SETM1MAXCURRENT;    // command
+
+	uint32_t max_v;
+	max_v = (uint32_t)(c_max * 100);
+
+	buffer[2] = max_v >> 24;
+	buffer[3] = max_v >> 16;
+	buffer[4] = max_v >> 8;
+	buffer[5] = max_v;
+
+	buffer[6] = 0;
+	buffer[7] = 0;
+	buffer[8] = 0;
+	buffer[9] = 0;
+
+	uint16_t crc = CRC16(buffer, 10);
+	buffer[10] = crc >> 8;
+	buffer[11] = crc;
+
+	RS232_SendBuf(port_number, buffer, 12);
+}
+//--------------------------------------------------------------
+
+void t_roboclaw_controller::set_M2_max_current_limit(double c_max)
+{
+	unsigned char buffer[12];
+	buffer[0] = 0x80; // port
+	buffer[1] = SETM2MAXCURRENT;    // command
+
+	uint32_t max_v;
+	max_v = (uint32_t)(c_max * 100);
+
+	buffer[2] = max_v >> 24;
+	buffer[3] = max_v >> 16;
+	buffer[4] = max_v >> 8;
+	buffer[5] = max_v;
+
+	buffer[6] = 0;
+	buffer[7] = 0;
+	buffer[8] = 0;
+	buffer[9] = 0;
+
+	uint16_t crc = CRC16(buffer, 10);
+	buffer[10] = crc >> 8;
+	buffer[11] = crc;
+
+	RS232_SendBuf(port_number, buffer, 12);
+}
+//--------------------------------------------------------------
