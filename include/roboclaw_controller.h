@@ -126,14 +126,24 @@ public:
 
 	t_roboclaw_controller(void);
 	~t_roboclaw_controller(void);
-	const char* get_library_version(void);
 
 	bool connect(int port, int baud_rate);
 	void close_connection(void);
 	void send_command(int command);
 	bool read_result(unsigned char* buffer, int buffer_size);
+
+	// Read the board temperature.Value returned is in 10ths of degrees.
 	double get_temperature(void);
+
+	// Read the main battery voltage level connected to B+ and B- terminals
 	double get_main_battery_voltage(void);
+
+	// returns the library version
+	// the caller must not delete the pointer
+	const char* get_library_version(void);
+
+	// Read RoboClaw firmware version.Returns up to 48 bytes(depending on the Roboclaw model) and
+	// is terminated by a line feed character and a null character.
 	void get_firmware_version(char *firmware_version);
 
 	// Drive motor 1 forward.Valid data range is 0 - 127. 
@@ -145,7 +155,14 @@ public:
 	void drive_backward_M1(unsigned char speed);
 	void drive_backward_M2(unsigned char speed);
 
+	// Read the current draw from each motor in 10ma increments. 
+	// The amps value is calculated by	dividing the value by 100.
 	void read_motor_currents(double &current_motor_1, double &current_motor_2);
+
+	// Read the current PWM output values for the motor channels.
+	// The values returned are + -32767.
+	// The duty cycle percent is calculated by dividing the Value by 327.67.
+	void read_motor_PWM(double &pwm_motor_1, double &pwm_motor_2);
 
 	// The duty value is signed and the range is - 32768 to + 32767(eg. + -100 % duty).
 	// The accel value range is 0 to 655359(eg maximum acceleration rate is - 100 % to 100 % in 100ms).
@@ -162,6 +179,15 @@ public:
 	// Set Motor 1 Maximum Current Limit. Current value is in 10ma units.
 	//  To calculate multiply current limit by 100.
 	void set_M2_max_current_limit(double c_max);
+
+	// Read the current unit status.
+	uint16_t read_status(void);
+
+	// Set config bits for standard settings.
+	void set_standard_config_settings(uint16_t config);
+
+	// Read config bits for standard settings.
+	uint16_t read_standard_config_settings(void);
 
 };
 //-------------------------------------------------------------
