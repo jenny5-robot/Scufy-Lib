@@ -17,7 +17,7 @@
 #define EVENT_INFO_PARAM2 4
 
 //----------------------------------------------------------------
-class t_jenny5_command_module{
+class t_jenny5_arduino_controller{
 private:
 	// version number of the library
 	char version[20];
@@ -49,8 +49,8 @@ private:
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
 public:
-	t_jenny5_command_module(void);
-	~t_jenny5_command_module(void);
+	t_jenny5_arduino_controller(void);
+	~t_jenny5_arduino_controller(void);
 
 	// connects to given serial port
 	bool connect(int port, int baud_rate);
