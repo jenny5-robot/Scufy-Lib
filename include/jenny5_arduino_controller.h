@@ -32,7 +32,7 @@ private:
 	char current_buffer[4096]; // I should not need so much
 
 	// each motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
-	int stepper_motor_state[4]; // max 4 motors (each motor occupy 3 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
+	int stepper_motor_state[6]; // max 6 motors 
 
 								// each dc motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
 	int dc_motor_state[3]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
@@ -121,7 +121,7 @@ public:
 	// sends (to Arduino) a command for creating a potentiometer controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
-	void send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *home);
+	void send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *home, int *_direction);
 
 	// sends (to Arduino) a command for creating an infrared controller
 	// this method should be called once at the beginning of the program

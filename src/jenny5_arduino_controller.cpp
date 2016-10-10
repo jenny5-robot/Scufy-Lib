@@ -12,9 +12,9 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(version, "2016.10.04.0"); // year.month.day.build number
+	strcpy(version, "2016.10.10.0"); // year.month.day.build number
 	current_buffer[0] = 0;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 3; i++)
 		dc_motor_state[i] = COMMAND_DONE;
@@ -675,13 +675,13 @@ void t_jenny5_arduino_controller::send_create_sonars(int num_sonars, int* trig_p
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *_home)
+void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *_home, int *_direction)
 {
 	char s[63];
 	sprintf(s, "CP %d", num_potentiometers);
 	char tmp_s[100];
 	for (int i = 0; i < num_potentiometers; i++) {
-		sprintf(tmp_s, "%d %d %d %d", out_pins[i], _low[i], _high[i], _home[i]);
+		sprintf(tmp_s, "%d %d %d %d", out_pins[i], _low[i], _high[i], _home[i], _direction[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}
