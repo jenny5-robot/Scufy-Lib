@@ -8,7 +8,7 @@
 #include <opencv2\highgui\highgui.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 
-#include "../include/jenny5_command_module.h"
+#include "../include/jenny5_arduino_controller.h"
 #include "../include/jenny5_events.h"
 #include "point_tracker.h"
 //----------------------------------------------------------------
@@ -60,11 +60,11 @@ bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 	return found_one;
 }
 //----------------------------------------------------------------
-bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, CascadeClassifier &face_classifier, char* error_string)
+bool init(t_jenny5_arduino_controller &head_controller, VideoCapture &head_cam, CascadeClassifier &face_classifier, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(2, 115200)) { // real - 1
+	if (!head_controller.connect(10, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -112,32 +112,32 @@ bool init(t_jenny5_command_module &head_controller, VideoCapture &head_cam, Casc
 	return true;
 }
 //----------------------------------------------------------------
-bool setup(t_jenny5_command_module &head_controller, char* error_string)
+bool setup(t_jenny5_arduino_controller &head_controller, char* error_string)
 {
 
-	int head_motors_dir_pins[2] = { 2, 5 };
-	int head_motors_step_pins[2] = { 3, 6 };
-	int head_motors_enable_pins[2] = { 4, 7 };
+	int head_motors_dir_pins[2] = { 5, 2 };
+	int head_motors_step_pins[2] = { 6, 3 };
+	int head_motors_enable_pins[2] = { 7, 4 };
 	head_controller.send_create_stepper_motors(2, head_motors_dir_pins, head_motors_step_pins, head_motors_enable_pins);
 
-	int head_sonars_trig_pins[1] = { 8 };
-	int head_sonars_echo_pins[1] = { 9 };
+	//int head_sonars_trig_pins[1] = { 8 };
+	//int head_sonars_echo_pins[1] = { 9 };
 
-	head_controller.send_create_sonars(1, head_sonars_trig_pins, head_sonars_echo_pins);
+	//head_controller.send_create_sonars(1, head_sonars_trig_pins, head_sonars_echo_pins);
 
-	int head_infrared_pins[2] = { 0, 1 };
-	int head_infrared_min[2] = { 100, 100 };
-	int head_infrared_max[2] = { 650, 800 };
-	int head_infrared_home[2] = { 470, 400 };
-	int head_infrared_dir[2] = { 1, 1 };
+	int head_potentiometer_pins[2] = { 0, 1 };
+	int head_potentiometer_min[2] = { 329, 332 };
+	int head_potentiometer_max[2] = { 829, 832 };
+	int head_potentiometer_home[2] = { 529, 632 };
+	int head_potentiometer_dir[2] = { -1, 1 };
 
-	head_controller.send_create_infrared_sensors(2, head_infrared_pins, head_infrared_min, head_infrared_max, head_infrared_home, head_infrared_dir);
+	head_controller.send_create_potentiometers(2, head_potentiometer_pins, head_potentiometer_min, head_potentiometer_max, head_potentiometer_home, head_potentiometer_dir);
 
 	clock_t start_time = clock();
 
 	bool motors_controller_created = false;
 	bool sonars_controller_created = false;
-	bool infrareds_controller_created = false;
+	bool potentiometers_controller_created = false;
 
 	while (1) {
 		if (!head_controller.update_commands_from_serial())
@@ -146,13 +146,13 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 		if (head_controller.query_for_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 			motors_controller_created = true;
 
-		if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
+		//if (head_controller.query_for_event(SONARS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 			sonars_controller_created = true;
 
-		if (head_controller.query_for_event(INFRARED_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
-			infrareds_controller_created = true;
+		if (head_controller.query_for_event(POTENTIOMETERS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
+			potentiometers_controller_created = true;
 
-		if (motors_controller_created && sonars_controller_created && infrareds_controller_created)
+		if (motors_controller_created && sonars_controller_created && potentiometers_controller_created)
 			break;
 
 		// measure the passed time 
@@ -165,8 +165,8 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 				sprintf(error_string, "Cannot create head's motors controller! Game over!");
 			if (!sonars_controller_created)
 				sprintf(error_string, "Cannot create head's sonars controller! Game over!");
-			if (!infrareds_controller_created)
-				sprintf(error_string, "Cannot create head's infrared controller! Game over!");
+			if (!potentiometers_controller_created)
+				sprintf(error_string, "Cannot create head's potentiometers controller! Game over!");
 			return false;
 		}
 	}
@@ -175,15 +175,15 @@ bool setup(t_jenny5_command_module &head_controller, char* error_string)
 	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1500, 500);
 	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1500, 500);
 
-	int infrared_index_m1[1] = { 0 };
-	int infrared_index_m2[1] = { 1 };
-	head_controller.send_attach_sensors_to_stepper_motor(0, 0, NULL, 1, infrared_index_m1, 0, NULL);
-	head_controller.send_attach_sensors_to_stepper_motor(1, 0, NULL, 1, infrared_index_m2, 0, NULL);
+	int potentiometer_index_m1[1] = { 0 };
+	int potentiometer_index_m2[1] = { 1 };
+	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_HORIZONTAL, 1, potentiometer_index_m1, 0, NULL, 0, NULL);
+	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_VERTICAL, 1, potentiometer_index_m2, 0, NULL, 0, NULL);
 
 	return true;
 }
 //----------------------------------------------------------------
-bool init(t_jenny5_command_module &head_controller, char* error_string)
+bool init(t_jenny5_arduino_controller &head_controller, char* error_string)
 {
 	// must home the head
 	head_controller.send_go_home_stepper_motor(MOTOR_HEAD_HORIZONTAL);
@@ -218,7 +218,7 @@ bool init(t_jenny5_command_module &head_controller, char* error_string)
 			if (!vertical_motor_homed)
 				sprintf(error_string, "Cannot home vertical motor! Game over!");
 			if (!horizontal_motor_homed)
-				sprintf(error_string, "Cannot home vertical motor! Game over!");
+				sprintf(error_string, "Cannot home horizontal motor! Game over!");
 			return false;
 		}
 	}
@@ -229,7 +229,7 @@ bool init(t_jenny5_command_module &head_controller, char* error_string)
 //----------------------------------------------------------------
 int	main(int argc, const char** argv)
 {
-	t_jenny5_command_module head_controller;
+	t_jenny5_arduino_controller head_controller;
 	VideoCapture head_cam;
 	CascadeClassifier face_classifier;
 
@@ -272,8 +272,8 @@ int	main(int argc, const char** argv)
 	namedWindow("Head camera", WINDOW_AUTOSIZE); // window to display the results
 
 	bool active = true;
-	while (active)        // starting infinit loop
-	{
+	while (active){        // starting infinit loop
+	
 		if (!head_controller.update_commands_from_serial())
 			Sleep(DOES_NOTHING_SLEEP); // no new data from serial ... we make a little pause so that we don't kill the processor
 
@@ -295,7 +295,7 @@ int	main(int argc, const char** argv)
 			Point p1(head_center.x - head_center.range, head_center.y - head_center.range);
 			Point p2(head_center.x + head_center.range, head_center.y + head_center.range);
 			// draw an outline for the faces
-			rectangle(cam_frame, Point(300, 300), Point(500, 400), cvScalar(0, 255, 0, 0), 1, 8, 0);
+			rectangle(cam_frame, p1, p2, cvScalar(0, 255, 0, 0), 1, 8, 0);
 		}
 		else {
 			Sleep(DOES_NOTHING_SLEEP); // no face found
@@ -393,6 +393,9 @@ int	main(int argc, const char** argv)
 		if (waitKey(1) >= 0)  // break the loop
 			active = false;
 	}
+
+	head_controller.send_move_stepper_motor(MOTOR_HEAD_HORIZONTAL, 0);
+	head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, 0);
 
 	head_controller.close_connection();
 	return 0;
