@@ -161,21 +161,22 @@ void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor
 	sprintf(s, "AS%d %d", motor_index, num_potentiometers + num_infrared + num_buttons);
 	for (int i = 0; i < num_potentiometers; i++) {
 		char tmp_str[63];
-		sprintf(tmp_str, " P%d#", potentiometers_index[i]);
+		sprintf(tmp_str, " P%d", potentiometers_index[i]);
 		strcat(s, tmp_str);
 	}
 	for (int i = 0; i < num_infrared; i++) {
 		char tmp_str[63];
-		sprintf(tmp_str, " I%d#", infrared_index[i]);
+		sprintf(tmp_str, " I%d", infrared_index[i]);
 		strcat(s, tmp_str);
 	}
 
 	for (int i = 0; i < num_buttons; i++) {
 		char tmp_str[63];
-		sprintf(tmp_str, " B%d#", buttons_index[i]);
+		sprintf(tmp_str, " B%d", buttons_index[i]);
 		strcat(s, tmp_str);
 	}
 
+	strcat(s, "#");
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -681,7 +682,7 @@ void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiomet
 	sprintf(s, "CP %d", num_potentiometers);
 	char tmp_s[100];
 	for (int i = 0; i < num_potentiometers; i++) {
-		sprintf(tmp_s, "%d %d %d %d", out_pins[i], _low[i], _high[i], _home[i], _direction[i]);
+		sprintf(tmp_s, "%d %d %d %d %d", out_pins[i], _low[i], _high[i], _home[i], _direction[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}
