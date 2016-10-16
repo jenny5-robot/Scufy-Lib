@@ -14,7 +14,7 @@
 #include <time.h>
 #include <math.h>
 
-#include "jenny5_command_module.h"
+#include "jenny5_arduino_controller.h"
 #include "jenny5_events.h"
 
 //----------------------------------------------------------------
@@ -37,11 +37,11 @@ double scale_factor = 0.1;
 int lidar_distances[LIDAR_NUM_STEPS];
 
 //----------------------------------------------------------------
-bool connect(t_jenny5_command_module &lidar_controller, char* error_string)
+bool connect(t_jenny5_arduino_controller &lidar_controller, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!lidar_controller.connect(3, 115200)) { // real number - 1
+	if (!lidar_controller.connect(10, 115200)) { // real number - 1
 		sprintf(error_string, "Error attaching to Jenny 5' LIDAR!");
 		return false;
 	}
@@ -77,9 +77,9 @@ bool connect(t_jenny5_command_module &lidar_controller, char* error_string)
 	return true;
 }
 //----------------------------------------------------------------
-bool setup(t_jenny5_command_module &LIDAR_controller, char* error_string)
+bool setup(t_jenny5_arduino_controller &LIDAR_controller, char* error_string)
 {
-	LIDAR_controller.send_create_LIDAR(5, 6, 7, 11);// dir, step, enable, IR_pin
+	LIDAR_controller.send_create_LIDAR(5, 6, 7, 12);// dir, step, enable, IR_pin
 
 	clock_t start_time = clock();
 
@@ -167,7 +167,7 @@ static void on_mouse(int event, int x, int y, int flags, void *userdata)
 //----------------------------------------------------------------
 int	main(void)
 {
-	t_jenny5_command_module LIDAR_controller;
+	t_jenny5_arduino_controller LIDAR_controller;
 	
 	for (int i = 0; i < LIDAR_NUM_STEPS; i++)
 		lidar_distances[i] = 0;
@@ -195,7 +195,7 @@ int	main(void)
 	else
 		printf("Setup OK.\n");
 
-	LIDAR_controller.send_set_LIDAR_motor_speed_and_acceleration(30, 100);
+	LIDAR_controller.send_set_LIDAR_motor_speed_and_acceleration(60, 100);
 	LIDAR_controller.send_LIDAR_go();
 
 	namedWindow("LIDAR map", WINDOW_AUTOSIZE);
