@@ -23,12 +23,12 @@
 using namespace std;
 using namespace cv;
 
-typedef struct _CENTER_POINT
+typedef struct t_CENTER_POINT
 {
 	int x;
 	int y;
 	int range;
-}CENTER_POINT, *PCENTER_POINT;
+};
 
 #define MOTOR_HEAD_HORIZONTAL 0
 #define MOTOR_HEAD_VERTICAL 1
@@ -41,7 +41,7 @@ typedef struct _CENTER_POINT
 
 
 //----------------------------------------------------------------
-bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
+bool biggest_face(std::vector<Rect> faces, t_CENTER_POINT &center)
 {
 
 	center.x = -1;
@@ -64,7 +64,7 @@ bool init(t_jenny5_arduino_controller &head_controller, VideoCapture &head_cam, 
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(10, 115200)) { // real - 1
+	if (!head_controller.connect(4, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -183,7 +183,7 @@ bool setup(t_jenny5_arduino_controller &head_controller, char* error_string)
 	return true;
 }
 //----------------------------------------------------------------
-bool init(t_jenny5_arduino_controller &head_controller, char* error_string)
+bool home_motors(t_jenny5_arduino_controller &head_controller, char* error_string)
 {
 	// must home the head
 	head_controller.send_go_home_stepper_motor(MOTOR_HEAD_HORIZONTAL);
@@ -256,7 +256,7 @@ int	main(int argc, const char** argv)
 
 
 	//  init
-	if (!init(head_controller, error_string)) {
+	if (!home_motors(head_controller, error_string)) {
 		printf("%s\n", error_string);
 		printf("Press Enter to terminate ...");
 		getchar();
@@ -287,7 +287,7 @@ int	main(int argc, const char** argv)
 		// find and store the faces
 		face_classifier.detectMultiScale(gray_frame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(50, 50));
 
-		CENTER_POINT head_center;
+		t_CENTER_POINT head_center;
 
 		bool face_found = biggest_face(faces, head_center);
 
