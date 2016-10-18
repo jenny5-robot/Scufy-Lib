@@ -56,7 +56,7 @@ void t_roboclaw_controller::close_connection(void)
 
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::send_command(int command)
+void t_roboclaw_controller::send_command(unsigned char command)
 {
 	unsigned char buffer[2];
 	buffer[0] = 0x80;// port
@@ -71,13 +71,13 @@ bool t_roboclaw_controller::read_result(unsigned char* buffer, int buffer_size)
 //--------------------------------------------------------------
 void t_roboclaw_controller::get_firmware_version(char *firmware_version)
 {
+	unsigned char buffer[32];
 
-	firmware_version[0] = 0x80;// port
-	firmware_version[1] = GETVERSION;
-	RS232_SendBuf(port_number, (unsigned char*)firmware_version, 2);
+	buffer[0] = 0x80;// port
+	buffer[1] = GETVERSION;
+	RS232_SendBuf(port_number, (unsigned char*)buffer, 2);
 	Sleep(10);
 
-	unsigned char buffer[32];
 	RS232_PollComport(port_number, buffer, 32);
 	strcpy(firmware_version, (char*)buffer);
 }

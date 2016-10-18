@@ -129,7 +129,7 @@ public:
 
 	bool connect(int port, int baud_rate);
 	void close_connection(void);
-	void send_command(int command);
+	void send_command(unsigned char command);
 	bool read_result(unsigned char* buffer, int buffer_size);
 
 	// Read the board temperature.Value returned is in 10ths of degrees.
