@@ -24,12 +24,14 @@
 using namespace std;
 using namespace cv;
 
-typedef struct _CENTER_POINT
+struct t_CENTER_POINT
 {
 	int x;
 	int y;
 	int range;
-}CENTER_POINT, *PCENTER_POINT;
+};
+
+
 
 #define MOTOR_HEAD_HORIZONTAL 0
 #define MOTOR_HEAD_VERTICAL 1
@@ -47,17 +49,16 @@ typedef struct _CENTER_POINT
 
 #define TRACKS_MOTOR_REDUCTION 5
 
-#define LIDAR_NUM_STEPS 200
+#define LIDAR_NUM_STEPS 210
 
 double scale_factor = 5.0;
-int lidar_distances[LIDAR_NUM_STEPS];
 
 #define MOTOR_FULL_SPEED 1500
 #define MOTOR_FULL_TORQUE_SPEED 500
 
 
 //----------------------------------------------------------------
-bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
+bool biggest_face(std::vector<Rect> faces, t_CENTER_POINT &center)
 {
 
 	center.x = -1;
@@ -67,7 +68,7 @@ bool biggest_face(std::vector<Rect> faces, CENTER_POINT &center)
 	bool found_one = false;
 	for (unsigned int i = 0; i < faces.size(); i++) {
 		if ((faces[i].width) / 2 > center.range) {
-			center.range = (faces[i].width) / 2;
+			center.range = faces[i].width / 2;
 			center.x = faces[i].x + center.range;
 			center.y = faces[i].y + center.range;
 			found_one = true;
@@ -80,17 +81,17 @@ bool connect(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_cont
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(2, 115200)) { // real - 1
+	if (!head_controller.connect(4, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
 
-	if (!lidar_controller.connect(3, 115200)) {
+	if (!lidar_controller.connect(5, 115200)) {
 		sprintf(error_string, "Error attaching to Jenny 5' LIDAR!");
 		return false;
 	}
 
-	if (!tracks_controller.connect(3, 115200)) {
+	if (!tracks_controller.connect(6, 38400)) {
 		sprintf(error_string, "Error attaching to Jenny 5' tracks!");
 		return false;
 	}
@@ -100,7 +101,7 @@ bool connect(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_cont
 	// wait for no more than 3 seconds. If it takes more it means that something is not right, so we have to abandon it
 	clock_t start_time = clock();
 	bool head_responded = false;
-	bool tracks_responded = false;
+	bool lidar_responded = false;
 
 	while (1) {
 		if (!head_controller.update_commands_from_serial() && !lidar_controller.update_commands_from_serial())
@@ -110,11 +111,11 @@ bool connect(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_cont
 			if (head_controller.query_for_event(IS_ALIVE_EVENT, 0))  // have we received the event from Serial ?
 				head_responded = true;
 		
-		if (!tracks_responded)
+		if (!lidar_responded)
 			if (lidar_controller.query_for_event(IS_ALIVE_EVENT, 0))  // have we received the event from Serial ?
-				tracks_responded = true;
+				lidar_responded = true;
 
-		if (head_responded && tracks_responded)
+		if (head_responded && lidar_responded)
 			break;
 		// measure the passed time 
 		clock_t end_time = clock();
@@ -125,15 +126,11 @@ bool connect(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_cont
 			if (!head_responded)
 			  sprintf(error_string, "Head does not respond! Game over!");
 
-			if (!tracks_responded)
-				sprintf(error_string, "Tracks do not respond! Game over!");
+			if (!lidar_responded)
+				sprintf(error_string, "LIDAR does not respond! Game over!");
 			return false;
 		}
 	}
-
-	// home head's motors
-
-
 
 	// create cascade for face reco
 	// load haarcascade library
@@ -174,14 +171,12 @@ bool setup(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_contro
 
 	head_controller.send_create_potentiometers(2, head_potentiometer_pins, head_potentiometer_min, head_potentiometer_max, head_potentiometer_home, head_potentiometer_dir);
 
-	lidar_controller.send_create_LIDAR(5, 6, 7, 11);// dir, step, enable, IR_pin
+	lidar_controller.send_create_LIDAR(5, 6, 7, 12);// dir, step, enable, IR_pin
 
 	clock_t start_time = clock();
 	bool head_motors_controler_created = false;
-	//bool head_sonars_controller_created = false;
-	bool infrareds_controller_created = false;
+	bool potentiometers_controller_created = false;
 	bool lidar_controller_created = false;
-
 
 	while (1) {
 		if (!head_controller.update_commands_from_serial() && !lidar_controller.update_commands_from_serial())
@@ -191,14 +186,14 @@ bool setup(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_contro
 			if (head_controller.query_for_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
 				head_motors_controler_created = true;
 
-		if (head_controller.query_for_event(INFRARED_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
-			infrareds_controller_created = true;
+		if (head_controller.query_for_event(POTENTIOMETERS_CONTROLLER_CREATED_EVENT, 0))  // have we received the event from Serial ?
+			potentiometers_controller_created = true;
 
 		if (!lidar_controller_created)
 			if (lidar_controller.query_for_event(LIDAR_CONTROLLER_CREATED_EVENT))  // have we received the event from Serial ?
 				lidar_controller_created = true;
 
-		if (head_motors_controler_created && lidar_controller_created && /*head_sonars_controller_created && */infrareds_controller_created)
+		if (head_motors_controler_created && lidar_controller_created && /*head_sonars_controller_created && */potentiometers_controller_created)
 			break;
 
 		// measure the passed time 
@@ -213,8 +208,8 @@ bool setup(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_contro
 			//if (!head_sonars_controller_created)
 				//sprintf(error_string, "Cannot create head's sonars controller! Game over!");
 
-			if (!infrareds_controller_created)
-				sprintf(error_string, "Cannot create head's infrared controller! Game over!");
+			if (!potentiometers_controller_created)
+				sprintf(error_string, "Cannot create head's potentiometers controller! Game over!");
 
 			if (!lidar_controller_created)
 				sprintf(error_string, "Cannot create LIDAR controller! Game over!");
@@ -231,8 +226,6 @@ bool setup(t_jenny5_arduino_controller &head_controller, t_jenny5_arduino_contro
 	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_HORIZONTAL, 1, potentiometer_index_m1, 0, NULL, 0, NULL);
 	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_VERTICAL, 1, potentiometer_index_m2, 0, NULL, 0, NULL);
 
-	lidar_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_LEFT, MOTOR_FULL_SPEED, 500);
-	lidar_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_tracks_RIGHT, MOTOR_FULL_SPEED, 500);
 	return true;
 }
 //----------------------------------------------------------------
@@ -327,6 +320,9 @@ int	main(void)
 	else
 		printf("Home motors succceded.\n");
 
+	int lidar_distances[LIDAR_NUM_STEPS];
+
+	
 	lidar_controller.send_set_LIDAR_motor_speed_and_acceleration(30, 100);
 	lidar_controller.send_LIDAR_go();
 
@@ -337,7 +333,7 @@ int	main(void)
 	Point center(w / 2, w / 2);
 	circle(lidar_map_image, center, 20.0, Scalar(0, 255, 0), 1, 8);
 	// finish drawing robot
-
+	
 	Mat cam_frame; // images used in the proces
 	Mat gray_frame;
 
@@ -349,6 +345,7 @@ int	main(void)
 		if (!head_controller.update_commands_from_serial() && !lidar_controller.update_commands_from_serial())
 			Sleep(DOES_NOTHING_SLEEP); // no new data from serial ... we take a little break so that we don't kill the processor
 		else {
+			
 			// extract all data from LIDAR 
 			int motor_position, distance;
 			bool at_least_one_new_LIDAR_distance = false;
@@ -373,18 +370,19 @@ int	main(void)
 
 			if (at_least_one_new_LIDAR_distance)
 			  imshow("LIDAR map", lidar_map_image);
+			  
 		}
 		head_cam >> cam_frame; // put captured-image frame in frame
 
 		cvtColor(cam_frame, gray_frame, CV_BGR2GRAY); // convert to gray and equalize
 		equalizeHist(gray_frame, gray_frame);
 
-		std::vector<Rect> faces;// create an array to store the faces found
+		std::vector<Rect> faces;// create an array to store the found faces
 
 		// find and store the faces
 		face_detector.detectMultiScale(gray_frame, faces, 1.1, 3, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
-		CENTER_POINT head_center;
+		t_CENTER_POINT head_center;
 
 		bool face_found = biggest_face(faces, head_center);
 
@@ -428,12 +426,7 @@ int	main(void)
 					// rotate
 					tracks_controller.drive_M1_with_signed_duty_and_acceleration(-100, 1);
 					tracks_controller.drive_M2_with_signed_duty_and_acceleration(-100, 1);
-					/*
-					lidar_controller.send_move_stepper_motor2(MOTOR_tracks_RIGHT, num_steps_x, MOTOR_tracks_LEFT, num_steps_x);
-					lidar_controller.set_stepper_motor_state(MOTOR_tracks_RIGHT, COMMAND_SENT);
-					lidar_controller.set_stepper_motor_state(MOTOR_tracks_LEFT, COMMAND_SENT);
-					printf("tracks: M%d %d# - sent\n", MOTOR_tracks_RIGHT, num_steps_x);
-					*/
+
 				}
 				else {
 
@@ -517,6 +510,7 @@ int	main(void)
 	// close connection
 	head_controller.close_connection();
 	lidar_controller.close_connection();
+	tracks_controller.close_connection();
 	return 0;
 }
 //----------------------------------------------------------------
