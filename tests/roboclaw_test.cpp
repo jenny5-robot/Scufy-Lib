@@ -14,7 +14,7 @@ int main(void)
 	t_roboclaw_controller roboclaw;
 
 	// connect
-	if (!roboclaw.connect(19, 38400)) { // real - 1
+	if (!roboclaw.connect(6, 38400)) { // real - 1
 		printf("Cannot connect! Game over.");
 		getchar();
 		return 1;
@@ -49,7 +49,7 @@ int main(void)
 	// read the result
 	roboclaw.read_result((unsigned char*)buffer, 100);
 
-	roboclaw.drive_M1_with_signed_duty_and_acceleration(-3000, 1);
+	roboclaw.drive_M1_with_signed_duty_and_acceleration(-1200, 1);
 	Sleep(5);
 	// read the result
 	roboclaw.read_result((unsigned char*)buffer, 100);
