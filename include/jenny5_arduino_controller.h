@@ -265,10 +265,10 @@ public:
 	void set_infrared_state(int infrared_index, int new_state);
 
 	// returns the state of the tera ranger one sensor
-	int get_tera_ranger_one_state(int infrared_index);
+	int get_tera_ranger_one_state(void);
 
 	// sets the state of the tera ranger one sensor
-	void set_tera_ranger_one_state(int infrared_index, int new_state);
+	void set_tera_ranger_one_state(int new_state);
 };
 //----------------------------------------------------------------
 #endif

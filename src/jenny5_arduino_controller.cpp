@@ -829,13 +829,13 @@ void t_jenny5_arduino_controller::send_create_LIDAR(int dir_pin, int step_pin, i
 //--------------------------------------------------------------
 
 // returns the state of the tera ranger one sensor
-int t_jenny5_arduino_controller::get_tera_ranger_one_state(int infrared_index)
+int t_jenny5_arduino_controller::get_tera_ranger_one_state(void)
 {
 	return tera_ranger_one_state;
 }
 //--------------------------------------------------------------
 // sets the state of the tera ranger one sensor
-void t_jenny5_arduino_controller::set_tera_ranger_one_state(int infrared_index, int new_state)
+void t_jenny5_arduino_controller::set_tera_ranger_one_state(int new_state)
 {
 	tera_ranger_one_state = new_state;
 }
