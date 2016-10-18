@@ -53,8 +53,11 @@ struct t_CENTER_POINT
 
 double scale_factor = 5.0;
 
-#define MOTOR_FULL_SPEED 1500
-#define MOTOR_FULL_TORQUE_SPEED 500
+//#define MOTOR_FULL_SPEED 1500
+//#define MOTOR_FULL_TORQUE_SPEED 500
+
+#define DC_MOTOR_SPEED 2000
+
 
 
 //----------------------------------------------------------------
@@ -409,8 +412,8 @@ int	main(void)
 				//int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8) * TRACKS_MOTOR_REDUCTION;
 
 				// rotate
-				tracks_controller.drive_M1_with_signed_duty_and_acceleration(100, 1);
-				tracks_controller.drive_M2_with_signed_duty_and_acceleration(100, 1);
+				tracks_controller.drive_M1_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
+				tracks_controller.drive_M2_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
 				//lidar_controller.set_stepper_motor_state(MOTOR_tracks_LEFT, COMMAND_SENT);
 				//lidar_controller.set_stepper_motor_state(MOTOR_tracks_RIGHT, COMMAND_SENT);
 				//printf("tracks: M%d %d M%d %d# - sent\n", MOTOR_tracks_LEFT, num_steps_x, MOTOR_tracks_RIGHT, num_steps_x);
@@ -424,8 +427,8 @@ int	main(void)
 //					int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8) * TRACKS_MOTOR_REDUCTION;
 
 					// rotate
-					tracks_controller.drive_M1_with_signed_duty_and_acceleration(-100, 1);
-					tracks_controller.drive_M2_with_signed_duty_and_acceleration(-100, 1);
+					tracks_controller.drive_M1_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
+					tracks_controller.drive_M2_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
 
 				}
 				else {
@@ -435,8 +438,8 @@ int	main(void)
 						// move forward
 						// only if LIDAR distance to the front point is very far from the robot
 						if (clear_ahead(lidar_distances)) {
-							tracks_controller.drive_M1_with_signed_duty_and_acceleration(100, 1);
-							tracks_controller.drive_M2_with_signed_duty_and_acceleration(-100, 1);
+							tracks_controller.drive_M1_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
+							tracks_controller.drive_M2_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
 
 							printf("tracks: M%d %d# - sent\n", MOTOR_tracks_LEFT, 1000);
 
@@ -445,8 +448,8 @@ int	main(void)
 					}
 					else {
 						// move backward
-						tracks_controller.drive_M1_with_signed_duty_and_acceleration(-100, 1);
-						tracks_controller.drive_M2_with_signed_duty_and_acceleration(100, 1);
+						tracks_controller.drive_M1_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
+						tracks_controller.drive_M2_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
 						printf("tracks: M%d %d# - sent\n", MOTOR_tracks_RIGHT, 1000);
 					}
 
@@ -473,6 +476,11 @@ int	main(void)
 						printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 						//		head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 					}
+		}
+		else {
+			// no face found ... so stop the platoform motors
+			tracks_controller.drive_M1_with_signed_duty_and_acceleration(0, 1);
+			tracks_controller.drive_M2_with_signed_duty_and_acceleration(0, 1);
 		}
 
 		// now extract the executed moves from the queue ... otherwise they will just sit there and will occupy memory
