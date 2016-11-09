@@ -41,7 +41,7 @@ struct t_CENTER_POINT
 
 #define NUM_SECONDS_TO_WAIT_FOR_CONNECTION 3
 
-#define TOLERANCE 150
+#define TOLERANCE 100
 
 #define DOES_NOTHING_SLEEP 10
 
@@ -56,7 +56,8 @@ double scale_factor = 5.0;
 //#define MOTOR_FULL_SPEED 1500
 //#define MOTOR_FULL_TORQUE_SPEED 500
 
-#define DC_MOTOR_SPEED 2000
+#define DC_MOTOR_SPEED 3000
+#define DC_MOTOR_SPEED_ROTATE 3000
 
 
 
@@ -397,8 +398,7 @@ int	main(void)
 		}
 		else {
 			Sleep(DOES_NOTHING_SLEEP); // no face found
-			//head_controller.send_move_motor(MOTOR_HEAD_HORIZONTAL, 0);// stops 
-			//head_controller.send_move_motor(MOTOR_HEAD_VERTICAL, 0);
+			// I have to move the head right-left; top-down
 		}
 
 		imshow("Head camera", cam_frame); // display the result
@@ -412,13 +412,9 @@ int	main(void)
 				//int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8) * TRACKS_MOTOR_REDUCTION;
 
 				// rotate
-				tracks_controller.drive_M1_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
-				tracks_controller.drive_M2_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
-				//lidar_controller.set_stepper_motor_state(MOTOR_tracks_LEFT, COMMAND_SENT);
-				//lidar_controller.set_stepper_motor_state(MOTOR_tracks_RIGHT, COMMAND_SENT);
-				//printf("tracks: M%d %d M%d %d# - sent\n", MOTOR_tracks_LEFT, num_steps_x, MOTOR_tracks_RIGHT, num_steps_x);
-
-
+				tracks_controller.drive_M1_with_signed_duty_and_acceleration(DC_MOTOR_SPEED_ROTATE, 1);
+				tracks_controller.drive_M2_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED_ROTATE, 1);
+				printf("rotate right - sent\n");
 			}
 			else
 				if (head_center.x < cam_frame.cols / 2 - TOLERANCE) {
@@ -427,9 +423,9 @@ int	main(void)
 //					int num_steps_x = (int)(angle_offset.degrees_from_center_x / 1.8 * 8) * TRACKS_MOTOR_REDUCTION;
 
 					// rotate
-					tracks_controller.drive_M1_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
-					tracks_controller.drive_M2_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
-
+					tracks_controller.drive_M1_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED_ROTATE, 1);
+					tracks_controller.drive_M2_with_signed_duty_and_acceleration(DC_MOTOR_SPEED_ROTATE, 1);
+					printf("rotate left - sent\n");
 				}
 				else {
 
@@ -441,16 +437,20 @@ int	main(void)
 							tracks_controller.drive_M1_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
 							tracks_controller.drive_M2_with_signed_duty_and_acceleration(-DC_MOTOR_SPEED, 1);
 
-							printf("tracks: M%d %d# - sent\n", MOTOR_tracks_LEFT, 1000);
-
-
+							printf("move ahead - sent\n");
+						}
+						else {
+							// stop the robot -- here I have to move around the obstacle
+							tracks_controller.drive_M1_with_signed_duty_and_acceleration(0, 1);
+							tracks_controller.drive_M2_with_signed_duty_and_acceleration(0, 1);
+							printf("cannot move ahead - obstacle detected\n");
 						}
 					}
 					else {
 						// move backward
 						tracks_controller.drive_M1_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
 						tracks_controller.drive_M2_with_signed_duty_and_acceleration(DC_MOTOR_SPEED, 1);
-						printf("tracks: M%d %d# - sent\n", MOTOR_tracks_RIGHT, 1000);
+						printf("move backward - sent\n");
 					}
 
 				}
@@ -463,7 +463,7 @@ int	main(void)
 
 					head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
 					head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-					printf("M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
+					printf("move head down M%d %d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 					//	head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 				}
 				else
@@ -473,7 +473,7 @@ int	main(void)
 
 						head_controller.send_move_stepper_motor(MOTOR_HEAD_VERTICAL, num_steps_y);
 						head_controller.set_stepper_motor_state(MOTOR_HEAD_VERTICAL, COMMAND_SENT);
-						printf("M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
+						printf("hove head up M%d -%d# - sent\n", MOTOR_HEAD_VERTICAL, num_steps_y);
 						//		head_controller.set_sonar_state(0, COMMAND_DONE); // if the motor has been moved the previous distances become invalid
 					}
 		}
@@ -481,6 +481,8 @@ int	main(void)
 			// no face found ... so stop the platoform motors
 			tracks_controller.drive_M1_with_signed_duty_and_acceleration(0, 1);
 			tracks_controller.drive_M2_with_signed_duty_and_acceleration(0, 1);
+
+			printf("no face found - motors stopped\n");
 		}
 
 		// now extract the executed moves from the queue ... otherwise they will just sit there and will occupy memory
@@ -519,6 +521,7 @@ int	main(void)
 	head_controller.close_connection();
 	lidar_controller.close_connection();
 	tracks_controller.close_connection();
+
 	return 0;
 }
 //----------------------------------------------------------------
