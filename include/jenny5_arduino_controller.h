@@ -121,12 +121,12 @@ public:
 	// sends (to Arduino) a command for creating a potentiometer controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
-	void send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *home, int *_direction);
+	void send_create_potentiometers(int num_potentiometers, int* out_pins);
 
 	// sends (to Arduino) a command for creating an infrared controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
-	void send_create_infrared_sensors(int num_infrared_sensors, int* out_pins, int *_min, int *_max, int *_home, int *_dir);
+	void send_create_infrared_sensors(int num_infrared_sensors, int* out_pins);
 
 	// sends (to Arduino) a command for creating a buttons controller
 	// this method should be called once at the beginning of the program
@@ -176,7 +176,7 @@ public:
 	void send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration);
 	
 	// sends (to Arduino) a command for attaching several sensors to a given motor
-	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index);
+	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int* _low, int* _high, int *home, int *_direction, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index);
 
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
 	void send_remove_attached_sensors_from_stepper_motor(int motor_index);
@@ -242,7 +242,7 @@ public:
 	void send_get_potentiometer_parameters(int potentiometer_index);
 
 	// sends (to Arduino) a command for setting parameters of a potentiometer
-	void send_set_potentiometer_parameters(int potentiometer_index, int min, int max, int home, int direction);
+	void send_set_potentiometer_parameters(int potentiometer_index);
 	
 
 	// STATE

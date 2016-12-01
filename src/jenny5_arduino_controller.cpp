@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(version, "2016.10.10.0"); // year.month.day.build number
+	strcpy(version, "2016.11.29.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -155,13 +155,13 @@ int t_jenny5_arduino_controller::get_data_from_serial(char *buffer, int buffer_s
 	return RS232_PollComport(port_number, (unsigned char*)buffer, buffer_size);
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index)
+void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int* _low, int* _high, int *home, int *_direction, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index)
 {
 	char s[63];
 	sprintf(s, "AS%d %d", motor_index, num_potentiometers + num_infrared + num_buttons);
 	for (int i = 0; i < num_potentiometers; i++) {
 		char tmp_str[63];
-		sprintf(tmp_str, " P%d", potentiometers_index[i]);
+		sprintf(tmp_str, " P%d %d %d %d %d", potentiometers_index[i], _low[i], _high[i], home[i], _direction[i]);
 		strcat(s, tmp_str);
 	}
 	for (int i = 0; i < num_infrared; i++) {
@@ -201,10 +201,10 @@ void t_jenny5_arduino_controller::send_get_potentiometer_parameters(int potentio
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_set_potentiometer_parameters(int potentiometer_index, int _min, int _max, int _home, int _direction)
+void t_jenny5_arduino_controller::send_set_potentiometer_parameters(int potentiometer_index)
 {
 	char s[30];
-	sprintf(s, "SP%d %d %d %d %d#", potentiometer_index, _min, _max, _home, _direction);
+	sprintf(s, "SP%d#", potentiometer_index);
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
@@ -676,13 +676,13 @@ void t_jenny5_arduino_controller::send_create_sonars(int num_sonars, int* trig_p
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiometers, int* out_pins, int* _low, int* _high, int *_home, int *_direction)
+void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiometers, int* out_pins)
 {
 	char s[63];
 	sprintf(s, "CP %d", num_potentiometers);
 	char tmp_s[100];
 	for (int i = 0; i < num_potentiometers; i++) {
-		sprintf(tmp_s, "%d %d %d %d %d", out_pins[i], _low[i], _high[i], _home[i], _direction[i]);
+		sprintf(tmp_s, "%d", out_pins[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}
@@ -690,13 +690,13 @@ void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiomet
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_infrared_sensors(int num_infrared_sensors, int* _out_pins, int *_min, int *_max, int *_home, int *_dir)
+void t_jenny5_arduino_controller::send_create_infrared_sensors(int num_infrared_sensors, int* _out_pins)
 {
 	char s[63];
 	sprintf(s, "CI %d", num_infrared_sensors);
 	char tmp_s[100];
 	for (int i = 0; i < num_infrared_sensors; i++) {
-		sprintf(tmp_s, "%d %d %d %d %d", _out_pins[i], _min[i], _max[i], _home[i], _dir[i]);
+		sprintf(tmp_s, "%d", _out_pins[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}

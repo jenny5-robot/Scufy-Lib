@@ -8,8 +8,8 @@
 #include <opencv2\highgui\highgui.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 
-#include "../include/jenny5_arduino_controller.h"
-#include "../include/jenny5_events.h"
+#include "jenny5_arduino_controller.h"
+#include "jenny5_events.h"
 #include "point_tracker.h"
 //----------------------------------------------------------------
 
@@ -23,7 +23,7 @@
 using namespace std;
 using namespace cv;
 
-typedef struct t_CENTER_POINT
+struct t_CENTER_POINT
 {
 	int x;
 	int y;
@@ -64,7 +64,7 @@ bool init(t_jenny5_arduino_controller &head_controller, VideoCapture &head_cam, 
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(4, 115200)) { // real - 1
+	if (!head_controller.connect(10, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -126,12 +126,7 @@ bool setup(t_jenny5_arduino_controller &head_controller, char* error_string)
 	//head_controller.send_create_sonars(1, head_sonars_trig_pins, head_sonars_echo_pins);
 
 	int head_potentiometer_pins[2] = { 0, 1 };
-	int head_potentiometer_min[2] = { 329, 332 };
-	int head_potentiometer_max[2] = { 829, 832 };
-	int head_potentiometer_home[2] = { 529, 632 };
-	int head_potentiometer_dir[2] = { -1, 1 };
-
-	head_controller.send_create_potentiometers(2, head_potentiometer_pins, head_potentiometer_min, head_potentiometer_max, head_potentiometer_home, head_potentiometer_dir);
+	head_controller.send_create_potentiometers(2, head_potentiometer_pins);
 
 	clock_t start_time = clock();
 
@@ -171,14 +166,26 @@ bool setup(t_jenny5_arduino_controller &head_controller, char* error_string)
 		}
 	}
 
-
 	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_HORIZONTAL, 1500, 500);
 	head_controller.send_set_stepper_motor_speed_and_acceleration(MOTOR_HEAD_VERTICAL, 1500, 500);
 
 	int potentiometer_index_m1[1] = { 0 };
 	int potentiometer_index_m2[1] = { 1 };
-	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_HORIZONTAL, 1, potentiometer_index_m1, 0, NULL, 0, NULL);
-	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_VERTICAL, 1, potentiometer_index_m2, 0, NULL, 0, NULL);
+
+	
+	int head_horizontal_motor_potentiometer_min[1] = { 329};
+	int head_horizontal_motor_potentiometer_max[1] = { 829};
+	int head_horizontal_motor_potentiometer_home[1] = { 529};
+	int head_horizontal_motor_potentiometer_dir[1] = { -1};
+
+	
+	int head_vertical_motor_potentiometer_min[1] = {  332 };
+	int head_vertical_motor_potentiometer_max[1] = {  832 };
+	int head_vertical_motor_potentiometer_home[1] = {  632 };
+	int head_vertical_motor_potentiometer_dir[1] = {  1 };
+
+	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_HORIZONTAL, 1, potentiometer_index_m1, head_horizontal_motor_potentiometer_min, head_horizontal_motor_potentiometer_max, head_horizontal_motor_potentiometer_home, head_horizontal_motor_potentiometer_dir, 0, NULL, 0, NULL);
+	head_controller.send_attach_sensors_to_stepper_motor(MOTOR_HEAD_VERTICAL, 1, potentiometer_index_m2, head_vertical_motor_potentiometer_min, head_vertical_motor_potentiometer_max, head_vertical_motor_potentiometer_home, head_vertical_motor_potentiometer_dir, 0, NULL, 0, NULL);
 
 	return true;
 }
@@ -227,7 +234,7 @@ bool home_motors(t_jenny5_arduino_controller &head_controller, char* error_strin
 	return true;
 }
 //----------------------------------------------------------------
-int	main(int argc, const char** argv)
+int	main(void)
 {
 	t_jenny5_arduino_controller head_controller;
 	VideoCapture head_cam;
