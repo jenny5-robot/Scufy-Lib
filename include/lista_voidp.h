@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
-#ifndef lista_cut1dxH
-#define lista_cut1dxH
+#ifndef lista_H
+#define lista_H
 //---------------------------------------------------------------------------
 
 struct node_double_linked{
