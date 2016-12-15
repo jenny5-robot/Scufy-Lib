@@ -64,7 +64,7 @@ bool init(t_jenny5_arduino_controller &head_controller, VideoCapture &head_cam, 
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!head_controller.connect(10, 115200)) { // real - 1
+	if (!head_controller.connect(7, 115200)) { // real - 1
 		sprintf(error_string, "Error attaching to Jenny 5' head!");
 		return false;
 	}
@@ -239,6 +239,8 @@ int	main(void)
 	t_jenny5_arduino_controller head_controller;
 	VideoCapture head_cam;
 	CascadeClassifier face_classifier;
+
+	printf("PROGRAM VERSION: 2016.12.14.0");
 
 	// initialization
 	char error_string[1000];

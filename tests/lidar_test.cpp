@@ -41,7 +41,7 @@ bool connect(t_jenny5_arduino_controller &lidar_controller, char* error_string)
 {
 	//-------------- START INITIALIZATION ------------------------------
 
-	if (!lidar_controller.connect(10, 115200)) { // real number - 1
+	if (!lidar_controller.connect(5, 115200)) { // real number - 1
 		sprintf(error_string, "Error attaching to Jenny 5' LIDAR!");
 		return false;
 	}
