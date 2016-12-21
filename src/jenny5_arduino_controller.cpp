@@ -704,13 +704,13 @@ void t_jenny5_arduino_controller::send_create_infrared_sensors(int num_infrared_
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_buttons(int num_buttons, int* out_pins, int *_dir)
+void t_jenny5_arduino_controller::send_create_buttons(int num_buttons, int* out_pins)
 {
 	char s[63];
 	sprintf(s, "CB %d", num_buttons);
 	char tmp_s[100];
 	for (int i = 0; i < num_buttons; i++) {
-		sprintf(tmp_s, "%d %d", out_pins[i], _dir[i]);
+		sprintf(tmp_s, "%d", out_pins[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
 	}

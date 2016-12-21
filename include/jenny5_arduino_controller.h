@@ -131,7 +131,7 @@ public:
 	// sends (to Arduino) a command for creating a buttons controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
-	void send_create_buttons(int num_buttons_sensors, int* out_pins, int *_dir);
+	void send_create_buttons(int num_buttons_sensors, int* out_pins);
 
 	// sends (to Arduino) a command for creating a tera ranger one controller
 	// this method should be called once at the beginning of the program
