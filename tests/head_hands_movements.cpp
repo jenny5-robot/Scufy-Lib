@@ -2,7 +2,7 @@
 // MIT License
 
 
-#define PROGRAM_VERSION "PROGRAM VERSION: 2016.12.21.0\n"
+#define PROGRAM_VERSION "PROGRAM VERSION: 2016.12.21.1\n"
 
 #include <iostream>
 #include <time.h>
@@ -174,12 +174,11 @@ bool setup_head(t_jenny5_arduino_controller &head_controller, char* error_string
 	int head_potentiometer_pins[2] = { 0, 1 };
 	head_controller.send_create_potentiometers(2, head_potentiometer_pins);
 
-	clock_t start_time = clock();
-
 	bool motors_controller_created = false;
 	bool sonars_controller_created = false;
 	bool potentiometers_controller_created = false;
 
+	clock_t start_time = clock();
 	while (1) {
 		if (!head_controller.update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
@@ -214,6 +213,37 @@ bool setup_head(t_jenny5_arduino_controller &head_controller, char* error_string
 
 	head_controller.send_set_stepper_motor_speed_and_acceleration(HEAD_MOTOR_HORIZONTAL, 1500, 500);
 	head_controller.send_set_stepper_motor_speed_and_acceleration(HEAD_MOTOR_VERTICAL, 1500, 500);
+
+	bool HEAD_MOTOR_HORIZONTAL_set_speed_accell = false;
+	bool HEAD_MOTOR_VERTICAL_set_speed_accell = false;
+
+	start_time = clock();
+
+	while (1) {
+		if (!head_controller.update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+		if (head_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, HEAD_MOTOR_HORIZONTAL))  // have we received the event from Serial ?
+			HEAD_MOTOR_HORIZONTAL_set_speed_accell = true;
+		if (head_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, HEAD_MOTOR_VERTICAL))  // have we received the event from Serial ?
+			HEAD_MOTOR_VERTICAL_set_speed_accell = true;
+
+		if (HEAD_MOTOR_HORIZONTAL_set_speed_accell && HEAD_MOTOR_VERTICAL_set_speed_accell)
+			break;
+
+		clock_t end_time = clock();
+
+		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		// if more than 3 seconds then game over
+		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
+			if (!HEAD_MOTOR_HORIZONTAL_set_speed_accell)
+				sprintf(error_string, "Cannot HEAD_MOTOR_HORIZONTAL_set_speed_accell! Game over!");
+			if (!HEAD_MOTOR_VERTICAL_set_speed_accell)
+				sprintf(error_string, "Cannot HEAD_MOTOR_VERTICAL_set_speed_accell! Game over!");
+			return false;
+		}
+
+	}
 
 	int potentiometer_index_head_horizontal_motor[1] = { 0 };
 	int potentiometer_index_head_vertical_motor[1] = { 1 };
@@ -308,10 +338,62 @@ bool setup_left_arm(t_jenny5_arduino_controller &left_arm_controller, char* erro
 	left_arm_controller.send_set_stepper_motor_speed_and_acceleration(LEFT_ARM_ELBOW_MOTOR, 1000, 500);
 	
 	left_arm_controller.send_set_stepper_motor_speed_and_acceleration(LEFT_ARM_FOREARM_MOTOR, 1000, 500);
-	Sleep(100);
-	/*
+	
 	left_arm_controller.send_set_stepper_motor_speed_and_acceleration(LEFT_ARM_GRIPPER_MOTOR, 1000, 500);
-	*/
+	
+
+	bool LEFT_ARM_BODY_MOTOR_set_speed_accell = false;
+	bool LEFT_ARM_SHOULDER_UP_DOWN_MOTOR_set_speed_accell = false;
+	bool LEFT_ARM_SHOULDER_LEFT_RIGHT_MOTOR_set_speed_accell = false;
+	bool LEFT_ARM_ELBOW_MOTOR_set_speed_accell = false;
+	bool LEFT_ARM_FOREARM_MOTOR_set_speed_accell = false;
+	bool LEFT_ARM_GRIPPER_MOTOR_set_speed_accell = false;
+
+	start_time = clock();
+
+	while (1) {
+		if (!left_arm_controller.update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+
+		if (left_arm_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, LEFT_ARM_BODY_MOTOR))  // have we received the event from Serial ?
+			LEFT_ARM_BODY_MOTOR_set_speed_accell = true;
+		if (left_arm_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, LEFT_ARM_SHOULDER_UP_DOWN_MOTOR))  // have we received the event from Serial ?
+			LEFT_ARM_SHOULDER_UP_DOWN_MOTOR_set_speed_accell = true;
+		if (left_arm_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, LEFT_ARM_SHOULDER_LEFT_RIGHT_MOTOR))  // have we received the event from Serial ?
+			LEFT_ARM_SHOULDER_LEFT_RIGHT_MOTOR_set_speed_accell = true;
+		if (left_arm_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, LEFT_ARM_ELBOW_MOTOR))  // have we received the event from Serial ?
+			LEFT_ARM_ELBOW_MOTOR_set_speed_accell = true;
+		if (left_arm_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, LEFT_ARM_FOREARM_MOTOR))  // have we received the event from Serial ?
+			LEFT_ARM_FOREARM_MOTOR_set_speed_accell = true;
+		if (left_arm_controller.query_for_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, LEFT_ARM_GRIPPER_MOTOR))  // have we received the event from Serial ?
+			LEFT_ARM_GRIPPER_MOTOR_set_speed_accell = true;
+
+
+		if (LEFT_ARM_BODY_MOTOR_set_speed_accell && LEFT_ARM_SHOULDER_UP_DOWN_MOTOR_set_speed_accell && LEFT_ARM_SHOULDER_LEFT_RIGHT_MOTOR_set_speed_accell && 
+			LEFT_ARM_ELBOW_MOTOR_set_speed_accell && LEFT_ARM_FOREARM_MOTOR_set_speed_accell && LEFT_ARM_GRIPPER_MOTOR_set_speed_accell)
+			break;
+
+		clock_t end_time = clock();
+
+		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		// if more than 3 seconds then game over
+		if (wait_time > NUM_SECONDS_TO_WAIT_FOR_CONNECTION) {
+			if (!LEFT_ARM_BODY_MOTOR_set_speed_accell)
+				sprintf(error_string, "Cannot LEFT_ARM_BODY_MOTOR_set_speed_accell! Game over!");
+			if (!LEFT_ARM_SHOULDER_UP_DOWN_MOTOR_set_speed_accell)
+				sprintf(error_string, "Cannot LEFT_ARM_SHOULDER_UP_DOWN_MOTOR_set_speed_accell! Game over!");
+			if (!LEFT_ARM_SHOULDER_LEFT_RIGHT_MOTOR_set_speed_accell)
+				sprintf(error_string, "Cannot LEFT_ARM_SHOULDER_LEFT_RIGHT_MOTOR_set_speed_accell! Game over!");
+			if (!LEFT_ARM_ELBOW_MOTOR_set_speed_accell)
+				sprintf(error_string, "Cannot LEFT_ARM_ELBOW_MOTOR_set_speed_accell! Game over!");
+			if (!LEFT_ARM_FOREARM_MOTOR_set_speed_accell)
+				sprintf(error_string, "Cannot LEFT_ARM_FOREARM_MOTOR_set_speed_accell! Game over!");
+			if (!LEFT_ARM_GRIPPER_MOTOR_set_speed_accell)
+				sprintf(error_string, "Cannot LEFT_ARM_GRIPPER_MOTOR_set_speed_accell! Game over!");
+			return false;
+		}
+
+	}
 
 	int potentiometer_index_LEFT_ARM_BODY_MOTOR[1] = { 0 };
 	int potentiometer_index_LEFT_ARM_SHOULDER_UP_DOWN_MOTOR[1] = { 1 };
