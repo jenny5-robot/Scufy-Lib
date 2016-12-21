@@ -30,6 +30,9 @@
 
 #define LIDAR_READ_EVENT 19
 
+#define STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT 20
+
+
 #define SECONDS_UNTIL_TIMEOUT 10
 
 //-----------------------------------------------------------------------

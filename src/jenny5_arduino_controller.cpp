@@ -247,18 +247,27 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 							jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
 							received_events.Add((void*)e);
 						}
-						
-					/*
-					if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motor finished movement
-						int motor_index, miliseconds_to_go;
-						sscanf(tmp_str + i + 2, "%d%d", &motor_index, &miliseconds_to_go);
-						i += 5;
-						jenny5_event *e = new jenny5_event(DC_MOTOR_MOVE_DONE_EVENT, motor_index, miliseconds_to_go, 0);
-						received_events.Add((void*)e);
-					}
-					*/
-					else
-						i++;
+						else
+							if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// set speed and acceleration
+								int motor_index;
+								sscanf(tmp_str + i + 2, "%d", &motor_index);
+								i += 3;
+
+								jenny5_event *e = new jenny5_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, motor_index, 0, 0);
+								received_events.Add((void*)e);
+							}
+
+				/*
+				if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motor finished movement
+					int motor_index, miliseconds_to_go;
+					sscanf(tmp_str + i + 2, "%d%d", &motor_index, &miliseconds_to_go);
+					i += 5;
+					jenny5_event *e = new jenny5_event(DC_MOTOR_MOVE_DONE_EVENT, motor_index, miliseconds_to_go, 0);
+					received_events.Add((void*)e);
+				}
+				*/
+							else
+								i++;
 
 			}
 			else
@@ -310,22 +319,22 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 									jenny5_event *e = new jenny5_event(LIDAR_READ_EVENT, motor_position, distance, 0);
 									received_events.Add((void*)e);
 								}
-									
-									else
-										if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
-											if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// stepper motors controller created
+
+								else
+									if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
+										if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// stepper motors controller created
+											i += 3;
+											jenny5_event *e = new jenny5_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+											received_events.Add((void*)e);
+										}
+										else
+											if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motors controller created
 												i += 3;
-												jenny5_event *e = new jenny5_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+												jenny5_event *e = new jenny5_event(DC_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
 												received_events.Add((void*)e);
 											}
 											else
-												if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motors controller created
-													i += 3;
-													jenny5_event *e = new jenny5_event(DC_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
-													received_events.Add((void*)e);
-												}
-												else
-													if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {// sonars controller created
+												if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {// sonars controller created
 													i += 3;
 													jenny5_event *e = new jenny5_event(SONARS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
 													received_events.Add((void*)e);
@@ -362,9 +371,9 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 																	}
 																	else
 																		i++;
-										}
-										else// not an recognized event
-											i++;
+									}
+									else// not an recognized event
+										i++;
 			// more events to add
 		}
 		else
@@ -380,7 +389,7 @@ bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 	tmp_buffer[received_size] = 0;
 	if (received_size) {
 		strcpy(current_buffer + strlen(current_buffer), tmp_buffer);
-	//	printf("%s\n", current_buffer);
+		//	printf("%s\n", current_buffer);
 
 		size_t buffer_length = strlen(current_buffer);
 		for (size_t i = 0; i < buffer_length; i++)
@@ -412,15 +421,15 @@ bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 #endif
 
 					break; //for i
-	}
+				}
 				else {// the string is not completed ... so I must wait for more...
 					break; // for i
 				}
-}
+	}
 
 
 		return true;
-	}
+}
 	else
 		return false;
 }
@@ -469,7 +478,7 @@ bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &even
 	clock_t start_time = clock();
 	bool event_success = false;
 
-	while (1) 
+	while (1)
 	{
 		if (!update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
@@ -477,10 +486,10 @@ bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &even
 		if (!event_success) {
 			if (query_for_event(event, available_info))  // have we received the event from Serial ?
 				event_success = true;
-				//for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
-				//	jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-				//	std::cout << (int)e->type << " " << e->param1 << std::endl;
-				//}
+			//for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+			//	jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+			//	std::cout << (int)e->type << " " << e->param1 << std::endl;
+			//}
 		}
 
 		if (event_success)
@@ -508,7 +517,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type)
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
-		  delete e;
+			delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -522,7 +531,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1)
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
 			*param1 = e->param1;
-								delete e;
+			delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -537,7 +546,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1, i
 		if (e->type == event_type) {
 			*param1 = e->param1;
 			*param2 = e->param2;
-								delete e;
+			delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -550,7 +559,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1)
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1) {
-							delete e;
+			delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -564,7 +573,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, in
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1) {
 			*param2 = e->param2;
-								delete e;
+			delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -577,7 +586,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, in
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1 && e->param2 == param2) {
-							delete e;
+			delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;
 		}
@@ -605,10 +614,10 @@ bool t_jenny5_arduino_controller::query_for_2_events(int event_type1, int param1
 	}
 
 	if (event1_found && event2_found) {
-jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p1);
-delete e;
-e = (jenny5_event*)received_events.GetCurrentInfo(node_p2);
-delete e;
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p1);
+		delete e;
+		e = (jenny5_event*)received_events.GetCurrentInfo(node_p2);
+		delete e;
 		received_events.DeleteCurrent(node_p1);
 		received_events.DeleteCurrent(node_p2);
 		return true;
