@@ -9,7 +9,6 @@
 #include "roboclaw_controller.h"
 #include <stdint.h>
 
-
 //--------------------------------------------------------------
 uint16_t CRC16(unsigned char *packet, int nBytes)
 {
@@ -31,6 +30,7 @@ uint16_t CRC16(unsigned char *packet, int nBytes)
 t_roboclaw_controller::t_roboclaw_controller(void)
 {
 	strcpy(library_version, "2016.10.01.0"); // year.month.day.build number
+	b_is_open = false;
 }
 //--------------------------------------------------------------
 t_roboclaw_controller::~t_roboclaw_controller(void)
@@ -45,17 +45,33 @@ const char* t_roboclaw_controller::get_library_version(void)
 //--------------------------------------------------------------
 bool t_roboclaw_controller::connect(int port, int baud_rate)
 {
-	char mode[] = { '8', 'N', '1', 0 };
+	if (!b_is_open) {
+		char mode[] = { '8', 'N', '1', 0 };
 
-	port_number = port;
+		port_number = port;
 
-	return RS232_OpenComport(port, baud_rate, mode) == 0;
+		if (RS232_OpenComport(port, baud_rate, mode) == 0) {
+			b_is_open = true;
+			return true;
+		}
+		else
+			return false;
+	}
+	else
+		return false;
+}
+//--------------------------------------------------------------
+bool t_roboclaw_controller::is_open(void)
+{
+	return b_is_open;
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::close_connection(void)
 {
-	RS232_CloseComport(port_number);
-
+	if (b_is_open) {
+		RS232_CloseComport(port_number);
+		b_is_open = false;
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::send_command(unsigned char command)
@@ -135,7 +151,7 @@ void t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 	uint16_t crc = CRC16(buffer, 3);
 	buffer[3] = crc >> 8;
 	buffer[4] = crc;
-	
+
 	RS232_SendBuf(port_number, buffer, 5);
 }
 //--------------------------------------------------------------
@@ -254,7 +270,6 @@ void t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 	RS232_SendBuf(port_number, buffer, 12);
 }
 //--------------------------------------------------------------
-
 void t_roboclaw_controller::set_M2_max_current_limit(double c_max)
 {
 	unsigned char buffer[12];

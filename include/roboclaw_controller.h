@@ -122,6 +122,8 @@ private:
 	// port number of the serial connection
 	int port_number;
 
+	bool b_is_open;
+
 public:
 
 	t_roboclaw_controller(void);
@@ -129,6 +131,7 @@ public:
 
 	bool connect(int port, int baud_rate);
 	void close_connection(void);
+	bool is_open(void);
 	void send_command(unsigned char command);
 	bool read_result(unsigned char* buffer, int buffer_size);
 
