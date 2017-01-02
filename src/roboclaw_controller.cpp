@@ -4,9 +4,11 @@
 // source code: https://github.com/jenny5-robot
 
 // MIT License
+// ---------------------------------------------------------------------------
 
 #include "roboclaw_controller.h"
 #include <stdint.h>
+
 
 //--------------------------------------------------------------
 uint16_t CRC16(unsigned char *packet, int nBytes)

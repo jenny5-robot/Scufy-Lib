@@ -1,7 +1,15 @@
+// copyright Mihai Oltean, mihai.oltean@gmail.com
+// www.jenny5.org
+// www.tcreate.org
+// source code: https://github.com/jenny5-robot
+
+// MIT License
 // ---------------------------------------------------------------------------
 
 #include "lista_voidp.h"
 #include <stdio.h>
+
+#include <vld.h>
 
 // ---------------------------------------------------------------------------
 TLista::TLista()
