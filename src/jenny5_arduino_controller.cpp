@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(version, "2016.11.29.0"); // year.month.day.build number
+	strcpy(library_version, "2017.01.02.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -24,6 +24,8 @@ t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 		potentiometer_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 6; i++)
 		infrared_state[i] = COMMAND_DONE;
+
+	is_open = false;
 }
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::~t_jenny5_arduino_controller(void)
@@ -31,27 +33,43 @@ t_jenny5_arduino_controller::~t_jenny5_arduino_controller(void)
 
 }
 //--------------------------------------------------------------
-const char* t_jenny5_arduino_controller::get_version(void)
+const char* t_jenny5_arduino_controller::get_library_version(void)
 {
-	return version;
+	return library_version;
 }
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::connect(int port, int baud_rate)
 {
-	char mode[] = { '8', 'N', '1', 0 };
+	if (!is_open) {
+		char mode[] = { '8', 'N', '1', 0 };
 
-	port_number = port;
-	current_buffer[0] = 0;
+		port_number = port;
+		current_buffer[0] = 0;
 
-	return RS232_OpenComport(port, baud_rate, mode) == 0;
+		if (RS232_OpenComport(port, baud_rate, mode) == 0) {
+			is_open = true;
+			return true;
+		}
+		else
+			return false;
+	}
+	else
+		return false;
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::close_connection(void)
 {
 	RS232_CloseComport(port_number);
 	current_buffer[0] = 0;
+	is_open = false;
 }
 //--------------------------------------------------------------
+void t_jenny5_arduino_controller::send_get_firmware_version(void)
+{
+	char s[3];
+	strcpy(s, "v#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
 void t_jenny5_arduino_controller::send_move_stepper_motor(int motor_index, int num_steps)
 {
 	char s[20];
@@ -372,6 +390,17 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 																	else
 																		i++;
 									}
+									else
+										if (tmp_str[i] == 'V' || tmp_str[i] == 'v') {// version number
+											//scan until #
+											char *stop_index = strchr(tmp_str + i, '#');
+											char *s_version = new char[stop_index - (tmp_str + i + 1) + 1];
+											strncpy(s_version, tmp_str + i + 1, stop_index - (tmp_str + i + 1));
+											s_version[stop_index - (tmp_str + i + 1)] = 0;
+											jenny5_event *e = new jenny5_event(ARDUINO_FIRMWARE_VERSION_EVENT, 0, (intptr_t)s_version, 0);
+											received_events.Add((void*)e);
+											i += stop_index - (tmp_str + i + 1) + 2;
+										}
 									else// not an recognized event
 										i++;
 			// more events to add
@@ -436,8 +465,7 @@ bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(jenny5_event &event, int available_info)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next)
-	{
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next){
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1 | EVENT_INFO_PARAM2))
 		{
@@ -517,6 +545,22 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type)
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
+			delete e;
+			received_events.DeleteCurrent(node_p);
+			return true;
+		}
+	}
+	return false;
+}
+//--------------------------------------------------------------
+bool t_jenny5_arduino_controller::query_for_firmware_version_event(char *arduino_firmware_version)
+{
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		if (e->type == ARDUINO_FIRMWARE_VERSION_EVENT) { // test for firmware version event because that one contains a string
+			strcpy(arduino_firmware_version, (char*)e->param2);
+			delete[] (char*)e->param2;
+			
 			delete e;
 			received_events.DeleteCurrent(node_p);
 			return true;

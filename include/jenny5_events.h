@@ -32,6 +32,8 @@
 
 #define STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT 20
 
+#define ARDUINO_FIRMWARE_VERSION_EVENT 21
+
 
 #define SECONDS_UNTIL_TIMEOUT 10
 
@@ -39,7 +41,8 @@
 class jenny5_event{
 public:
 	char type;
-	int param1, param2;
+	int param1;
+	intptr_t param2;
 	int time;
 
 public:
@@ -57,14 +60,14 @@ public:
 		time(-1)
 	{}
 
-	jenny5_event(char _type, int _param1, int _param2) :
+	jenny5_event(char _type, int _param1, intptr_t _param2) :
 		type(_type),
 		param1(_param1),
 		param2(_param2),
 		time(-1)
 	{}
 
-	jenny5_event(char _type, int _param1, int _param2, int _time)
+	jenny5_event(char _type, int _param1, intptr_t _param2, int _time)
 	{
 		type = _type;
 		param1 = _param1;

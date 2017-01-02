@@ -20,11 +20,12 @@
 class t_jenny5_arduino_controller{
 private:
 	// version number of the library
-	char version[20];
+	char library_version[20];
 
 	// port number of the serial connection
 	int port_number;
 	
+	bool is_open;
 	// a list with received events from Arduino
 	TLista received_events;
 
@@ -59,8 +60,11 @@ public:
 	void close_connection(void);
 	
 	// returns a string containing the version number of this library
-	const char* get_version(void);
+	const char* get_library_version(void);
 	
+	// returns a string containing the version number of this library
+	void send_get_firmware_version(void);
+
 	// reads data from serial and updates the list of received events from Arduino
 	// this should be called frequently from the main loop of the program in order to read the data received from Arduino
 	bool update_commands_from_serial(void);
@@ -83,6 +87,9 @@ public:
 	// search in the list of events for a particular event type
 	bool query_for_event(int event_type);
 	
+	// search in the list of events for a fimrware version event type
+	bool query_for_firmware_version_event(char *firmware_version);
+		
 	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int* param1);
 
