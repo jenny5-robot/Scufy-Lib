@@ -17,7 +17,6 @@
 #include <unistd.h>
 #endif
 
-#include <vld.h>
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
@@ -73,9 +72,11 @@ bool t_jenny5_arduino_controller::is_open(void)
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::close_connection(void)
 {
-	RS232_CloseComport(port_number);
-	current_buffer[0] = 0;
-	b_is_open = false;
+	if (b_is_open) {
+		RS232_CloseComport(port_number);
+		current_buffer[0] = 0;
+		b_is_open = false;
+	}
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::send_get_firmware_version(void)
@@ -84,6 +85,7 @@ void t_jenny5_arduino_controller::send_get_firmware_version(void)
 	strcpy(s, "v#");
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
+//--------------------------------------------------------------
 void t_jenny5_arduino_controller::send_move_stepper_motor(int motor_index, int num_steps)
 {
 	char s[20];
