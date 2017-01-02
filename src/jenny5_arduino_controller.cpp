@@ -1,3 +1,11 @@
+// copyright Mihai Oltean, mihai.oltean@gmail.com
+// www.jenny5.org
+// www.tcreate.org
+// source code: https://github.com/jenny5-robot
+
+// MIT License
+// ---------------------------------------------------------------------------
+
 
 #include "jenny5_arduino_controller.h"
 #include "jenny5_events.h"
@@ -9,10 +17,11 @@
 #include <unistd.h>
 #endif
 
+#include <vld.h>
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(library_version, "2017.01.02.0"); // year.month.day.build number
+	strcpy(library_version, "2017.01.02.1"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -25,7 +34,7 @@ t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 	for (int i = 0; i < 6; i++)
 		infrared_state[i] = COMMAND_DONE;
 
-	is_open = false;
+	b_is_open = false;
 }
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::~t_jenny5_arduino_controller(void)
@@ -40,14 +49,14 @@ const char* t_jenny5_arduino_controller::get_library_version(void)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::connect(int port, int baud_rate)
 {
-	if (!is_open) {
+	if (!b_is_open) {
 		char mode[] = { '8', 'N', '1', 0 };
 
 		port_number = port;
 		current_buffer[0] = 0;
 
 		if (RS232_OpenComport(port, baud_rate, mode) == 0) {
-			is_open = true;
+			b_is_open = true;
 			return true;
 		}
 		else
@@ -57,11 +66,16 @@ bool t_jenny5_arduino_controller::connect(int port, int baud_rate)
 		return false;
 }
 //--------------------------------------------------------------
+bool t_jenny5_arduino_controller::is_open(void)
+{
+	return b_is_open;
+}
+//--------------------------------------------------------------
 void t_jenny5_arduino_controller::close_connection(void)
 {
 	RS232_CloseComport(port_number);
 	current_buffer[0] = 0;
-	is_open = false;
+	b_is_open = false;
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::send_get_firmware_version(void)

@@ -25,7 +25,8 @@ private:
 	// port number of the serial connection
 	int port_number;
 	
-	bool is_open;
+	// true between the calls of connect and close_connection methods; otherwise is false
+	bool b_is_open;
 	// a list with received events from Arduino
 	TLista received_events;
 
@@ -55,6 +56,9 @@ public:
 
 	// connects to given serial port
 	bool connect(int port, int baud_rate);
+
+	// test if the connection is open; For testing if the Arduino is alive please send_is_alive method and wait for IS_ALIVE_EVENT event
+	bool is_open(void);
 	
 	// close serial connection
 	void close_connection(void);
