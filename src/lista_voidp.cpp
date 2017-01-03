@@ -9,8 +9,6 @@
 #include "lista_voidp.h"
 #include <stdio.h>
 
-#include <vld.h>
-
 // ---------------------------------------------------------------------------
 TLista::TLista()
 {
