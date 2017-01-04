@@ -20,7 +20,7 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(library_version, "2017.01.02.1"); // year.month.day.build number
+	strcpy(library_version, "2017.01.03.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -128,6 +128,14 @@ void t_jenny5_arduino_controller::send_move_stepper_motor_array(int num_motors, 
 	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
 }
 //--------------------------------------------------------------
+void t_jenny5_arduino_controller::send_stepper_motor_goto_sensor_position(int motor_index, int sensor_position)
+{
+	char s[20];
+	sprintf(s, "SG%d %d#", motor_index, sensor_position);
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+}
+//--------------------------------------------------------------
+
 void t_jenny5_arduino_controller::send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
 {
 	char s[20];

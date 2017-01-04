@@ -177,6 +177,9 @@ public:
 	// sends (to Arduino) a command for moving multiple motors
 	void send_move_stepper_motor_array(int num_motors, int* motor_index, int *num_steps);
 
+	// sends (to Arduino) a command for moving a motor to a new sensor position
+	void send_stepper_motor_goto_sensor_position(int motor_index, int sensor_position);
+
 	// sends (to Arduino) a command for blocking a motor to current position
 	void send_lock_stepper_motor(int motor_index);
 	
