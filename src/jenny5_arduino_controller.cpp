@@ -607,7 +607,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1, int *param2)
+bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1, intptr_t *param2)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -635,7 +635,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, int* param2)
+bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, intptr_t* param2)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
