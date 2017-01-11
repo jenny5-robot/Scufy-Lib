@@ -20,7 +20,7 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(library_version, "2017.01.03.0"); // year.month.day.build number
+	strcpy(library_version, "2017.01.11.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -337,7 +337,15 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 							received_events.Add((void*)e);
 						}
 						else
-							if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection or tera ranger one read
+							if (tmp_str[i] == 'B' || tmp_str[i] == 'b') {//button state
+								int button_index, button_state;
+								sscanf(tmp_str + i + 1, "%d%d", &button_index, &button_state);
+								i += 4;
+								jenny5_event *e = new jenny5_event(BUTTON_EVENT, button_index, button_state, 0);
+								received_events.Add((void*)e);
+							}
+							else
+								if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection or tera ranger one read
 								if (tmp_str[i + 1] == 'R' || tmp_str[i + 1] == 'r') { // tera ranger one
 									int distance;
 									int num_read;
