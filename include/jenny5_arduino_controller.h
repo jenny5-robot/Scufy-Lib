@@ -190,7 +190,7 @@ public:
 	void send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration);
 	
 	// sends (to Arduino) a command for attaching several sensors to a given motor
-	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int* _low, int* _high, int *home, int *_direction, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index);
+	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int* _low, int* _high, int *home, int *_direction, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index, int *button_direction);
 
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
 	void send_remove_attached_sensors_from_stepper_motor(int motor_index);

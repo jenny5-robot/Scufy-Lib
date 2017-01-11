@@ -197,13 +197,13 @@ int t_jenny5_arduino_controller::get_data_from_serial(char *buffer, int buffer_s
 	return RS232_PollComport(port_number, (unsigned char*)buffer, buffer_size);
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int* _low, int* _high, int *home, int *_direction, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index)
+void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int* _low, int* _high, int *home, int *pot_direction, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index, int *button_direction)
 {
 	char s[63];
 	sprintf(s, "AS%d %d", motor_index, num_potentiometers + num_infrared + num_buttons);
 	for (int i = 0; i < num_potentiometers; i++) {
 		char tmp_str[63];
-		sprintf(tmp_str, " P%d %d %d %d %d", potentiometers_index[i], _low[i], _high[i], home[i], _direction[i]);
+		sprintf(tmp_str, " P%d %d %d %d %d", potentiometers_index[i], _low[i], _high[i], home[i], pot_direction[i]);
 		strcat(s, tmp_str);
 	}
 	for (int i = 0; i < num_infrared; i++) {
@@ -214,7 +214,7 @@ void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor
 
 	for (int i = 0; i < num_buttons; i++) {
 		char tmp_str[63];
-		sprintf(tmp_str, " B%d", buttons_index[i]);
+		sprintf(tmp_str, " B%d %d", buttons_index[i], button_direction[i]);
 		strcat(s, tmp_str);
 	}
 
