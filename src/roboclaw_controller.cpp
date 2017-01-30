@@ -29,7 +29,7 @@ uint16_t CRC16(unsigned char *packet, int nBytes)
 //--------------------------------------------------------------
 t_roboclaw_controller::t_roboclaw_controller(void)
 {
-	strcpy(library_version, "2016.10.01.0"); // year.month.day.build number
+	strcpy(library_version, "2016.01.30.0"); // year.month.day.build number
 	b_is_open = false;
 }
 //--------------------------------------------------------------
@@ -76,281 +76,328 @@ void t_roboclaw_controller::close_connection(void)
 //--------------------------------------------------------------
 void t_roboclaw_controller::send_command(unsigned char command)
 {
-	unsigned char buffer[2];
-	buffer[0] = 0x80;// port
-	buffer[1] = command;
-	RS232_SendBuf(port_number, buffer, 2);
+	if (b_is_open) {
+		unsigned char buffer[2];
+		buffer[0] = 0x80;// port
+		buffer[1] = command;
+		RS232_SendBuf(port_number, buffer, 2);
+	}
 }
 //--------------------------------------------------------------
 bool t_roboclaw_controller::read_result(unsigned char* buffer, int buffer_size)
 {
-	return RS232_PollComport(port_number, buffer, buffer_size);
+	if (b_is_open) {
+		return RS232_PollComport(port_number, buffer, buffer_size);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::get_firmware_version(char *firmware_version)
 {
-	unsigned char buffer[32];
+	if (b_is_open) {
+		unsigned char buffer[32];
 
-	buffer[0] = 0x80;// port
-	buffer[1] = GETVERSION;
-	RS232_SendBuf(port_number, (unsigned char*)buffer, 2);
-	Sleep(10);
+		buffer[0] = 0x80;// port
+		buffer[1] = GETVERSION;
+		RS232_SendBuf(port_number, (unsigned char*)buffer, 2);
+		Sleep(10);
 
-	RS232_PollComport(port_number, buffer, 32);
-	strcpy(firmware_version, (char*)buffer);
+		RS232_PollComport(port_number, buffer, 32);
+		strcpy(firmware_version, (char*)buffer);
+	}
+	else
+		firmware_version[0] = 0;
 }
 //--------------------------------------------------------------
 double t_roboclaw_controller::get_temperature(void)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80;// port
-	buffer[1] = GETTEMP;
-	RS232_SendBuf(port_number, buffer, 2);
-	Sleep(10);
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80;// port
+		buffer[1] = GETTEMP;
+		RS232_SendBuf(port_number, buffer, 2);
+		Sleep(10);
 
-	RS232_PollComport(port_number, buffer, 10);
+		RS232_PollComport(port_number, buffer, 10);
 
-	return (double)(buffer[0] << 8 | buffer[1]) / 10.0;
+		return (double)(buffer[0] << 8 | buffer[1]) / 10.0;
+	}
+	else
+		return 0;
 }
 //--------------------------------------------------------------
 double t_roboclaw_controller::get_main_battery_voltage(void)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80;// port
-	buffer[1] = GETMBATT;
-	RS232_SendBuf(port_number, buffer, 2);
-	Sleep(10);
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80;// port
+		buffer[1] = GETMBATT;
+		RS232_SendBuf(port_number, buffer, 2);
+		Sleep(10);
 
-	RS232_PollComport(port_number, buffer, 10);
+		RS232_PollComport(port_number, buffer, 10);
 
-	return (double)(buffer[0] << 8 | buffer[1]) / 10.0;
+		return (double)(buffer[0] << 8 | buffer[1]) / 10.0;
+	}
+	else
+		return 0;
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 {
-	unsigned char buffer[5];
-	buffer[0] = 0x80; // port
-	buffer[1] = M1FORWARD;    // command
-	buffer[2] = speed;
+	if (b_is_open) {
+		unsigned char buffer[5];
+		buffer[0] = 0x80; // port
+		buffer[1] = M1FORWARD;    // command
+		buffer[2] = speed;
 
-	uint16_t crc = CRC16(buffer, 3);
-	buffer[3] = crc >> 8;
-	buffer[4] = crc;
+		uint16_t crc = CRC16(buffer, 3);
+		buffer[3] = crc >> 8;
+		buffer[4] = crc;
 
-	RS232_SendBuf(port_number, buffer, 5);
-
+		RS232_SendBuf(port_number, buffer, 5);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 {
-	unsigned char buffer[5];
-	buffer[0] = 0x80; // port
-	buffer[1] = M2FORWARD;    // command
-	buffer[2] = speed;
+	if (b_is_open) {
+		unsigned char buffer[5];
+		buffer[0] = 0x80; // port
+		buffer[1] = M2FORWARD;    // command
+		buffer[2] = speed;
 
-	uint16_t crc = CRC16(buffer, 3);
-	buffer[3] = crc >> 8;
-	buffer[4] = crc;
+		uint16_t crc = CRC16(buffer, 3);
+		buffer[3] = crc >> 8;
+		buffer[4] = crc;
 
-	RS232_SendBuf(port_number, buffer, 5);
+		RS232_SendBuf(port_number, buffer, 5);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 {
-	unsigned char buffer[5];
-	buffer[0] = 0x80; // port
-	buffer[1] = M1BACKWARD;    // command
-	buffer[2] = speed;
+	if (b_is_open) {
+		unsigned char buffer[5];
+		buffer[0] = 0x80; // port
+		buffer[1] = M1BACKWARD;    // command
+		buffer[2] = speed;
 
-	uint16_t crc = CRC16(buffer, 3);
-	buffer[3] = crc >> 8;
-	buffer[4] = crc;
+		uint16_t crc = CRC16(buffer, 3);
+		buffer[3] = crc >> 8;
+		buffer[4] = crc;
 
-	RS232_SendBuf(port_number, buffer, 5);
+		RS232_SendBuf(port_number, buffer, 5);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 {
-	unsigned char buffer[5];
-	buffer[0] = 0x80; // port
-	buffer[1] = M2BACKWARD;    // command
-	buffer[2] = speed;
+	if (b_is_open) {
+		unsigned char buffer[5];
+		buffer[0] = 0x80; // port
+		buffer[1] = M2BACKWARD;    // command
+		buffer[2] = speed;
 
-	uint16_t crc = CRC16(buffer, 3);
-	buffer[3] = crc >> 8;
-	buffer[4] = crc;
+		uint16_t crc = CRC16(buffer, 3);
+		buffer[3] = crc >> 8;
+		buffer[4] = crc;
 
-	RS232_SendBuf(port_number, buffer, 5);
+		RS232_SendBuf(port_number, buffer, 5);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::read_motor_currents(double &current_motor_1, double &current_motor_2)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80;// port
-	buffer[1] = GETCURRENTS;
-	RS232_SendBuf(port_number, buffer, 2);
-	Sleep(10);
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80;// port
+		buffer[1] = GETCURRENTS;
+		RS232_SendBuf(port_number, buffer, 2);
+		Sleep(10);
 
-	RS232_PollComport(port_number, buffer, 10);
+		RS232_PollComport(port_number, buffer, 10);
 
-	current_motor_1 = (double)(buffer[0] << 8 | buffer[1]) / 100.0;
-	current_motor_2 = (double)(buffer[2] << 8 | buffer[3]) / 100.0;
-
+		current_motor_1 = (double)(buffer[0] << 8 | buffer[1]) / 100.0;
+		current_motor_2 = (double)(buffer[2] << 8 | buffer[3]) / 100.0;
+	}
+	else {
+		current_motor_1 = 0;
+		current_motor_2 = 0;
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80; // port
-	buffer[1] = M1DUTYACCEL;    // command
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80; // port
+		buffer[1] = M1DUTYACCEL;    // command
 
-	buffer[2] = duty >> 8;
-	buffer[3] = duty;
+		buffer[2] = duty >> 8;
+		buffer[3] = duty;
 
-	buffer[4] = accel >> 8;
-	buffer[5] = accel;
+		buffer[4] = accel >> 8;
+		buffer[5] = accel;
 
-	buffer[6] = accel >> 8;
-	buffer[7] = accel;
+		buffer[6] = accel >> 8;
+		buffer[7] = accel;
 
-	uint16_t crc = CRC16(buffer, 8);
-	buffer[8] = crc >> 8;
-	buffer[9] = crc;
+		uint16_t crc = CRC16(buffer, 8);
+		buffer[8] = crc >> 8;
+		buffer[9] = crc;
 
-	RS232_SendBuf(port_number, buffer, 10);
-
+		RS232_SendBuf(port_number, buffer, 10);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80; // port
-	buffer[1] = M2DUTYACCEL;    // command
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80; // port
+		buffer[1] = M2DUTYACCEL;    // command
 
-	buffer[2] = duty >> 8;
-	buffer[3] = duty;
+		buffer[2] = duty >> 8;
+		buffer[3] = duty;
 
-	buffer[4] = accel >> 8;
-	buffer[5] = accel;
+		buffer[4] = accel >> 8;
+		buffer[5] = accel;
 
-	buffer[6] = accel >> 8;
-	buffer[7] = accel;
+		buffer[6] = accel >> 8;
+		buffer[7] = accel;
 
-	uint16_t crc = CRC16(buffer, 8);
-	buffer[8] = crc >> 8;
-	buffer[9] = crc;
+		uint16_t crc = CRC16(buffer, 8);
+		buffer[8] = crc >> 8;
+		buffer[9] = crc;
 
-	RS232_SendBuf(port_number, buffer, 10);
-
+		RS232_SendBuf(port_number, buffer, 10);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 {
-	unsigned char buffer[12];
-	buffer[0] = 0x80; // port
-	buffer[1] = SETM1MAXCURRENT;    // command
+	if (b_is_open) {
+		unsigned char buffer[12];
+		buffer[0] = 0x80; // port
+		buffer[1] = SETM1MAXCURRENT;    // command
 
-	uint32_t max_v;
-	max_v = (uint32_t)(c_max * 100);
+		uint32_t max_v;
+		max_v = (uint32_t)(c_max * 100);
 
-	buffer[2] = max_v >> 24;
-	buffer[3] = max_v >> 16;
-	buffer[4] = max_v >> 8;
-	buffer[5] = max_v;
+		buffer[2] = max_v >> 24;
+		buffer[3] = max_v >> 16;
+		buffer[4] = max_v >> 8;
+		buffer[5] = max_v;
 
-	buffer[6] = 0;
-	buffer[7] = 0;
-	buffer[8] = 0;
-	buffer[9] = 0;
+		buffer[6] = 0;
+		buffer[7] = 0;
+		buffer[8] = 0;
+		buffer[9] = 0;
 
-	uint16_t crc = CRC16(buffer, 10);
-	buffer[10] = crc >> 8;
-	buffer[11] = crc;
+		uint16_t crc = CRC16(buffer, 10);
+		buffer[10] = crc >> 8;
+		buffer[11] = crc;
 
-	RS232_SendBuf(port_number, buffer, 12);
+		RS232_SendBuf(port_number, buffer, 12);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::set_M2_max_current_limit(double c_max)
 {
-	unsigned char buffer[12];
-	buffer[0] = 0x80; // port
-	buffer[1] = SETM2MAXCURRENT;    // command
+	if (b_is_open) {
+		unsigned char buffer[12];
+		buffer[0] = 0x80; // port
+		buffer[1] = SETM2MAXCURRENT;    // command
 
-	uint32_t max_v;
-	max_v = (uint32_t)(c_max * 100);
+		uint32_t max_v;
+		max_v = (uint32_t)(c_max * 100);
 
-	buffer[2] = max_v >> 24;
-	buffer[3] = max_v >> 16;
-	buffer[4] = max_v >> 8;
-	buffer[5] = max_v;
+		buffer[2] = max_v >> 24;
+		buffer[3] = max_v >> 16;
+		buffer[4] = max_v >> 8;
+		buffer[5] = max_v;
 
-	buffer[6] = 0;
-	buffer[7] = 0;
-	buffer[8] = 0;
-	buffer[9] = 0;
+		buffer[6] = 0;
+		buffer[7] = 0;
+		buffer[8] = 0;
+		buffer[9] = 0;
 
-	uint16_t crc = CRC16(buffer, 10);
-	buffer[10] = crc >> 8;
-	buffer[11] = crc;
+		uint16_t crc = CRC16(buffer, 10);
+		buffer[10] = crc >> 8;
+		buffer[11] = crc;
 
-	RS232_SendBuf(port_number, buffer, 12);
+		RS232_SendBuf(port_number, buffer, 12);
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::read_motor_PWM(double &pwm_motor_1, double &pwm_motor_2)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80;// port
-	buffer[1] = GETPWMS;
-	RS232_SendBuf(port_number, buffer, 2);
-	Sleep(10);
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80;// port
+		buffer[1] = GETPWMS;
+		RS232_SendBuf(port_number, buffer, 2);
+		Sleep(10);
 
-	RS232_PollComport(port_number, buffer, 10);
+		RS232_PollComport(port_number, buffer, 10);
 
-	pwm_motor_1 = (double)(buffer[0] << 8 | buffer[1]) / 327.67;
-	pwm_motor_2 = (double)(buffer[2] << 8 | buffer[3]) / 327.67;
+		pwm_motor_1 = (double)(buffer[0] << 8 | buffer[1]) / 327.67;
+		pwm_motor_2 = (double)(buffer[2] << 8 | buffer[3]) / 327.67;
+	}
+	else {
+		pwm_motor_1 = 0;
+		pwm_motor_2 = 0;
+	}
 }
 //--------------------------------------------------------------
 uint16_t t_roboclaw_controller::read_status(void)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80;// port
-	buffer[1] = GETERROR;
-	RS232_SendBuf(port_number, buffer, 2);
-	Sleep(10);
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80;// port
+		buffer[1] = GETERROR;
+		RS232_SendBuf(port_number, buffer, 2);
+		Sleep(10);
 
-	RS232_PollComport(port_number, buffer, 10);
+		RS232_PollComport(port_number, buffer, 10);
 
-	return buffer[0] << 8 | buffer[1];
+		return buffer[0] << 8 | buffer[1];
+	}
+	else
+		return 0;
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::set_standard_config_settings(uint16_t config)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80;// port
-	buffer[1] = SETCONFIG;
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80;// port
+		buffer[1] = SETCONFIG;
 
-	buffer[2] = config >> 8;
-	buffer[3] = config;
+		buffer[2] = config >> 8;
+		buffer[3] = config;
 
-	uint16_t crc = CRC16(buffer, 4);
-	buffer[4] = crc >> 8;
-	buffer[5] = crc;
+		uint16_t crc = CRC16(buffer, 4);
+		buffer[4] = crc >> 8;
+		buffer[5] = crc;
 
-	RS232_SendBuf(port_number, buffer, 6);
-	Sleep(10);
-
+		RS232_SendBuf(port_number, buffer, 6);
+		Sleep(10);
+	}
 }
 //--------------------------------------------------------------
 uint16_t t_roboclaw_controller::read_standard_config_settings(void)
 {
-	unsigned char buffer[10];
-	buffer[0] = 0x80;// port
-	buffer[1] = GETCONFIG;
-	RS232_SendBuf(port_number, buffer, 2);
-	Sleep(10);
+	if (b_is_open) {
+		unsigned char buffer[10];
+		buffer[0] = 0x80;// port
+		buffer[1] = GETCONFIG;
+		RS232_SendBuf(port_number, buffer, 2);
+		Sleep(10);
 
-	RS232_PollComport(port_number, buffer, 10);
+		RS232_PollComport(port_number, buffer, 10);
 
-	return buffer[0] << 8 | buffer[1];
+		return buffer[0] << 8 | buffer[1];
+	}
 }
 //--------------------------------------------------------------
