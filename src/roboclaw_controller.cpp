@@ -89,6 +89,10 @@ bool t_roboclaw_controller::read_result(unsigned char* buffer, int buffer_size)
 	if (b_is_open) {
 		return RS232_PollComport(port_number, buffer, buffer_size);
 	}
+	else {
+		buffer[0] = 0;
+		return false;
+	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::get_firmware_version(char *firmware_version)
@@ -399,5 +403,7 @@ uint16_t t_roboclaw_controller::read_standard_config_settings(void)
 
 		return buffer[0] << 8 | buffer[1];
 	}
+	else
+		return  0;
 }
 //--------------------------------------------------------------
