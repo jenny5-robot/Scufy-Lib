@@ -663,9 +663,9 @@ int RS232_SendBuf(int comport_number, unsigned char *buf, int size)
 }
 
 
-void RS232_CloseComport(int comport_number)
+int RS232_CloseComport(int comport_number)
 {
-  CloseHandle(Cport[comport_number]);
+  return CloseHandle(Cport[comport_number]);
 }
 
 /*
