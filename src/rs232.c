@@ -475,7 +475,7 @@ int RS232_OpenComport(int comport_number, int baudrate, const char *mode)
 	  DCB port_settings;
 		COMMTIMEOUTS Cptimeouts;
 
-  if((comport_number>20)||(comport_number<0))
+  if((comport_number>25)||(comport_number<0))
   {
     printf("illegal comport number\n");
     return(1);
