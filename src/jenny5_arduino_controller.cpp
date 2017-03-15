@@ -445,8 +445,8 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 {
 	// the same code as in firmware
-	char tmp_buffer[4096];
-	int received_size = get_data_from_serial(tmp_buffer, 4096);
+	char tmp_buffer[40960];
+	int received_size = get_data_from_serial(tmp_buffer, 40960);
 	tmp_buffer[received_size] = 0;
 	if (received_size) {
 		strcpy(current_buffer + strlen(current_buffer), tmp_buffer);
