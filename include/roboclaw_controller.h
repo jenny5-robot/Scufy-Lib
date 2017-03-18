@@ -136,7 +136,7 @@ public:
 	bool read_result(unsigned char* buffer, int buffer_size);
 
 	// Read the board temperature.Value returned is in 10ths of degrees.
-	double get_temperature(void);
+	double get_board_temperature(void);
 
 	// Read the main battery voltage level connected to B+ and B- terminals
 	double get_main_battery_voltage(void);
@@ -151,16 +151,16 @@ public:
 
 	// Drive motor 1 forward.Valid data range is 0 - 127. 
 	// A value of 127 = full speed forward, 64 = about half speed forward and 0 = full stop.
-	void drive_forward_M1(unsigned char speed);
+	bool drive_forward_M1(unsigned char speed);
 	// Drive motor 2 forward.Valid data range is 0 - 127. 
 	// A value of 127 = full speed forward, 64 = about half speed forward and 0 = full stop.
-	void drive_forward_M2(unsigned char speed);
-	void drive_backward_M1(unsigned char speed);
-	void drive_backward_M2(unsigned char speed);
+	bool drive_forward_M2(unsigned char speed);
+	bool drive_backward_M1(unsigned char speed);
+	bool drive_backward_M2(unsigned char speed);
 
 	// Read the current draw from each motor in 10ma increments. 
 	// The amps value is calculated by	dividing the value by 100.
-	void read_motor_currents(double &current_motor_1, double &current_motor_2);
+	void get_motors_current_consumption(double &current_motor_1, double &current_motor_2);
 
 	// Read the current PWM output values for the motor channels.
 	// The values returned are + -32767.
@@ -169,11 +169,11 @@ public:
 
 	// The duty value is signed and the range is - 32768 to + 32767(eg. + -100 % duty).
 	// The accel value range is 0 to 655359(eg maximum acceleration rate is - 100 % to 100 % in 100ms).
-	void drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
+	bool drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
 
 	// The duty value is signed and the range is - 32768 to + 32767(eg. + -100 % duty).
 	// The accel value range is 0 to 655359(eg maximum acceleration rate is - 100 % to 100 % in 100ms).
-	void drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
+	bool drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel);
 
 	// Set Motor 1 Maximum Current Limit. Current value is in 10ma units.
 	//  To calculate multiply current limit by 100.

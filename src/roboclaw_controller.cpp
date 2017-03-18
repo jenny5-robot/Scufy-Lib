@@ -112,7 +112,7 @@ void t_roboclaw_controller::get_firmware_version(char *firmware_version)
 		firmware_version[0] = 0;
 }
 //--------------------------------------------------------------
-double t_roboclaw_controller::get_temperature(void)
+double t_roboclaw_controller::get_board_temperature(void)
 {
 	if (b_is_open) {
 		unsigned char buffer[10];
@@ -146,7 +146,7 @@ double t_roboclaw_controller::get_main_battery_voltage(void)
 		return 0;
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::drive_forward_M1(unsigned char speed)
+bool t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 {
 	if (b_is_open) {
 		unsigned char buffer[5];
@@ -159,10 +159,17 @@ void t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 		buffer[4] = crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
+		Sleep(10);
+
+		int num_read = RS232_PollComport(port_number, buffer, 10);
+		if (!num_read)
+			return false;
+		return true;
 	}
+	return false;
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::drive_forward_M2(unsigned char speed)
+bool t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 {
 	if (b_is_open) {
 		unsigned char buffer[5];
@@ -175,10 +182,17 @@ void t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 		buffer[4] = crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
+		Sleep(10);
+
+		int num_read = RS232_PollComport(port_number, buffer, 10);
+		if (!num_read)
+			return false;
+		return true;
 	}
+	return false;
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::drive_backward_M1(unsigned char speed)
+bool t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 {
 	if (b_is_open) {
 		unsigned char buffer[5];
@@ -191,10 +205,17 @@ void t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 		buffer[4] = crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
+		Sleep(10);
+
+		int num_read = RS232_PollComport(port_number, buffer, 10);
+		if (!num_read)
+			return false;
+		return true;
 	}
+	return false;
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::drive_backward_M2(unsigned char speed)
+bool t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 {
 	if (b_is_open) {
 		unsigned char buffer[5];
@@ -207,10 +228,17 @@ void t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 		buffer[4] = crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
+		Sleep(10);
+
+		int num_read = RS232_PollComport(port_number, buffer, 10);
+		if (!num_read)
+			return false;
+		return true;
 	}
+	return false;
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::read_motor_currents(double &current_motor_1, double &current_motor_2)
+void t_roboclaw_controller::get_motors_current_consumption(double &current_motor_1, double &current_motor_2)
 {
 	if (b_is_open) {
 		unsigned char buffer[10];
@@ -230,7 +258,7 @@ void t_roboclaw_controller::read_motor_currents(double &current_motor_1, double 
 	}
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
+bool t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
 {
 	if (b_is_open) {
 		unsigned char buffer[10];
@@ -251,10 +279,17 @@ void t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t d
 		buffer[9] = crc;
 
 		RS232_SendBuf(port_number, buffer, 10);
+		Sleep(10);
+		
+		int num_read = RS232_PollComport(port_number, buffer, 10);
+		if (!num_read)
+			return false;
+		return true;
 	}
+	return false;
 }
 //--------------------------------------------------------------
-void t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
+bool t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
 {
 	if (b_is_open) {
 		unsigned char buffer[10];
@@ -275,7 +310,13 @@ void t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t d
 		buffer[9] = crc;
 
 		RS232_SendBuf(port_number, buffer, 10);
+		Sleep(10);
+		int num_read = RS232_PollComport(port_number, buffer, 10);
+		if (!num_read)
+			return false;
+		return true;
 	}
+	return false;
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::set_M1_max_current_limit(double c_max)
