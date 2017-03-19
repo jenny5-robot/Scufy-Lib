@@ -73,6 +73,9 @@ public:
 	// this should be called frequently from the main loop of the program in order to read the data received from Arduino
 	bool update_commands_from_serial(void);
 
+	// clear the list of commands
+	void clear_commands_list(void);
+
 	// gets an unformated string of chars from serial
 	// should be used only in extreme cases
 	// normally an application must call update_commands_from_serial

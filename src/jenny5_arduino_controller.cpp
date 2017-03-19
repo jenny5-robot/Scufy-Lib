@@ -580,6 +580,15 @@ bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &even
 	return true;
 }
 //--------------------------------------------------------------
+void t_jenny5_arduino_controller::clear_commands_list(void)
+{
+	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
+		delete e;
+		received_events.DeleteCurrent(node_p);
+	}
+}
+//--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(int event_type)
 {
 	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
