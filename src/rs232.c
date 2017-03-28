@@ -31,7 +31,8 @@
 /* For more info and how to use this library, visit: http://www.teuniz.net/RS-232/ */
 
 
-#include "../include/rs232.h"
+#include "rs232.h"
+#include <strsafe.h>
 
 
 
@@ -586,6 +587,31 @@ http://technet.microsoft.com/en-us/library/cc732236.aspx
                       OPEN_EXISTING,
                       0,                          /* no threads */
                       NULL);                      /* no templates */
+
+  LPVOID lpMsgBuf;
+  LPVOID lpDisplayBuf;
+  DWORD dw = GetLastError();
+
+  FormatMessage(
+	  FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	  FORMAT_MESSAGE_FROM_SYSTEM |
+	  FORMAT_MESSAGE_IGNORE_INSERTS,
+	  NULL,
+	  dw,
+	  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	  (LPTSTR)&lpMsgBuf,
+	  0, NULL);
+
+  // Display the error message and exit the process
+  lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
+	  (lstrlen((LPCTSTR)lpMsgBuf) + 40) * sizeof(TCHAR));
+  StringCchPrintf((LPTSTR)lpDisplayBuf,
+	  LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+	  TEXT("failed with error %d: %s"),
+	  dw, lpMsgBuf);
+
+  LocalFree(lpMsgBuf);
+  LocalFree(lpDisplayBuf);
 
   if(Cport[comport_number]==INVALID_HANDLE_VALUE)
   {
