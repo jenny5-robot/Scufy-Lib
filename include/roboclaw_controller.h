@@ -177,11 +177,11 @@ public:
 
 	// Set Motor 1 Maximum Current Limit. Current value is in 10ma units.
 	//  To calculate multiply current limit by 100.
-	void set_M1_max_current_limit(double c_max);
+	bool set_M1_max_current_limit(double c_max);
 
 	// Set Motor 1 Maximum Current Limit. Current value is in 10ma units.
 	//  To calculate multiply current limit by 100.
-	void set_M2_max_current_limit(double c_max);
+	bool set_M2_max_current_limit(double c_max);
 
 	// Read the current unit status.
 	uint16_t read_status(void);
