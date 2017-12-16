@@ -1,6 +1,7 @@
-// copyright Mihai Oltean, mihai.oltean@gmail.com
-// www.jenny5.org
-// www.tcreate.org
+// author: Mihai Oltean
+// email: mihai.oltean@gmail.com
+// main website: http://www.jenny5.org
+// mirror website: https://jenny5-robot.github.io
 // source code: https://github.com/jenny5-robot
 
 // MIT License

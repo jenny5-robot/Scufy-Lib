@@ -1,5 +1,14 @@
-#ifndef jenny5_command_moduleH
-#define jenny5_command_moduleH
+// author: Mihai Oltean, 
+// email: mihai.oltean@gmail.com
+// main website: http://www.jenny5.org
+// mirror website: https://jenny5-robot.github.io
+// source code: https://github.com/jenny5-robot
+
+// MIT License
+// ---------------------------------------------------------------------------
+
+#ifndef jenny5_command_module_H
+#define jenny5_command_module_H
 
 #include "rs232.h"
 #include "lista_voidp.h"
