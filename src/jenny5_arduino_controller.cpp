@@ -555,10 +555,6 @@ bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &even
 		if (!event_success) {
 			if (query_for_event(event, available_info))  // have we received the event from Serial ?
 				event_success = true;
-			//for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
-			//	jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-			//	std::cout << (int)e->type << " " << e->param1 << std::endl;
-			//}
 		}
 
 		if (event_success)
