@@ -146,6 +146,11 @@ public:
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
 	void send_create_potentiometers(int num_potentiometers, int* out_pins);
 
+	// sends (to Arduino) a command for creating a as5147s controller
+	// this method should be called once at the beginning of the program
+	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	void send_create_as5147s(int num_as5147s, int* out_pins);
+
 	// sends (to Arduino) a command for creating an infrared controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
@@ -205,7 +210,14 @@ public:
 	void send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration);
 	
 	// sends (to Arduino) a command for attaching several sensors to a given motor
-	void send_attach_sensors_to_stepper_motor(int motor_index, int num_potentiometers, int *potentiometers_index, int* _low, int* _high, int *home, int *_direction, int num_infrared, int *infrared_index, int num_buttons, int *buttons_index, int *button_direction);
+	void send_attach_sensors_to_stepper_motor(int motor_index, 
+		int num_potentiometers, int *potentiometers_index, 
+		int* _low, int* _high, int *home, int *_direction, 
+		int num_AS5147s, int *AS5147_index,
+		int* AS5147_low, int* AS5147_high, int *AS5147_home, int *AS5147_direction,
+		int num_infrared, int *infrared_index,
+		int num_buttons, int *buttons_index, int *button_direction
+	);
 
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
 	void send_remove_attached_sensors_from_stepper_motor(int motor_index);
@@ -244,6 +256,9 @@ public:
 
 	// sends (to Arduino) a command for reading a potentiometer position
 	void send_get_potentiometer_position(int sensor_index);
+
+	// sends (to Arduino) a command for reading a AS5147 position
+	void send_get_AS5147_position(int sensor_index);
 
 	// sends (to Arduino) a command for reading a infrared value
 	void send_get_infrared_signal_strength(int sensor_index);
