@@ -287,6 +287,11 @@ public:
 
 	// sends (to Arduino) a command for setting parameters of a potentiometer
 	void send_set_potentiometer_parameters(int potentiometer_index);
+
+	// sends a command for reading the free memory size
+	void send_get_free_memory(void);
+
+	int get_free_memory(void);
 	
 
 	// STATE

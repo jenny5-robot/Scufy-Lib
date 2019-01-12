@@ -23,7 +23,7 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(library_version, "2019.01.09.0"); // year.month.day.build number
+	strcpy(library_version, "2019.01.10.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -569,7 +569,19 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 											received_events.Add((void*)e);
 											i += stop_index - (tmp_str + i + 1) + 2;
 										}
-									else// not an recognized event
+										else
+											if(tmp_str[i] == 'M' || tmp_str[i] == 'm') {// version number
+											//scan until #
+										
+										int num_consumed;
+										int free_memory;
+										sscanf(tmp_str + i + 1, "%d%n", &free_memory, &num_consumed);
+										i += 2 + num_consumed;
+										jenny5_event *e = new jenny5_event(FREE_MEMORY_EVENT, free_memory, 0, 0);
+										received_events.Add((void*)e);
+										
+									}
+										else// not an recognized event// not an recognized event
 										i++;
 			// more events to add
 		}
@@ -1153,7 +1165,6 @@ void t_jenny5_arduino_controller::send_get_tera_ranger_one_distance(void)
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
-
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::send_LIDAR_go(void)
@@ -1164,8 +1175,6 @@ void t_jenny5_arduino_controller::send_LIDAR_go(void)
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
-
-
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::send_LIDAR_stop(void)
@@ -1176,7 +1185,6 @@ void t_jenny5_arduino_controller::send_LIDAR_stop(void)
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
-
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration)
@@ -1187,6 +1195,46 @@ void t_jenny5_arduino_controller::send_set_LIDAR_motor_speed_and_acceleration(in
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
-
 }
 //--------------------------------------------------------------
+void t_jenny5_arduino_controller::send_get_free_memory(void)
+{
+	char s[20];
+	sprintf(s, "M#");
+	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+#ifdef DEBUG_ON
+	printf("%s\n", s);
+#endif
+}
+//--------------------------------------------------------------
+int t_jenny5_arduino_controller::get_free_memory(void)
+{
+	send_get_free_memory();
+
+	clock_t start_time = clock();
+	bool free_memory_set = false;
+
+	int free_memory = 0;
+
+	while (1) {
+		if (!update_commands_from_serial())
+			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
+		if (query_for_event(FREE_MEMORY_EVENT, &free_memory)) {  // have we received the event from Serial ?
+			free_memory_set = true;
+			break;
+		}
+
+		// measure the passed time 
+		clock_t end_time = clock();
+
+		double wait_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+		// if more than 1 seconds then game over
+		if (wait_time > 1) {
+			break;
+		}
+	}
+	return free_memory;
+}
+//--------------------------------------------------------------
+
+
