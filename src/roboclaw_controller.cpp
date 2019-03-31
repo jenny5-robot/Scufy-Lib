@@ -157,7 +157,7 @@ bool t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 
 		uint16_t crc = CRC16(buffer, 3);
 		buffer[3] = crc >> 8;
-		buffer[4] = crc;
+		buffer[4] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
 		Sleep(10);
@@ -180,7 +180,7 @@ bool t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 
 		uint16_t crc = CRC16(buffer, 3);
 		buffer[3] = crc >> 8;
-		buffer[4] = crc;
+		buffer[4] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
 		Sleep(10);
@@ -203,7 +203,7 @@ bool t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 
 		uint16_t crc = CRC16(buffer, 3);
 		buffer[3] = crc >> 8;
-		buffer[4] = crc;
+		buffer[4] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
 		Sleep(10);
@@ -226,7 +226,7 @@ bool t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 
 		uint16_t crc = CRC16(buffer, 3);
 		buffer[3] = crc >> 8;
-		buffer[4] = crc;
+		buffer[4] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 5);
 		Sleep(10);
@@ -267,17 +267,17 @@ bool t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t d
 		buffer[1] = M1DUTYACCEL;    // command
 
 		buffer[2] = duty >> 8;
-		buffer[3] = duty;
+		buffer[3] = (unsigned char)duty;
 
 		buffer[4] = accel >> 8;
-		buffer[5] = accel;
+		buffer[5] = (unsigned char)accel;
 
 		buffer[6] = accel >> 8;
-		buffer[7] = accel;
+		buffer[7] = (unsigned char)accel;
 
 		uint16_t crc = CRC16(buffer, 8);
 		buffer[8] = crc >> 8;
-		buffer[9] = crc;
+		buffer[9] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 10);
 		Sleep(10);
@@ -298,17 +298,17 @@ bool t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t d
 		buffer[1] = M2DUTYACCEL;    // command
 
 		buffer[2] = duty >> 8;
-		buffer[3] = duty;
+		buffer[3] = (unsigned char)duty;
 
 		buffer[4] = accel >> 8;
-		buffer[5] = accel;
+		buffer[5] = (unsigned char)accel;
 
 		buffer[6] = accel >> 8;
-		buffer[7] = accel;
+		buffer[7] = (unsigned char)accel;
 
 		uint16_t crc = CRC16(buffer, 8);
 		buffer[8] = crc >> 8;
-		buffer[9] = crc;
+		buffer[9] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 10);
 		Sleep(10);
@@ -333,7 +333,7 @@ bool t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 		buffer[2] = max_v >> 24;
 		buffer[3] = max_v >> 16;
 		buffer[4] = max_v >> 8;
-		buffer[5] = max_v;
+		buffer[5] = (unsigned char)max_v;
 
 		buffer[6] = 0;
 		buffer[7] = 0;
@@ -342,7 +342,7 @@ bool t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 
 		uint16_t crc = CRC16(buffer, 10);
 		buffer[10] = crc >> 8;
-		buffer[11] = crc;
+		buffer[11] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 12);
 		Sleep(10);
@@ -376,7 +376,7 @@ bool t_roboclaw_controller::set_M2_max_current_limit(double c_max)
 
 		uint16_t crc = CRC16(buffer, 10);
 		buffer[10] = crc >> 8;
-		buffer[11] = crc;
+		buffer[11] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 12);
 		Sleep(10);
@@ -433,11 +433,11 @@ void t_roboclaw_controller::set_standard_config_settings(uint16_t config)
 		buffer[1] = SETCONFIG;
 
 		buffer[2] = config >> 8;
-		buffer[3] = config;
+		buffer[3] = (unsigned char)config;
 
 		uint16_t crc = CRC16(buffer, 4);
 		buffer[4] = crc >> 8;
-		buffer[5] = crc;
+		buffer[5] = (unsigned char)crc;
 
 		RS232_SendBuf(port_number, buffer, 6);
 		Sleep(10);
