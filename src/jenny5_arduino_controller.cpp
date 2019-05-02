@@ -20,10 +20,12 @@
 
 #define DEBUG_ON
 
+#define MAX_BUFFER_LENGTH 40960
+
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(library_version, "2019.01.10.0"); // year.month.day.build number
+	strcpy(library_version, "2019.04.25.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -35,13 +37,19 @@ t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 		potentiometer_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 6; i++)
 		infrared_state[i] = COMMAND_DONE;
+	
+	tera_ranger_one_state = 0;
 
-	b_is_open = false;
+	if (c_serial_new(&m_port, NULL) < 0) {
+		fprintf(stderr, "ERROR: Unable to create new serial port\n");
+//		return 1;
+	}
+
 }
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::~t_jenny5_arduino_controller(void)
 {
-
+	c_serial_free(m_port);
 }
 //--------------------------------------------------------------
 const char* t_jenny5_arduino_controller::get_library_version(void)
@@ -49,20 +57,33 @@ const char* t_jenny5_arduino_controller::get_library_version(void)
 	return library_version;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::connect(int port, int baud_rate)
+bool t_jenny5_arduino_controller::connect(const char* port, int baud_rate)
 {
-	if (!b_is_open) {
-		char mode[] = { '8', 'N', '1', 0 };
+	if (!c_serial_is_open(m_port)) {
 
-		port_number = port;
 		current_buffer[0] = 0;
 
-		if (RS232_OpenComport(port, baud_rate, mode) == 0) {
-			b_is_open = true;
-			return true;
-		}
-		else
+		if (c_serial_set_port_name(m_port, port) < 0) {
+			//fprintf(stderr, "ERROR: can't set port name\n");
 			return false;
+		}
+
+		c_serial_set_baud_rate(m_port, CSERIAL_BAUD_115200);
+		c_serial_set_data_bits(m_port, CSERIAL_BITS_8);
+		c_serial_set_stop_bits(m_port, CSERIAL_STOP_BITS_1);
+		c_serial_set_parity(m_port, CSERIAL_PARITY_NONE);
+		c_serial_set_flow_control(m_port, CSERIAL_FLOW_NONE);
+
+		c_serial_set_serial_line_change_flags(m_port, CSERIAL_LINE_FLAG_ALL);
+
+		int status = c_serial_open(m_port);
+		if (status < 0) {
+			//fprintf(stderr, "ERROR: Can't open serial port\n");
+			return false;
+		}
+
+		c_serial_flush(m_port);
+		return true;
 	}
 	else
 		return false;
@@ -70,15 +91,14 @@ bool t_jenny5_arduino_controller::connect(int port, int baud_rate)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::is_open(void)
 {
-	return b_is_open;
+	return c_serial_is_open(m_port);
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::close_connection(void)
 {
-	if (b_is_open) {
-		RS232_CloseComport(port_number);
+	if (c_serial_is_open(m_port)) {
+		c_serial_close(m_port);
 		current_buffer[0] = 0;
-		b_is_open = false;
 	}
 }
 //--------------------------------------------------------------
@@ -86,7 +106,8 @@ void t_jenny5_arduino_controller::send_get_firmware_version(void)
 {
 	char s[3];
 	strcpy(s, "v#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -96,7 +117,8 @@ void t_jenny5_arduino_controller::send_move_stepper_motor(int motor_index, int n
 {
 	char s[20];
 	sprintf(s, "SM%d %d#", motor_index, num_steps);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -107,7 +129,8 @@ void t_jenny5_arduino_controller::send_move_stepper_motor2(int motor_index1, int
 {
 	char s[30];
 	sprintf(s, "SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -118,7 +141,8 @@ void t_jenny5_arduino_controller::send_move_stepper_motor3(int motor_index1, int
 {
 	char s[63];
 	sprintf(s, "SM%d %d SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -129,7 +153,8 @@ void t_jenny5_arduino_controller::send_move_stepper_motor4(int motor_index1, int
 {
 	char s[63];
 	sprintf(s, "SM%d %d SM%d %d SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -140,7 +165,8 @@ void t_jenny5_arduino_controller::send_stop_stepper_motor(int motor_index)
 {
 	char s[20];
 	sprintf(s, "ST%d#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -158,7 +184,8 @@ void t_jenny5_arduino_controller::send_move_stepper_motor_array(int num_motors, 
 		sprintf(tmp_str, "SM%d %d#", motor_index[i], num_steps[i]);
 		strcat(s, tmp_str);
 	}
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -169,7 +196,8 @@ void t_jenny5_arduino_controller::send_stepper_motor_goto_sensor_position(int mo
 {
 	char s[20];
 	sprintf(s, "SG%d %d#", motor_index, sensor_position);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -181,7 +209,8 @@ void t_jenny5_arduino_controller::send_set_stepper_motor_speed_and_acceleration(
 {
 	char s[20];
 	sprintf(s, "SS%d %d %d#", motor_index, motor_speed, motor_acceleration);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -192,7 +221,8 @@ void t_jenny5_arduino_controller::send_get_sonar_distance(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RU%d#", sensor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -203,7 +233,8 @@ void t_jenny5_arduino_controller::send_get_button_state(int button_index)
 {
 	char s[20];
 	sprintf(s, "RB%d#", button_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -214,7 +245,8 @@ void t_jenny5_arduino_controller::send_get_potentiometer_position(int sensor_ind
 {
 	char s[20];
 	sprintf(s, "RP%d#", sensor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -225,7 +257,8 @@ void t_jenny5_arduino_controller::send_get_AS5147_position(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RA%d#", sensor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -236,7 +269,8 @@ void t_jenny5_arduino_controller::send_get_infrared_signal_strength(int sensor_i
 {
 	char s[20];
 	sprintf(s, "RI%d#", sensor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -247,7 +281,8 @@ void t_jenny5_arduino_controller::send_get_motors_sensors_statistics(void)
 {
 	char s[20];
 	sprintf(s, "G#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -258,7 +293,8 @@ void t_jenny5_arduino_controller::send_disable_stepper_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "SD%d#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -269,16 +305,28 @@ void t_jenny5_arduino_controller::send_lock_stepper_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "SL%d#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
 
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_data_from_serial(char *buffer, int buffer_size)
+int t_jenny5_arduino_controller::get_data_from_serial(unsigned char *buffer, int buffer_size)
 {
-	return RS232_PollComport(port_number, (unsigned char*)buffer, buffer_size);
+	int num_available;
+	if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK)
+		return 0;
+	if (num_available){
+		buffer_size = MAX_BUFFER_LENGTH;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+		return buffer_size;
+
+	}
+	else
+		return 0;
+		//RS232_PollComport(port_number, (unsigned char*)buffer, buffer_size);
 }
 //--------------------------------------------------------------
 void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor_index, 
@@ -317,7 +365,8 @@ void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor
 	}
 
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -328,7 +377,8 @@ void t_jenny5_arduino_controller::send_remove_attached_sensors_from_stepper_moto
 {
 	char s[10];
 	sprintf(s, "AS%d 0#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -339,7 +389,8 @@ void t_jenny5_arduino_controller::send_get_motor_parameters(int motor_index)
 {
 	char s[10];
 	sprintf(s, "GS%d#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -350,7 +401,8 @@ void t_jenny5_arduino_controller::send_get_potentiometer_parameters(int potentio
 {
 	char s[10];
 	sprintf(s, "GP%d#", potentiometer_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -361,7 +413,8 @@ void t_jenny5_arduino_controller::send_set_potentiometer_parameters(int potentio
 {
 	char s[30];
 	sprintf(s, "SP%d#", potentiometer_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -372,7 +425,8 @@ void t_jenny5_arduino_controller::send_is_alive(void)
 {
 	char s[3];
 	strcpy(s, "T#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -398,7 +452,7 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 					if (tmp_str[i + 1] == 'L' || tmp_str[i + 1] == 'l') {// motor was locked
 						int motor_index;
 						sscanf(tmp_str + i + 2, "%d", &motor_index);
-						i += 3;
+						i += 4;
 						jenny5_event *e = new jenny5_event(STEPPER_MOTOR_LOCKED_EVENT, motor_index, 0, 0);
 						received_events.Add((void*)e);
 					}
@@ -406,7 +460,7 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 						if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// motor was disabled
 							int motor_index;
 							sscanf(tmp_str + i + 2, "%d", &motor_index);
-							i += 3;
+							i += 4;
 
 							jenny5_event *e = new jenny5_event(STEPPER_MOTOR_DISABLED_EVENT, motor_index, 0, 0);
 							received_events.Add((void*)e);
@@ -415,11 +469,23 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 							if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// set speed and acceleration
 								int motor_index;
 								sscanf(tmp_str + i + 2, "%d", &motor_index);
-								i += 3;
+								i += 4;
 
 								jenny5_event *e = new jenny5_event(STEPPER_MOTOR_SET_SPEED_ACCELL_EVENT, motor_index, 0, 0);
 								received_events.Add((void*)e);
 							}
+							else
+								if (tmp_str[i + 1] == 'T' || tmp_str[i + 1] == 't') {// stepper stopped
+									int motor_index;
+									sscanf(tmp_str + i + 2, "%d", &motor_index);
+									i += 4;
+
+									jenny5_event *e = new jenny5_event(STEPPER_STOPPED_EVENT, motor_index, 0, 0);
+									received_events.Add((void*)e);
+								}
+							
+								
+							
 
 				/*
 				if (tmp_str[i + 1] == 'D' || tmp_str[i + 1] == 'd') {// DC motor finished movement
@@ -435,63 +501,76 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 
 			}
 			else
-				if (tmp_str[i] == 'U' || tmp_str[i] == 'u') {//sonar reading returned value
-					int sonar_index, distance;
-					sscanf(tmp_str + i + 1, "%d%d", &sonar_index, &distance);
-					i += 4;
-					jenny5_event *e = new jenny5_event(SONAR_EVENT, sonar_index, distance, 0);
-					received_events.Add((void*)e);
-				}
-				else
-					if (tmp_str[i] == 'P' || tmp_str[i] == 'p') {//potentiometer reading returned value
-						int potentiometer_index, position;
-						sscanf(tmp_str + i + 1, "%d%d", &potentiometer_index, &position);
-						i += 4;
-						jenny5_event *e = new jenny5_event(POTENTIOMETER_EVENT, potentiometer_index, position, 0);
+				if (tmp_str[i] == 'R' || tmp_str[i] == 'r') { // reads something
+					if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {//sonar reading returned value
+						int sonar_index, distance;
+						sscanf(tmp_str + i + 2, "%d%d", &sonar_index, &distance);
+						i += 5;
+						jenny5_event *e = new jenny5_event(SONAR_EVENT, sonar_index, distance, 0);
 						received_events.Add((void*)e);
 					}
 					else
-						if (tmp_str[i] == 'A' || tmp_str[i] == 'a') {//AS5147 reading returned value
-							int as5147_index, position;
-							sscanf(tmp_str + i + 1, "%d%d", &as5147_index, &position);
-							i += 4;
-							jenny5_event *e = new jenny5_event(AS5147_EVENT, as5147_index, position, 0);
+						if (tmp_str[i + 1] == 'P' || tmp_str[i + 1] == 'p') {//potentiometer reading returned value
+							int potentiometer_index, position;
+							sscanf(tmp_str + i + 2, "%d%d", &potentiometer_index, &position);
+							i += 5;
+							jenny5_event *e = new jenny5_event(POTENTIOMETER_EVENT, potentiometer_index, position, 0);
 							received_events.Add((void*)e);
 						}
 						else
-							if (tmp_str[i] == 'I' || tmp_str[i] == 'i') {//infrared reading returned value
-							int infrared_index, distance;
-							sscanf(tmp_str + i + 1, "%d%d", &infrared_index, &distance);
-							i += 4;
-							jenny5_event *e = new jenny5_event(INFRARED_EVENT, infrared_index, distance, 0);
-							received_events.Add((void*)e);
-						}
-						else
-							if (tmp_str[i] == 'B' || tmp_str[i] == 'b') {//button state
-								int button_index, button_state;
-								sscanf(tmp_str + i + 1, "%d%d", &button_index, &button_state);
-								i += 4;
-								jenny5_event *e = new jenny5_event(BUTTON_EVENT, button_index, button_state, 0);
+							if (tmp_str[i + 1] == 'A' || tmp_str[i + 1] == 'a') {//AS5147 reading returned value
+								int as5147_index, position;
+								sscanf(tmp_str + i + 2, "%d%d", &as5147_index, &position);
+								i += 5;
+								jenny5_event *e = new jenny5_event(AS5147_EVENT, as5147_index, position, 0);
 								received_events.Add((void*)e);
 							}
 							else
-								if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection or tera ranger one read
-								if (tmp_str[i + 1] == 'R' || tmp_str[i + 1] == 'r') { // tera ranger one
-									int distance;
-									int num_read;
-									sscanf(tmp_str + i + 2, "%d%n", &distance, &num_read);
-									jenny5_event *e = new jenny5_event(TERA_RANGER_ONE_EVENT, distance, 0, 0);
+								if (tmp_str[i + 1] == 'I' || tmp_str[i + 1] == 'i') {//infrared reading returned value
+									int infrared_index, distance;
+									sscanf(tmp_str + i + 2, "%d%d", &infrared_index, &distance);
+									i += 5;
+									jenny5_event *e = new jenny5_event(INFRARED_EVENT, infrared_index, distance, 0);
 									received_events.Add((void*)e);
-									i += 2 + num_read + 1;
 								}
-								else { // test connection
-									jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
-									received_events.Add((void*)e);
-									i += 2;
-								}
-							}
-							else
-								if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {//LIDAR reading returned value
+								else
+									if (tmp_str[i + 1] == 'B' || tmp_str[i + 1] == 'b') {//button state
+										int button_index, button_state;
+										sscanf(tmp_str + i + 2, "%d%d", &button_index, &button_state);
+										i += 5;
+										jenny5_event *e = new jenny5_event(BUTTON_EVENT, button_index, button_state, 0);
+										received_events.Add((void*)e);
+									}
+									else
+										if (tmp_str[i + 1] == 'T' || tmp_str[i + 1] == 't') { // tera ranger one
+											int distance;
+											int num_read;
+											sscanf(tmp_str + i + 2, "%d%n", &distance, &num_read);
+											jenny5_event *e = new jenny5_event(TERA_RANGER_ONE_EVENT, distance, 0, 0);
+											received_events.Add((void*)e);
+											i += 2 + num_read + 1;
+										}
+										else
+											if (tmp_str[i + 1] == 'M' || tmp_str[i + 1] == 'm') {// version number
+											//scan until #
+
+												int num_consumed;
+												int free_memory;
+												sscanf(tmp_str + i + 2, "%d%n", &free_memory, &num_consumed);
+												i += 2 + num_consumed + 1;
+												jenny5_event *e = new jenny5_event(FREE_MEMORY_EVENT, free_memory, 0, 0);
+												received_events.Add((void*)e);
+
+											}
+				}// end read something
+				else
+					if (tmp_str[i] == 'T' || tmp_str[i] == 't') {// test connection
+						jenny5_event *e = new jenny5_event(IS_ALIVE_EVENT, 0, 0, 0);
+						received_events.Add((void*)e);
+						i += 2;
+					}
+					else
+						if (tmp_str[i] == 'L' || tmp_str[i] == 'l') {//LIDAR reading returned value
 									int motor_position, distance;
 									int num_consumed;
 									sscanf(tmp_str + i + 1, "%d%d%n", &motor_position, &distance, &num_consumed);
@@ -499,9 +578,8 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 									jenny5_event *e = new jenny5_event(LIDAR_READ_EVENT, motor_position, distance, 0);
 									received_events.Add((void*)e);
 								}
-
-								else
-									if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
+						else
+							if (tmp_str[i] == 'C' || tmp_str[i] == 'c') {// something is created
 										if (tmp_str[i + 1] == 'S' || tmp_str[i + 1] == 's') {// stepper motors controller created
 											i += 3;
 											jenny5_event *e = new jenny5_event(STEPPER_MOTORS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
@@ -558,8 +636,8 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 																	else
 																		i++;
 									}
-									else
-										if (tmp_str[i] == 'V' || tmp_str[i] == 'v') {// version number
+							else
+								if (tmp_str[i] == 'V' || tmp_str[i] == 'v') {// version number
 											//scan until #
 											char *stop_index = strchr(tmp_str + i, '#');
 											char *s_version = new char[stop_index - (tmp_str + i + 1) + 1];
@@ -569,20 +647,43 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 											received_events.Add((void*)e);
 											i += stop_index - (tmp_str + i + 1) + 2;
 										}
-										else
-											if(tmp_str[i] == 'M' || tmp_str[i] == 'm') {// version number
+								else
+									if (tmp_str[i] == 'I' || tmp_str[i] == 'i') {// information from firmware
 											//scan until #
-										
-										int num_consumed;
-										int free_memory;
-										sscanf(tmp_str + i + 1, "%d%n", &free_memory, &num_consumed);
-										i += 2 + num_consumed;
-										jenny5_event *e = new jenny5_event(FREE_MEMORY_EVENT, free_memory, 0, 0);
-										received_events.Add((void*)e);
-										
-									}
-										else// not an recognized event// not an recognized event
-										i++;
+												char *stop_index = strchr(tmp_str + i, '#');
+												if (stop_index) {
+													char *s_info = new char[stop_index - (tmp_str + i + 1) + 1];
+													strncpy(s_info, tmp_str + i + 1, stop_index - (tmp_str + i + 1));
+													s_info[stop_index - (tmp_str + i + 1)] = 0;
+													//jenny5_event *e = new jenny5_event(INFO_EVENT, 0, (intptr_t)s_info, 0);
+													//received_events.Add((void*)e);
+													i += stop_index - (tmp_str + i + 1) + 2;
+													printf("INFO from firmware = %s\n", s_info);
+												}
+											}
+									else
+										if (tmp_str[i] == 'E' || tmp_str[i] == 'e') {// information from firmware
+												//scan until #
+											char *stop_index = strchr(tmp_str + i, '#');
+											//char *s_info = new char[stop_index - (tmp_str + i + 1) + 1];
+											//strncpy(s_info, tmp_str + i + 1, stop_index - (tmp_str + i + 1));
+											//s_info[stop_index - (tmp_str + i + 1)] = 0;
+											//jenny5_event *e = new jenny5_event(INFO_EVENT, 0, (intptr_t)s_info, 0);
+											//received_events.Add((void*)e);
+											i += stop_index - (tmp_str + i + 1) + 2;
+											printf("Error from firmware.\n");
+										}
+										else
+											if (tmp_str[i] == 'A' || tmp_str[i] == 'a') {//attach
+												int motor_index;
+												int num_consumed;
+												sscanf(tmp_str + i + 1, "%d%n", &motor_index, &num_consumed);
+												i += 2 + num_consumed;
+												jenny5_event *e = new jenny5_event(ATTACH_SENSORS_EVENT, motor_index, 0);
+												received_events.Add((void*)e);
+											}
+											else// not an recognized event// not an recognized event
+												i++;
 			// more events to add
 		}
 		else
@@ -593,11 +694,13 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 {
 	// the same code as in firmware
-	char tmp_buffer[40960];
-	int received_size = get_data_from_serial(tmp_buffer, 40960);
+	unsigned char tmp_buffer[MAX_BUFFER_LENGTH];
+	int received_size = get_data_from_serial(tmp_buffer, MAX_BUFFER_LENGTH);
+	if (received_size >= MAX_BUFFER_LENGTH)
+		return false;
 	tmp_buffer[received_size] = 0;
 	if (received_size) {
-		strcpy(current_buffer + strlen(current_buffer), tmp_buffer);
+		strcpy(current_buffer + strlen(current_buffer), (char*)tmp_buffer);
 		//	printf("%s\n", current_buffer);
 
 		size_t buffer_length = strlen(current_buffer);
@@ -605,7 +708,7 @@ bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 			if ((current_buffer[i] >= 'A' && current_buffer[i] <= 'Z') || (current_buffer[i] >= 'a' && current_buffer[i] <= 'z')) {// a command
 				// find the terminal character #
 				size_t j = buffer_length - 1;
-				for (; j > i && current_buffer[j] != '#'; j--);// parse until I find the termination char
+				for (; j > i && current_buffer[j] != '#'; j--);// parse until I find the termination other commands
 				if (j > i) {
 
 #ifdef DEBUG
@@ -859,7 +962,8 @@ void t_jenny5_arduino_controller::send_go_home_stepper_motor(int motor_index)
 {
 	char s[20];
 	sprintf(s, "SH%d#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -887,7 +991,8 @@ void t_jenny5_arduino_controller::send_create_stepper_motors(int num_motors, int
 		strcat(s, tmp_s);
 	}
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -905,7 +1010,8 @@ void t_jenny5_arduino_controller::send_create_dc_motors(int num_motors, int *pwm
 		strcat(s, tmp_s);
 	}
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -923,7 +1029,8 @@ void t_jenny5_arduino_controller::send_create_sonars(int num_sonars, int* trig_p
 		strcat(s, tmp_s);
 	}
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -941,7 +1048,8 @@ void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiomet
 		strcat(s, tmp_s);
 	}
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -959,7 +1067,8 @@ void t_jenny5_arduino_controller::send_create_as5147s(int num_as5147s, int* out_
 		strcat(s, tmp_s);
 	}
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -977,7 +1086,8 @@ void t_jenny5_arduino_controller::send_create_infrared_sensors(int num_infrared_
 		strcat(s, tmp_s);
 	}
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -995,7 +1105,8 @@ void t_jenny5_arduino_controller::send_create_buttons(int num_buttons, int* out_
 		strcat(s, tmp_s);
 	}
 	strcat(s, "#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1037,7 +1148,8 @@ void t_jenny5_arduino_controller::send_move_dc_motor(int motor_index, int num_mi
 {
 	char s[20];
 	sprintf(s, "MD%d %d#", motor_index, num_miliseconds);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1049,7 +1161,8 @@ void t_jenny5_arduino_controller::send_go_home_dc_motor(int motor_index)
 {
 	char s[20];
 	sprintf(s, "HD%d#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1061,7 +1174,8 @@ void t_jenny5_arduino_controller::send_disable_dc_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "DD%d#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1073,7 +1187,8 @@ void t_jenny5_arduino_controller::send_set_dc_motor_speed(int motor_index, int m
 {
 	char s[20];
 	sprintf(s, "SD%d %d#", motor_index, motor_speed);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1087,10 +1202,11 @@ void t_jenny5_arduino_controller::send_attach_sensors_to_dc_motor(int motor_inde
 	sprintf(s, "AD%d %d", motor_index, num_buttons);
 	for (int i = 0; i < num_buttons; i++) {
 		char tmp_str[64];
-		sprintf(s, " B%d#", buttons_index[i]);
+		sprintf(tmp_str, " B%d#", buttons_index[i]);
 		strcat(s, tmp_str);
 	}
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1102,7 +1218,8 @@ void t_jenny5_arduino_controller::send_remove_attached_sensors_from_dc_motor(int
 {
 	char s[10];
 	sprintf(s, "AD%d 0#", motor_index);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1125,7 +1242,8 @@ void t_jenny5_arduino_controller::send_create_tera_ranger_one(void)
 {
 	char s[10];
 	sprintf(s, "CT#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1136,7 +1254,8 @@ void t_jenny5_arduino_controller::send_create_LIDAR(int dir_pin, int step_pin, i
 {
 	char s[30];
 	sprintf(s, "CL %d %d %d %d#", dir_pin, step_pin, enable_pin, ir_pin);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1161,7 +1280,8 @@ void t_jenny5_arduino_controller::send_get_tera_ranger_one_distance(void)
 {
 	char s[10];
 	sprintf(s, "TR#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1171,7 +1291,8 @@ void t_jenny5_arduino_controller::send_LIDAR_go(void)
 {
 	char s[10];
 	sprintf(s, "LG#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1181,7 +1302,8 @@ void t_jenny5_arduino_controller::send_LIDAR_stop(void)
 {
 	char s[10];
 	sprintf(s, "LH#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1191,7 +1313,8 @@ void t_jenny5_arduino_controller::send_set_LIDAR_motor_speed_and_acceleration(in
 {
 	char s[20];
 	sprintf(s, "LS %d %d#", motor_speed, motor_acceleration);
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
@@ -1200,8 +1323,9 @@ void t_jenny5_arduino_controller::send_set_LIDAR_motor_speed_and_acceleration(in
 void t_jenny5_arduino_controller::send_get_free_memory(void)
 {
 	char s[20];
-	sprintf(s, "M#");
-	RS232_SendBuf(port_number, (unsigned char*)s, (int)strlen(s));
+	sprintf(s, "RM#");
+	int data_length = strlen(s);
+	c_serial_write_data(m_port, (unsigned char*)s, &data_length);
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif

@@ -17,7 +17,7 @@
 #ifndef ROBOCLAW_CONTROLLER_H
 #define ROBOCLAW_CONTROLLER_H
 
-#include "rs232.h"
+#include "c_serial.h"
 #include <inttypes.h>
 //-------------------------------------------------------------
 enum {
@@ -122,16 +122,15 @@ private:
 	char library_version[20];
 
 	// port number of the serial connection
-	int port_number;
-
-	bool b_is_open;
+	c_serial_port_t* m_port;
+	c_serial_control_lines_t m_lines;
 
 public:
 
 	t_roboclaw_controller(void);
 	~t_roboclaw_controller(void);
 
-	bool connect(int port, int baud_rate);
+	bool connect(const char* port, int baud_rate);
 	void close_connection(void);
 	bool is_open(void);
 	void send_command(unsigned char command);

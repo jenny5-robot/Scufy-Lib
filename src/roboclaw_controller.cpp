@@ -30,13 +30,18 @@ uint16_t CRC16(unsigned char *packet, int nBytes)
 //--------------------------------------------------------------
 t_roboclaw_controller::t_roboclaw_controller(void)
 {
-	strcpy(library_version, "2017.04.03.0"); // year.month.day.build number
-	b_is_open = false;
+	strcpy(library_version, "2017.05.02.0"); // year.month.day.build number
+
+	if (c_serial_new(&m_port, NULL) < 0) {
+		//fprintf(stderr, "ERROR: Unable to create new serial port\n");
+		//		return 1;
+	}
+
 }
 //--------------------------------------------------------------
 t_roboclaw_controller::~t_roboclaw_controller(void)
 {
-
+	c_serial_free(m_port);
 }
 //--------------------------------------------------------------
 const char* t_roboclaw_controller::get_library_version(void)
@@ -44,19 +49,31 @@ const char* t_roboclaw_controller::get_library_version(void)
 	return library_version;
 }
 //--------------------------------------------------------------
-bool t_roboclaw_controller::connect(int port, int baud_rate)
+bool t_roboclaw_controller::connect(const char* port, int baud_rate)
 {
-	if (!b_is_open) {
-		char mode[] = { '8', 'N', '1', 0 };
+	if (!c_serial_is_open(m_port)) {
 
-		port_number = port;
-
-		if (RS232_OpenComport(port, baud_rate, mode) == 0) {
-			b_is_open = true;
-			return true;
-		}
-		else
+		if (c_serial_set_port_name(m_port, port) < 0) {
+			//fprintf(stderr, "ERROR: can't set port name\n");
 			return false;
+		}
+
+		c_serial_set_baud_rate(m_port, CSERIAL_BAUD_115200);
+		c_serial_set_data_bits(m_port, CSERIAL_BITS_8);
+		c_serial_set_stop_bits(m_port, CSERIAL_STOP_BITS_1);
+		c_serial_set_parity(m_port, CSERIAL_PARITY_NONE);
+		c_serial_set_flow_control(m_port, CSERIAL_FLOW_NONE);
+
+		c_serial_set_serial_line_change_flags(m_port, CSERIAL_LINE_FLAG_ALL);
+
+		int status = c_serial_open(m_port);
+		if (status < 0) {
+			//fprintf(stderr, "ERROR: Can't open serial port\n");
+			return false;
+		}
+
+		c_serial_flush(m_port);
+		return true;
 	}
 	else
 		return false;
@@ -64,31 +81,40 @@ bool t_roboclaw_controller::connect(int port, int baud_rate)
 //--------------------------------------------------------------
 bool t_roboclaw_controller::is_open(void)
 {
-	return b_is_open;
+	return c_serial_is_open(m_port);
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::close_connection(void)
 {
-	if (b_is_open) {
-		RS232_CloseComport(port_number);
-		b_is_open = false;
+	if (c_serial_is_open(m_port)) {
+		c_serial_close(m_port);
 	}
 }
 //--------------------------------------------------------------
 void t_roboclaw_controller::send_command(unsigned char command)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[2];
 		buffer[0] = 0x80;// port
 		buffer[1] = command;
-		RS232_SendBuf(port_number, buffer, 2);
+		int data_length = 2;
+		c_serial_write_data(m_port, buffer, &data_length);
 	}
 }
 //--------------------------------------------------------------
 bool t_roboclaw_controller::read_result(unsigned char* buffer, int buffer_size)
 {
-	if (b_is_open) {
-		return RS232_PollComport(port_number, buffer, buffer_size);
+	if (c_serial_is_open(m_port)) {
+		int num_available;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			buffer[0] = 0;
+			return false;
+		}
+		if (num_available <= 0)
+			return false;
+
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+		return true;
 	}
 	else {
 		buffer[0] = 0;
@@ -98,15 +124,28 @@ bool t_roboclaw_controller::read_result(unsigned char* buffer, int buffer_size)
 //--------------------------------------------------------------
 void t_roboclaw_controller::get_firmware_version(char *firmware_version)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
+		int buffer_size = 32;
 		unsigned char buffer[32];
 
 		buffer[0] = 0x80;// port
 		buffer[1] = GETVERSION;
-		RS232_SendBuf(port_number, (unsigned char*)buffer, 2);
+		
+		int data_length = 2;
+		c_serial_write_data(m_port, buffer, &data_length);
+		//RS232_SendBuf(port_number, (unsigned char*)buffer, 2);
 		Sleep(10);
 
-		RS232_PollComport(port_number, buffer, 32);
+		//RS232_PollComport(port_number, buffer, 32);
+		int num_available;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			buffer[0] = 0;
+		}
+		if (num_available <= 0)
+			buffer[0] = 0;
+		
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+		
 		strcpy(firmware_version, (char*)buffer);
 	}
 	else
@@ -115,14 +154,24 @@ void t_roboclaw_controller::get_firmware_version(char *firmware_version)
 //--------------------------------------------------------------
 double t_roboclaw_controller::get_board_temperature(void)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = GETTEMP;
-		RS232_SendBuf(port_number, buffer, 2);
+		int data_length = 2;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		RS232_PollComport(port_number, buffer, 10);
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			return 0;
+		}
+		if (num_available <= 0)
+			return 0;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+
+//		RS232_PollComport(port_number, buffer, 10);
 
 		return (double)(buffer[0] << 8 | buffer[1]) / 10.0;
 	}
@@ -132,14 +181,22 @@ double t_roboclaw_controller::get_board_temperature(void)
 //--------------------------------------------------------------
 double t_roboclaw_controller::get_main_battery_voltage(void)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = GETMBATT;
-		RS232_SendBuf(port_number, buffer, 2);
+		int data_length = 2;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		RS232_PollComport(port_number, buffer, 10);
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			return 0;
+		}
+		if (num_available <= 0)
+			return 0;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 
 		return (double)(buffer[0] << 8 | buffer[1]) / 10.0;
 	}
@@ -149,7 +206,7 @@ double t_roboclaw_controller::get_main_battery_voltage(void)
 //--------------------------------------------------------------
 bool t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[5];
 		buffer[0] = 0x80; // port
 		buffer[1] = M1FORWARD;    // command
@@ -159,12 +216,20 @@ bool t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 		buffer[3] = crc >> 8;
 		buffer[4] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 5);
+		int data_length = 5;
+		c_serial_write_data(m_port, buffer, &data_length);
+//		RS232_SendBuf(port_number, buffer, 5);
 		Sleep(10);
 
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+
 		return true;
 	}
 	return false;
@@ -172,7 +237,7 @@ bool t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 //--------------------------------------------------------------
 bool t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[5];
 		buffer[0] = 0x80; // port
 		buffer[1] = M2FORWARD;    // command
@@ -182,12 +247,19 @@ bool t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 		buffer[3] = crc >> 8;
 		buffer[4] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 5);
+		int data_length = 5;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+
 		return true;
 	}
 	return false;
@@ -195,7 +267,7 @@ bool t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 //--------------------------------------------------------------
 bool t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[5];
 		buffer[0] = 0x80; // port
 		buffer[1] = M1BACKWARD;    // command
@@ -205,12 +277,19 @@ bool t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 		buffer[3] = crc >> 8;
 		buffer[4] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 5);
+		int data_length = 5;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+
 		return true;
 	}
 	return false;
@@ -218,7 +297,7 @@ bool t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 //--------------------------------------------------------------
 bool t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[5];
 		buffer[0] = 0x80; // port
 		buffer[1] = M2BACKWARD;    // command
@@ -228,12 +307,19 @@ bool t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 		buffer[3] = crc >> 8;
 		buffer[4] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 5);
+		int data_length = 5;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+
 		return true;
 	}
 	return false;
@@ -241,14 +327,25 @@ bool t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 //--------------------------------------------------------------
 void t_roboclaw_controller::get_motors_current_consumption(double &current_motor_1, double &current_motor_2)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = GETCURRENTS;
-		RS232_SendBuf(port_number, buffer, 2);
+		int data_length = 5;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		RS232_PollComport(port_number, buffer, 10);
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			current_motor_1 = current_motor_2 = 0;
+			return ;
+		}
+		if (num_available <= 0) {
+			current_motor_1 = current_motor_2 = 0;
+			return ;
+		}
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 
 		current_motor_1 = (double)(buffer[0] << 8 | buffer[1]) / 100.0;
 		current_motor_2 = (double)(buffer[2] << 8 | buffer[3]) / 100.0;
@@ -261,7 +358,7 @@ void t_roboclaw_controller::get_motors_current_consumption(double &current_motor
 //--------------------------------------------------------------
 bool t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80; // port
 		buffer[1] = M1DUTYACCEL;    // command
@@ -279,12 +376,19 @@ bool t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t d
 		buffer[8] = crc >> 8;
 		buffer[9] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 10);
+		int data_length = 10;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 		
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
+
 		return true;
 	}
 	return false;
@@ -292,7 +396,7 @@ bool t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t d
 //--------------------------------------------------------------
 bool t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t duty, uint32_t accel)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80; // port
 		buffer[1] = M2DUTYACCEL;    // command
@@ -310,11 +414,17 @@ bool t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t d
 		buffer[8] = crc >> 8;
 		buffer[9] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 10);
+		int data_length = 10;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 		return true;
 	}
 	return false;
@@ -322,7 +432,7 @@ bool t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t d
 //--------------------------------------------------------------
 bool t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[12];
 		buffer[0] = 0x80; // port
 		buffer[1] = SETM1MAXCURRENT;    // command
@@ -344,11 +454,17 @@ bool t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 		buffer[10] = crc >> 8;
 		buffer[11] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 12);
+		int data_length = 12;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 		return true;
 	}
 	return false;
@@ -356,7 +472,7 @@ bool t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 //--------------------------------------------------------------
 bool t_roboclaw_controller::set_M2_max_current_limit(double c_max)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[12];
 		buffer[0] = 0x80; // port
 		buffer[1] = SETM2MAXCURRENT;    // command
@@ -378,11 +494,17 @@ bool t_roboclaw_controller::set_M2_max_current_limit(double c_max)
 		buffer[10] = crc >> 8;
 		buffer[11] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 12);
+		int data_length = 12;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
-		int num_read = RS232_PollComport(port_number, buffer, 10);
-		if (!num_read)
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
+		}
+		if (num_available <= 0)
+			return false;
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 		return true;
 	}
 	return false;
@@ -390,14 +512,25 @@ bool t_roboclaw_controller::set_M2_max_current_limit(double c_max)
 //--------------------------------------------------------------
 void t_roboclaw_controller::read_motor_PWM(double &pwm_motor_1, double &pwm_motor_2)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = GETPWMS;
-		RS232_SendBuf(port_number, buffer, 2);
+		int data_length = 2;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		RS232_PollComport(port_number, buffer, 10);
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			pwm_motor_1 = pwm_motor_2 = 0;
+			return ;
+		}
+		if (num_available <= 0) {
+			pwm_motor_1 = pwm_motor_2 = 0;
+			return ;
+		}
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 
 		pwm_motor_1 = (double)(buffer[0] << 8 | buffer[1]) / 327.67;
 		pwm_motor_2 = (double)(buffer[2] << 8 | buffer[3]) / 327.67;
@@ -410,14 +543,23 @@ void t_roboclaw_controller::read_motor_PWM(double &pwm_motor_1, double &pwm_moto
 //--------------------------------------------------------------
 uint16_t t_roboclaw_controller::read_status(void)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = GETERROR;
-		RS232_SendBuf(port_number, buffer, 2);
+		int data_length = 2;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
-		RS232_PollComport(port_number, buffer, 10);
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			return 0;
+		}
+		if (num_available <= 0) {
+			return 0;
+		}
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 
 		return buffer[0] << 8 | buffer[1];
 	}
@@ -427,7 +569,7 @@ uint16_t t_roboclaw_controller::read_status(void)
 //--------------------------------------------------------------
 void t_roboclaw_controller::set_standard_config_settings(uint16_t config)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = SETCONFIG;
@@ -439,22 +581,33 @@ void t_roboclaw_controller::set_standard_config_settings(uint16_t config)
 		buffer[4] = crc >> 8;
 		buffer[5] = (unsigned char)crc;
 
-		RS232_SendBuf(port_number, buffer, 6);
+		int data_length = 6;
+		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 	}
 }
 //--------------------------------------------------------------
 uint16_t t_roboclaw_controller::read_standard_config_settings(void)
 {
-	if (b_is_open) {
+	if (c_serial_is_open(m_port)) {
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = GETCONFIG;
-		RS232_SendBuf(port_number, buffer, 2);
+		int data_length = 2;
+		c_serial_write_data(m_port, buffer, &data_length);
+
 		Sleep(10);
 
-		RS232_PollComport(port_number, buffer, 10);
+		int num_available;
+		int buffer_size = 10;
+		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
+			return 0;
+		}
+		if (num_available <= 0) {
+			return 0;
+		}
 
+		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
 		return buffer[0] << 8 | buffer[1];
 	}
 	else

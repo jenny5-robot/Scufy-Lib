@@ -1,6 +1,6 @@
 // author: Mihai Oltean, 
 // email: mihai.oltean@gmail.com
-// main website: http://www.jenny5.org
+// main website: www.jenny5.org
 // mirror website: https://jenny5-robot.github.io
 // source code: https://github.com/jenny5-robot
 
@@ -10,9 +10,10 @@
 #ifndef jenny5_command_module_H
 #define jenny5_command_module_H
 
-#include "rs232.h"
+
 #include "lista_voidp.h"
 #include "jenny5_events.h"
+#include "c_serial.h"
 
 #include <iostream>
 #include <time.h>
@@ -32,10 +33,11 @@ private:
 	char library_version[20];
 
 	// port number of the serial connection
-	int port_number;
+	c_serial_port_t* m_port;
+	c_serial_control_lines_t m_lines;
 	
 	// true between the calls of connect and close_connection methods; otherwise is false
-	bool b_is_open;
+	//bool b_is_open;
 	// a list with received events from Arduino
 	TLista received_events;
 
@@ -64,7 +66,7 @@ public:
 	~t_jenny5_arduino_controller(void);
 
 	// connects to given serial port
-	bool connect(int port, int baud_rate);
+	bool connect(const char* port, int baud_rate);
 
 	// test if the connection is open; For testing if the Arduino is alive please send_is_alive method and wait for IS_ALIVE_EVENT event
 	bool is_open(void);
@@ -88,7 +90,7 @@ public:
 	// gets an unformated string of chars from serial
 	// should be used only in extreme cases
 	// normally an application must call update_commands_from_serial
-	int get_data_from_serial(char *buffer, int buffer_size);
+	int get_data_from_serial(unsigned char *buffer, int buffer_size);
 
 	// -search in the list of events for a particular event type
 	// -if found returns true and, event param will be updated with the
