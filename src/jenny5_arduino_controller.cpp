@@ -25,7 +25,7 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(library_version, "2019.04.25.0"); // year.month.day.build number
+	strcpy(library_version, "2019.05.08.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
@@ -447,6 +447,7 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 					i += 2 + num_consumed;
 					jenny5_event *e = new jenny5_event(STEPPER_MOTOR_MOVE_DONE_EVENT, motor_index, distance_to_go, 0);
 					received_events.Add((void*)e);
+					printf("Distance to go = %d\n", distance_to_go);
 				}
 				else
 					if (tmp_str[i + 1] == 'L' || tmp_str[i + 1] == 'l') {// motor was locked
@@ -482,6 +483,7 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 
 									jenny5_event *e = new jenny5_event(STEPPER_STOPPED_EVENT, motor_index, 0, 0);
 									received_events.Add((void*)e);
+									printf("Stepper stopped.\n");
 								}
 							
 								
