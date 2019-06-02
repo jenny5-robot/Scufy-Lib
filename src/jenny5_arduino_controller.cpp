@@ -1,6 +1,6 @@
 // author: Mihai Oltean, 
 // email: mihai.oltean@gmail.com
-// main website: http://www.jenny5.org
+// main website: https://www.jenny5.org
 // mirror website: https://jenny5-robot.github.io
 // source code: https://github.com/jenny5-robot
 
