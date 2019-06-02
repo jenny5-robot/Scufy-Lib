@@ -61,6 +61,11 @@ private:
 	// parse the string for events
 	void parse_and_queue_commands(char* tmp_str, int str_length);
 
+	// gets an unformated string of chars from serial
+	// should be used only in extreme cases
+	// normally an application must call update_commands_from_serial
+	int get_data_from_serial(unsigned char* buffer, int buffer_size);
+
 public:
 	t_jenny5_arduino_controller(void);
 	~t_jenny5_arduino_controller(void);
@@ -87,20 +92,18 @@ public:
 	// clear the list of commands
 	void clear_commands_list(void);
 
-	// gets an unformated string of chars from serial
-	// should be used only in extreme cases
-	// normally an application must call update_commands_from_serial
-	int get_data_from_serial(unsigned char *buffer, int buffer_size);
-
-	// -search in the list of events for a particular event type
-	// -if found returns true and, event param will be updated with the
-	// found event, else false is returned.
-	bool query_for_event(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
-
 	// waits for the completion of the event passed as a parameter,
 	// also updates all the event data if it was found
 	// if waits more than SECONDS_UNTIL_TIMEOUT times out and ends the program
 	bool wait_for_command_completion(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
+
+	// ---------------------QUERY LIST of COMMANDS ---------------
+
+
+	// search in the list of events for a particular event type
+	// if found returns true and, event param will be updated with the
+	// found event, else false is returned.
+	bool query_for_event(jenny5_event& event, int available_info = EVENT_INFO_TYPE);
 
 	// search in the list of events for a particular event type
 	bool query_for_event(int event_type);
@@ -126,6 +129,7 @@ public:
 	// search in the list of events for a particular event type
 	bool query_for_event(int event_type, int param1, int param2);
 
+	// -------------- CREATE COMMANDS ----------------
 	// sends (to Arduino) a command for creating a stepper motor controller
 	// several arrays of pin indecses for direction, step and enable must be specified
 	// this method should be called once at the beginning of the program
@@ -177,7 +181,7 @@ public:
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
 	void send_is_alive(void);
 
-	// STEPPER MOTORS
+	// ------------------ STEPPER MOTORS MOVEMENT --------------------
 	// sends (to Arduino) a command for moving a stepper motor to home position
 	void send_go_home_stepper_motor(int motor_index);
 
@@ -230,7 +234,7 @@ public:
 	// sets the state of a motor
 	void set_stepper_motor_state(int motor_index, int new_state);
 
-	//DC motors
+	// ---------------------- DC motors ----------------------
 	// sends (to Arduino) a command for moving a DC motor for a given number of microseconds
 	void send_move_dc_motor(int motor_index, int num_miliseconds);
 	// sends (to Arduino) a command for moving a DC motor to home position
@@ -249,7 +253,7 @@ public:
 	void set_dc_motor_state(int motor_index, int new_state);
 
 
-	// SENSORS
+	// ----------------------- SENSORS ----------------------
 	// sends (to Arduino) a command for reading a sonar
 	void send_get_sonar_distance(int sensor_index);
 	
@@ -277,7 +281,7 @@ public:
 	// sends (to Arduino) a command for setting the speed and acceleration of the LIDAR motor
 	void send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration);
 
-	// DEBUG SENSORS
+	// ---------------------- DEBUG ---------------------------
 	// sends (to Arduino) a command for reading parameters of a motor; debug purposes
 	void send_get_motors_sensors_statistics(void);
 
@@ -296,7 +300,7 @@ public:
 	int get_free_memory(void);
 	
 
-	// STATE
+	//  ----------------------- STATE -----------------------
 	// returns the state of a sonar
 	int get_sonar_state(int sonar_index);
 
