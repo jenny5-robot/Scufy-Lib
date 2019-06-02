@@ -50,7 +50,7 @@ private:
 								// each dc motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
 	int dc_motor_state[3]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
 
-	int sonar_state[6]; // max 6 ultrasounds (each sonar occupy 2 digital pins ... so 6x2 = 12 digital pins = which arduino nano has)
+	int ultrasonic_state[6]; // max 6 ultrasounds (each ultrasonic occupy 2 digital pins ... so 6x2 = 12 digital pins = which arduino nano has)
 
 	int potentiometer_state[6]; // if I have max 6 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
 
@@ -97,8 +97,8 @@ public:
 	// if waits more than SECONDS_UNTIL_TIMEOUT times out and ends the program
 	bool wait_for_command_completion(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
 
-	// ---------------------QUERY LIST of COMMANDS ---------------
 
+	// ---------------------QUERY LIST of COMMANDS ---------------
 
 	// search in the list of events for a particular event type
 	// if found returns true and, event param will be updated with the
@@ -142,10 +142,10 @@ public:
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
 	void send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins);
 
-	// sends (to Arduino) a command for creating a sonar controller
+	// sends (to Arduino) a command for creating a ultrasonic controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
-	void send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins);
+	void send_create_ultrasonics(int num_ultrasonics, int* trig_pins, int* echo_pins);
 
 	// sends (to Arduino) a command for creating a potentiometer controller
 	// this method should be called once at the beginning of the program
@@ -254,8 +254,8 @@ public:
 
 
 	// ----------------------- SENSORS ----------------------
-	// sends (to Arduino) a command for reading a sonar
-	void send_get_sonar_distance(int sensor_index);
+	// sends (to Arduino) a command for reading a ultrasonic
+	void send_get_ultrasonic_distance(int sensor_index);
 	
 	// sends (to Arduino) a command for a button state
 	void send_get_button_state(int button_index);
@@ -301,11 +301,11 @@ public:
 	
 
 	//  ----------------------- STATE -----------------------
-	// returns the state of a sonar
-	int get_sonar_state(int sonar_index);
+	// returns the state of a ultrasonic
+	int get_ultrasonic_state(int ultrasonic_index);
 
-	// sets the state of a sonar
-	void set_sonar_state(int sonar_index, int new_state);
+	// sets the state of a ultrasonic
+	void set_ultrasonic_state(int ultrasonic_index, int new_state);
 
 	// returns the state of a potentiometer
 	int get_potentiometer_state(int potentiometer_index);

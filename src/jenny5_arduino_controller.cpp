@@ -25,14 +25,14 @@
 //--------------------------------------------------------------
 t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 {
-	strcpy(library_version, "2019.05.08.0"); // year.month.day.build number
+	strcpy(library_version, "2019.06.02.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 	for (int i = 0; i < 6; i++)
 		stepper_motor_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 3; i++)
 		dc_motor_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 6; i++)
-		sonar_state[i] = COMMAND_DONE;
+		ultrasonic_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 6; i++)
 		potentiometer_state[i] = COMMAND_DONE;
 	for (int i = 0; i < 6; i++)
@@ -217,7 +217,7 @@ void t_jenny5_arduino_controller::send_set_stepper_motor_speed_and_acceleration(
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_sonar_distance(int sensor_index)
+void t_jenny5_arduino_controller::send_get_ultrasonic_distance(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RU%d#", sensor_index);
@@ -504,11 +504,11 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 			}
 			else
 				if (tmp_str[i] == 'R' || tmp_str[i] == 'r') { // reads something
-					if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {//sonar reading returned value
-						int sonar_index, distance;
-						sscanf(tmp_str + i + 2, "%d%d", &sonar_index, &distance);
+					if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {//ultrasonic reading returned value
+						int ultrasonic_index, distance;
+						sscanf(tmp_str + i + 2, "%d%d", &ultrasonic_index, &distance);
 						i += 5;
-						jenny5_event *e = new jenny5_event(SONAR_EVENT, sonar_index, distance, 0);
+						jenny5_event *e = new jenny5_event(ULTRASONIC_EVENT, ultrasonic_index, distance, 0);
 						received_events.Add((void*)e);
 					}
 					else
@@ -594,9 +594,9 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 												received_events.Add((void*)e);
 											}
 											else
-												if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {// sonars controller created
+												if (tmp_str[i + 1] == 'U' || tmp_str[i + 1] == 'u') {// ultrasonics controller created
 													i += 3;
-													jenny5_event *e = new jenny5_event(SONARS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
+													jenny5_event *e = new jenny5_event(ULTRASONICS_CONTROLLER_CREATED_EVENT, 0, 0, 0);
 													received_events.Add((void*)e);
 												}
 												else
@@ -1020,12 +1020,12 @@ void t_jenny5_arduino_controller::send_create_dc_motors(int num_motors, int *pwm
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_sonars(int num_sonars, int* trig_pins, int* echo_pins)
+void t_jenny5_arduino_controller::send_create_ultrasonics(int num_ultrasonics, int* trig_pins, int* echo_pins)
 {
 	char s[63];
-	sprintf(s, "CU %d", num_sonars);
+	sprintf(s, "CU %d", num_ultrasonics);
 	char tmp_s[100];
-	for (int i = 0; i < num_sonars; i++) {
+	for (int i = 0; i < num_ultrasonics; i++) {
 		sprintf(tmp_s, "%d %d", trig_pins[i], echo_pins[i]);
 		strcat(s, " ");
 		strcat(s, tmp_s);
@@ -1115,14 +1115,14 @@ void t_jenny5_arduino_controller::send_create_buttons(int num_buttons, int* out_
 
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_sonar_state(int sonar_index)
+int t_jenny5_arduino_controller::get_ultrasonic_state(int ultrasonic_index)
 {
-	return sonar_state[sonar_index];
+	return ultrasonic_state[ultrasonic_index];
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::set_sonar_state(int sonar_index, int state)
+void t_jenny5_arduino_controller::set_ultrasonic_state(int ultrasonic_index, int state)
 {
-	sonar_state[sonar_index] = state;
+	ultrasonic_state[ultrasonic_index] = state;
 }
 //--------------------------------------------------------------
 int t_jenny5_arduino_controller::get_potentiometer_state(int potentiometer_index)
