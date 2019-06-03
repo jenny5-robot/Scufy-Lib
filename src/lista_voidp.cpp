@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 // ---------------------------------------------------------------------------
-TLista::TLista()
+t_lista::t_lista()
 {
 	head = NULL;
 	tail = NULL;
@@ -19,12 +19,12 @@ TLista::TLista()
 }
 
 // ---------------------------------------------------------------------------
-TLista::TLista(TLista& c)
+t_lista::t_lista(t_lista& c)
 {
 	head = NULL;
 	tail = NULL;
 
-	node_double_linked *tmp = c.head;
+	t_node_double_linked *tmp = c.head;
 	while (tmp)
 	{
 		Add(tmp->inf);
@@ -34,11 +34,11 @@ TLista::TLista(TLista& c)
 }
 
 // ---------------------------------------------------------------------------
-TLista::~TLista()
+t_lista::~t_lista()
 {
 	while (head)
 	{
-		node_double_linked * tmp = head;
+		t_node_double_linked * tmp = head;
 		head = head->next;
 		delete tmp;
 	}
@@ -47,11 +47,11 @@ TLista::~TLista()
 }
 
 // ---------------------------------------------------------------------------
-void TLista::Add(void* data)
+void t_lista::Add(void* data)
 {
 	if (!head)
 	{
-		head = new node_double_linked;
+		head = new t_node_double_linked;
 		head->inf = data;
 		head->next = NULL;
 		head->prev = NULL;
@@ -59,7 +59,7 @@ void TLista::Add(void* data)
 	}
 	else
 	{
-		node_double_linked* tmp = new node_double_linked;
+		t_node_double_linked* tmp = new t_node_double_linked;
 		tmp->inf = data;
 		tmp->next = NULL;
 		tmp->prev = tail;
@@ -70,14 +70,14 @@ void TLista::Add(void* data)
 }
 
 // ---------------------------------------------------------------------------
-void TLista::Delete(int Index)
+void t_lista::Delete(int Index)
 {
 	if (Index < count)
 		if (head)
 		{
 			if (!Index)
 			{ // delete the head
-				node_double_linked* tmp = head;
+				t_node_double_linked* tmp = head;
 				head = head->next;
 				if (head)
 					head->prev = NULL;
@@ -88,7 +88,7 @@ void TLista::Delete(int Index)
 			else
 			{ // delete the other
 				int i = 0;
-				node_double_linked* tmp = head;
+				t_node_double_linked* tmp = head;
 				while (tmp && (i < Index - 1))
 				{
 					i++;
@@ -97,7 +97,7 @@ void TLista::Delete(int Index)
 				// sunt pozitionat pe anterioru
 				if (tmp)
 				{
-					node_double_linked* urm = tmp->next;
+					t_node_double_linked* urm = tmp->next;
 					tmp->next = urm->next;
 					if (urm->next)
 						urm->next->prev = tmp;
@@ -112,14 +112,14 @@ void TLista::Delete(int Index)
 
 // ---------------------------------------------------------------------------
 /*
- void TLista::Insert(int Index, void* data)
+ void t_lista::Insert(int Index, void* data)
  {
 
  if (head == NULL)
  Add(data);
  else{
  int i = 0;
- node_double_linked* tmp = head;
+ t_node_double_linked* tmp = head;
  while ((tmp != NULL) && (i < Index)){
  i++;
  tmp = tmp->next;
@@ -129,13 +129,13 @@ void TLista::Delete(int Index)
  }
  */
 // ---------------------------------------------------------------------------
-void* TLista::GetInfo(int Index)
+void* t_lista::GetInfo(int Index)
 {
 	if (!head)
 		return NULL;
 
 	int i = 0;
-	node_double_linked* tmp = head;
+	t_node_double_linked* tmp = head;
 	while (tmp && (i < Index))
 	{
 		i++;
@@ -148,13 +148,13 @@ void* TLista::GetInfo(int Index)
 }
 
 // ---------------------------------------------------------------------------
-node_double_linked* TLista::GetNode(int Index)
+t_node_double_linked* t_lista::GetNode(int Index)
 {
 	if (!head)
 		return NULL;
 
 	int i = 0;
-	node_double_linked* tmp = head;
+	t_node_double_linked* tmp = head;
 	while (tmp && (i < Index))
 	{
 		i++;
@@ -168,7 +168,7 @@ node_double_linked* TLista::GetNode(int Index)
 
 // ---------------------------------------------------------------------------
 /*
- TLista& TLista::operator=(const TLista& c)
+ t_lista& t_lista::operator=(const t_lista& c)
  {
  if (this == &c)
  return *this;
@@ -176,7 +176,7 @@ node_double_linked* TLista::GetNode(int Index)
  if (this->count > 0) // trebuie sa o sterg prima data
  while (this->count > 0)
  this->Delete(0);
- node_double_linked *tmp = c.head;
+ t_node_double_linked *tmp = c.head;
  while (tmp != NULL){
  this->Add(tmp->inf);
  tmp = tmp->next;
@@ -187,7 +187,7 @@ node_double_linked* TLista::GetNode(int Index)
  */
 // ---------------------------------------------------------------------------
 /*
- void* TLista::GetCurrentInfo(node_double_linked* p)
+ void* t_lista::GetCurrentInfo(t_node_double_linked* p)
  {
  if (p)
  return p->inf;
@@ -195,7 +195,7 @@ node_double_linked* TLista::GetNode(int Index)
  }
  */
 // ---------------------------------------------------------------------------
-void* TLista::GetNextInfo(node_double_linked* p)
+void* t_lista::GetNextInfo(t_node_double_linked* p)
 {
 	if (p){
 		if (p->next)
@@ -207,7 +207,7 @@ void* TLista::GetNextInfo(node_double_linked* p)
 }
 
 // ---------------------------------------------------------------------------
-void* TLista::GetPrevInfo(node_double_linked* p)
+void* t_lista::GetPrevInfo(t_node_double_linked* p)
 {
 	if (p){
 		if (p->prev)
@@ -219,7 +219,7 @@ void* TLista::GetPrevInfo(node_double_linked* p)
 }
 
 // ---------------------------------------------------------------------------
-void* TLista::GetNextCircularInfo(node_double_linked* p)
+void* t_lista::GetNextCircularInfo(t_node_double_linked* p)
 {
 	if (p){
 		if (!p->next)
@@ -231,7 +231,7 @@ void* TLista::GetNextCircularInfo(node_double_linked* p)
 }
 
 // ---------------------------------------------------------------------------
-void* TLista::GetPrevCircularInfo(node_double_linked* p)
+void* t_lista::GetPrevCircularInfo(t_node_double_linked* p)
 {
 	if (p){
 		if (!p->prev)
@@ -243,7 +243,7 @@ void* TLista::GetPrevCircularInfo(node_double_linked* p)
 }
 
 // ---------------------------------------------------------------------------
-node_double_linked* TLista::delete_current_circular(node_double_linked* p)
+t_node_double_linked* t_lista::delete_current_circular(t_node_double_linked* p)
 {
 	if (count > 1) {
 		// more elements
@@ -268,7 +268,7 @@ node_double_linked* TLista::delete_current_circular(node_double_linked* p)
 	}
 }
 // ---------------------------------------------------------------------------
-node_double_linked* TLista::DeleteCurrent(node_double_linked* p)
+t_node_double_linked* t_lista::DeleteCurrent(t_node_double_linked* p)
 {
 	if (count > 0)
 		if (p == head)
@@ -298,7 +298,7 @@ node_double_linked* TLista::DeleteCurrent(node_double_linked* p)
 			}
 			else
 			{
-				node_double_linked *tmp = p->next;
+				t_node_double_linked *tmp = p->next;
 				p->prev->next = p->next;
 				p->next->prev = p->prev;
 				delete p;
@@ -310,13 +310,13 @@ node_double_linked* TLista::DeleteCurrent(node_double_linked* p)
 }
 
 // ---------------------------------------------------------------------------
-void TLista::Append(TLista & )
+void t_lista::Append(t_lista & )
 {
 
 }
 
 // ---------------------------------------------------------------------------
-void TLista::Insert(long Index, void* data)
+void t_lista::Insert(long Index, void* data)
 {
 
 	if (Index >= count)
@@ -324,7 +324,7 @@ void TLista::Insert(long Index, void* data)
 	else
 		if (Index == 0)
 		{ // insert in the head
-			node_double_linked* k = new node_double_linked;
+			t_node_double_linked* k = new t_node_double_linked;
 			k->inf = data;
 			k->prev = NULL;
 			k->next = head;
@@ -335,7 +335,7 @@ void TLista::Insert(long Index, void* data)
 		else
 		{
 			long i = 0;
-			node_double_linked* tmp = head;
+			t_node_double_linked* tmp = head;
 			while (tmp && (i < Index - 1))
 			{
 				i++;
@@ -344,7 +344,7 @@ void TLista::Insert(long Index, void* data)
 			// insert AFTER tmp
 			if (tmp)
 			{
-				node_double_linked* k = new node_double_linked;
+				t_node_double_linked* k = new t_node_double_linked;
 				k->inf = data;
 				k->prev = tmp;
 				k->next = tmp->next;
@@ -356,11 +356,11 @@ void TLista::Insert(long Index, void* data)
 }
 
 // ---------------------------------------------------------------------------
-void TLista::Clear(void)
+void t_lista::Clear(void)
 {
 	while (head)
 	{
-		node_double_linked * tmp = head;
+		t_node_double_linked * tmp = head;
 		head = head->next;
 		delete tmp;
 	}
@@ -370,11 +370,11 @@ void TLista::Clear(void)
 }
 
 // ---------------------------------------------------------------------------
-void TLista::DeleteHead(void)
+void t_lista::DeleteHead(void)
 {
 	if (head)
 	{
-		node_double_linked* tmp = head;
+		t_node_double_linked* tmp = head;
 		head = head->next;
 		if (head)
 			head->prev = NULL;
@@ -386,24 +386,24 @@ void TLista::DeleteHead(void)
 }
 
 // ---------------------------------------------------------------------------
-	void* TLista::GetCurrentInfo(node_double_linked* p){
+	void* t_lista::GetCurrentInfo(t_node_double_linked* p){
 		if (p)
 			return p->inf;
 		return 0;
 	}
 // ---------------------------------------------------------------------------
-	void* TLista::GetHeadInfo(void){
+	void* t_lista::GetHeadInfo(void){
 		if (head)
 			return head->inf;
 		return 0;
 	}
 // ---------------------------------------------------------------------------
-void AppendWithoutCopy(TLista &)
+void AppendWithoutCopy(t_lista &)
 {
 
 }
 // ---------------------------------------------------------------------------
-void TLista::make_circular(void)
+void t_lista::make_circular(void)
 {
 	if (head) {
 		head->prev = tail;

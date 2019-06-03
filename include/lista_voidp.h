@@ -11,41 +11,40 @@
 #define lista_H
 //---------------------------------------------------------------------------
 
-struct node_double_linked{
+struct t_node_double_linked{
   void* inf;
-  node_double_linked* next, *prev;
+  t_node_double_linked* next, *prev;
 };
 //---------------------------------------------------------------------------
-class TLista{
+class t_lista{
 	private:
 	public:
-		node_double_linked* head, *tail;
+		t_node_double_linked* head, *tail;
 		int count;
-		TLista();
-		TLista(TLista&);
-		~TLista();
+		t_lista();
+		t_lista(t_lista&);
+		~t_lista();
 		void Add(void*);
 		void Delete(int);
-	node_double_linked* DeleteCurrent(node_double_linked*);
-	void* GetInfo(int);
-	node_double_linked* GetNode(int Index);
-	void Append(TLista & source);
-	void Insert(long, void*);
-	void Clear(void);
-	void DeleteHead(void);
+		t_node_double_linked* DeleteCurrent(t_node_double_linked*);
+		void* GetInfo(int);
+		t_node_double_linked* GetNode(int Index);
+		void Append(t_lista& source);
+		void Insert(long, void*);
+		void Clear(void);
+		void DeleteHead(void);
 
+		void* GetCurrentInfo(t_node_double_linked* p);
+		void* GetHeadInfo(void);
 
-	void* GetCurrentInfo(node_double_linked* p);
-	void* GetHeadInfo(void);
+		void* GetNextInfo(t_node_double_linked*);
+		void* GetPrevInfo(t_node_double_linked*);
+		void* GetNextCircularInfo(t_node_double_linked*);
+		void* GetPrevCircularInfo(t_node_double_linked*);
+		t_node_double_linked* delete_current_circular(t_node_double_linked* p);
 
-	void* GetNextInfo(node_double_linked*);
-	void* GetPrevInfo(node_double_linked*);
-	void* GetNextCircularInfo(node_double_linked*);
-	void* GetPrevCircularInfo(node_double_linked*);
-	node_double_linked* delete_current_circular(node_double_linked* p);
-
-	void AppendWithoutCopy(TLista &source);
-	void make_circular(void);
+		void AppendWithoutCopy(t_lista&source);
+		void make_circular(void);
 
 };
 //---------------------------------------------------------------------------
