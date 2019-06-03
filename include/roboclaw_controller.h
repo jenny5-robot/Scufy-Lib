@@ -146,7 +146,8 @@ public:
 	// the caller must not delete the pointer
 	const char* get_library_version(void);
 
-	// Read RoboClaw firmware version.Returns up to 48 bytes(depending on the Roboclaw model) and
+	// Read RoboClaw firmware version. 
+	// Returns up to 48 bytes(depending on the Roboclaw model) and 
 	// is terminated by a line feed character and a null character.
 	void get_firmware_version(char *firmware_version);
 

@@ -30,7 +30,7 @@ uint16_t CRC16(unsigned char *packet, int nBytes)
 //--------------------------------------------------------------
 t_roboclaw_controller::t_roboclaw_controller(void)
 {
-	strcpy(library_version, "2017.05.02.0"); // year.month.day.build number
+	strcpy(library_version, "2019.06.01.0"); // year.month.day.build number
 
 	if (c_serial_new(&m_port, NULL) < 0) {
 		//fprintf(stderr, "ERROR: Unable to create new serial port\n");
