@@ -36,21 +36,19 @@ private:
 	c_serial_port_t* m_port;
 	c_serial_control_lines_t m_lines;
 	
-	// true between the calls of connect and close_connection methods; otherwise is false
-	//bool b_is_open;
 	// a list with received events from Arduino
-	TLista received_events;
+	t_lista received_events;
 
 	// current buffer of characters received from Arduino
-	char current_buffer[4096]; // I should not need so much
+	char current_buffer[4096]; 
 
 	// each motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
 	int stepper_motor_state[6]; // max 6 motors 
 
-								// each dc motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
-	int dc_motor_state[3]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which arduino nano has)
+	// each dc motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
+	int dc_motor_state[3]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which Arduino Nano has)
 
-	int ultrasonic_state[6]; // max 6 ultrasounds (each ultrasonic occupy 2 digital pins ... so 6x2 = 12 digital pins = which arduino nano has)
+	int ultrasonic_state[6]; // max 6 ultrasounds (each ultrasonic occupy 2 digital pins ... so 6x2 = 12 digital pins = which Arduino Nano has)
 
 	int potentiometer_state[6]; // if I have max 6 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
 
@@ -82,15 +80,15 @@ public:
 	// returns a string containing the version number of this library
 	const char* get_library_version(void);
 	
-	// returns a string containing the version number of this library
+	// send a command to Arduino for obtaining the version number of the firmware 
 	void send_get_firmware_version(void);
 
 	// reads data from serial and updates the list of received events from Arduino
 	// this should be called frequently from the main loop of the program in order to read the data received from Arduino
 	bool update_commands_from_serial(void);
 
-	// clear the list of commands
-	void clear_commands_list(void);
+	// clear the list of received events
+	void clear_events_list(void);
 
 	// waits for the completion of the event passed as a parameter,
 	// also updates all the event data if it was found
@@ -101,29 +99,41 @@ public:
 	// ---------------------QUERY LIST of COMMANDS ---------------
 
 	// search in the list of events for a particular event type
-	// if found returns true and, event param will be updated with the
-	// found event, else false is returned.
+	// if found, returns true and the event param will be updated with the info about the found event, 
+	// if not found, the function returns false
 	bool query_for_event(jenny5_event& event, int available_info = EVENT_INFO_TYPE);
 
 	// search in the list of events for a particular event type
+	// it returns true if the event is found in list
+	// the first occurance of the event is removed from the list
 	bool query_for_event(int event_type);
 	
-	// search in the list of events for a fimrware version event type
+	// search in the list of events for a firmware version event type
+	// it returns true if the event is found in list
 	bool query_for_firmware_version_event(char *firmware_version);
 		
 	// search in the list of events for a particular event type
+	// it returns true if the event is found in list
+	// param1 parameter will be set to the information from the param1 member of the event
 	bool query_for_event(int event_type, int* param1);
 
 	// search in the list of events for a particular event type
+	// it returns true if the event is found in list
+	// param1 parameter will be set to the information from the param1 member of the event
+	// param2 parameter will be set to the information from the param2 member of the event
 	bool query_for_event(int event_type, int *param1, intptr_t *param2);
 
 	// search in the list of events for a particular event type
+	// returns true if the event type matches and if the param1 member is equal to the parameter given to this function
 	bool query_for_event(int event_type, int param1);
 
 	// search in the list of events for a particular event type
+	// returns true if the event type matches and if the param1 member is equal to the parameter given to this function
+	// param2 parameter will be set to the information from the param2 member of the event
 	bool query_for_event(int event_type, int param1, intptr_t *param2);
 
-	// search in the list of events for a particular event type
+	// search in the list of events for two event types
+	// returns true only if both events are found
 	bool query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2);
 
 	// search in the list of events for a particular event type
@@ -179,6 +189,7 @@ public:
 	void send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin);
 
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
+	// when the Arduino will respond, the event will be added in the list
 	void send_is_alive(void);
 
 	// ------------------ STEPPER MOTORS MOVEMENT --------------------

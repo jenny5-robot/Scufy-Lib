@@ -750,10 +750,9 @@ bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(jenny5_event &event, int available_info)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next){
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next){
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
-		if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1 | EVENT_INFO_PARAM2))
-		{
+		if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1 | EVENT_INFO_PARAM2)){
 			if (e->type == event.type && e->type == event.param1 && e->type == event.param2) {
 				event.time = e->time;
 				delete e;
@@ -761,26 +760,26 @@ bool t_jenny5_arduino_controller::query_for_event(jenny5_event &event, int avail
 				return true;
 			}
 		}
-		else if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1))
-		{
-			if (e->type == event.type && e->param1 == event.param1) {
-				event.param2 = e->param2;
-				event.time = e->time;
-				delete e;
-				received_events.DeleteCurrent(node_p);
-				return true;
+		else 
+			if (available_info == (EVENT_INFO_TYPE | EVENT_INFO_PARAM1)){
+				if (e->type == event.type && e->param1 == event.param1) {
+					event.param2 = e->param2;
+					event.time = e->time;
+					delete e;
+					received_events.DeleteCurrent(node_p);
+					return true;
+				}
 			}
-		}
-		else if (available_info == EVENT_INFO_TYPE)
-		{
-			if (e->type == event.type) {
-				event.param1 = e->param1;
-				event.param2 = e->param2;
-				event.time = e->time;
-				delete e;
-				received_events.DeleteCurrent(node_p);
-				return true;
-			}
+		else 
+			if (available_info == EVENT_INFO_TYPE){
+				if (e->type == event.type) {
+					event.param1 = e->param1;
+					event.param2 = e->param2;
+					event.time = e->time;
+					delete e;
+					received_events.DeleteCurrent(node_p);
+					return true;
+				}
 		}
 	}
 	return false;
@@ -791,8 +790,7 @@ bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &even
 	clock_t start_time = clock();
 	bool event_success = false;
 
-	while (1)
-	{
+	while (1){
 		if (!update_commands_from_serial())
 			Sleep(5); // no new data from serial ... we make a little pause so that we don't kill the processor
 
@@ -810,18 +808,16 @@ bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &even
 
 		// if more than SECONDS_UNTIL_TIMEOUT seconds then game over
 		if (wait_time > SECONDS_UNTIL_TIMEOUT) {
-			if (!event_success)
-			{
-				std::cout << "Event with CODE" << event.type << " timed-out.\n";
-				std::cout << "Exiting...\n";
-				exit(0); //TO_DELETE
+			if (!event_success){
+				printf("Event with CODE %d timed-out.\n", event.type);
+				return false;
 			}
 		}
 	}
 	return true;
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::clear_commands_list(void)
+void t_jenny5_arduino_controller::clear_events_list(void)
 {
 	while (received_events.head){
 		jenny5_event* e = (jenny5_event*)received_events.GetHeadInfo();
@@ -832,7 +828,7 @@ void t_jenny5_arduino_controller::clear_commands_list(void)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(int event_type)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
 			delete e;
@@ -845,7 +841,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_firmware_version_event(char *arduino_firmware_version)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == ARDUINO_FIRMWARE_VERSION_EVENT) { // test for firmware version event because that one contains a string
 			strcpy(arduino_firmware_version, (char*)e->param2);
@@ -861,7 +857,7 @@ bool t_jenny5_arduino_controller::query_for_firmware_version_event(char *arduino
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
 			*param1 = e->param1;
@@ -875,7 +871,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1, intptr_t *param2)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type) {
 			*param1 = e->param1;
@@ -890,7 +886,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1, i
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1) {
 			delete e;
@@ -903,7 +899,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1)
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, intptr_t* param2)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1) {
 			*param2 = e->param2;
@@ -917,7 +913,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, in
 //--------------------------------------------------------------
 bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, int param2)
 {
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type && e->param1 == param1 && e->param2 == param2) {
 			delete e;
@@ -933,8 +929,8 @@ bool t_jenny5_arduino_controller::query_for_2_events(int event_type1, int param1
 	bool event1_found = false;
 	bool event2_found = false;
 
-	node_double_linked *node_p1 = NULL, *node_p2 = NULL;
-	for (node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
+	t_node_double_linked *node_p1 = NULL, *node_p2 = NULL;
+	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
 		if (e->type == event_type1 && e->param1 == param1_1) {
 			event1_found = true;
