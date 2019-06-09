@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 
-#include "jenny5_arduino_controller.h"
+#include "scufy_lib.h"
 #include "jenny5_events.h"
 #include <stdio.h>
 
@@ -23,7 +23,7 @@
 #define MAX_BUFFER_LENGTH 40960
 
 //--------------------------------------------------------------
-t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
+t_scufy_lib::t_scufy_lib(void)
 {
 	strcpy(library_version, "2019.06.02.0"); // year.month.day.build number
 	current_buffer[0] = 0;
@@ -47,17 +47,17 @@ t_jenny5_arduino_controller::t_jenny5_arduino_controller(void)
 
 }
 //--------------------------------------------------------------
-t_jenny5_arduino_controller::~t_jenny5_arduino_controller(void)
+t_scufy_lib::~t_scufy_lib(void)
 {
 	c_serial_free(m_port);
 }
 //--------------------------------------------------------------
-const char* t_jenny5_arduino_controller::get_library_version(void)
+const char* t_scufy_lib::get_library_version(void)
 {
 	return library_version;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::connect(const char* port, int baud_rate)
+bool t_scufy_lib::connect(const char* port, int baud_rate)
 {
 	if (!c_serial_is_open(m_port)) {
 
@@ -89,12 +89,12 @@ bool t_jenny5_arduino_controller::connect(const char* port, int baud_rate)
 		return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::is_open(void)
+bool t_scufy_lib::is_open(void)
 {
 	return c_serial_is_open(m_port);
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::close_connection(void)
+void t_scufy_lib::close_connection(void)
 {
 	if (c_serial_is_open(m_port)) {
 		c_serial_close(m_port);
@@ -102,7 +102,7 @@ void t_jenny5_arduino_controller::close_connection(void)
 	}
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_firmware_version(void)
+void t_scufy_lib::send_get_firmware_version(void)
 {
 	char s[3];
 	strcpy(s, "v#");
@@ -113,7 +113,7 @@ void t_jenny5_arduino_controller::send_get_firmware_version(void)
 #endif
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_move_stepper_motor(int motor_index, int num_steps)
+void t_scufy_lib::send_move_stepper_motor(int motor_index, int num_steps)
 {
 	char s[20];
 	sprintf(s, "SM%d %d#", motor_index, num_steps);
@@ -125,7 +125,7 @@ void t_jenny5_arduino_controller::send_move_stepper_motor(int motor_index, int n
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_move_stepper_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
+void t_scufy_lib::send_move_stepper_motor2(int motor_index1, int num_steps1, int motor_index2, int num_steps2)
 {
 	char s[30];
 	sprintf(s, "SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2);
@@ -137,7 +137,7 @@ void t_jenny5_arduino_controller::send_move_stepper_motor2(int motor_index1, int
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_move_stepper_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
+void t_scufy_lib::send_move_stepper_motor3(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3)
 {
 	char s[63];
 	sprintf(s, "SM%d %d SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3);
@@ -149,7 +149,7 @@ void t_jenny5_arduino_controller::send_move_stepper_motor3(int motor_index1, int
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_move_stepper_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4)
+void t_scufy_lib::send_move_stepper_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4)
 {
 	char s[63];
 	sprintf(s, "SM%d %d SM%d %d SM%d %d SM%d %d#", motor_index1, num_steps1, motor_index2, num_steps2, motor_index3, num_steps3, motor_index4, num_steps4);
@@ -161,7 +161,7 @@ void t_jenny5_arduino_controller::send_move_stepper_motor4(int motor_index1, int
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_stop_stepper_motor(int motor_index)
+void t_scufy_lib::send_stop_stepper_motor(int motor_index)
 {
 	char s[20];
 	sprintf(s, "ST%d#", motor_index);
@@ -174,7 +174,7 @@ void t_jenny5_arduino_controller::send_stop_stepper_motor(int motor_index)
 }
 //--------------------------------------------------------------
 
-void t_jenny5_arduino_controller::send_move_stepper_motor_array(int num_motors, int* motor_index, int *num_steps)
+void t_scufy_lib::send_move_stepper_motor_array(int num_motors, int* motor_index, int *num_steps)
 {
 	char s[63];
 	s[0] = 0;
@@ -192,7 +192,7 @@ void t_jenny5_arduino_controller::send_move_stepper_motor_array(int num_motors, 
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_stepper_motor_goto_sensor_position(int motor_index, int sensor_position)
+void t_scufy_lib::send_stepper_motor_goto_sensor_position(int motor_index, int sensor_position)
 {
 	char s[20];
 	sprintf(s, "SG%d %d#", motor_index, sensor_position);
@@ -205,7 +205,7 @@ void t_jenny5_arduino_controller::send_stepper_motor_goto_sensor_position(int mo
 }
 //--------------------------------------------------------------
 
-void t_jenny5_arduino_controller::send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
+void t_scufy_lib::send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
 {
 	char s[20];
 	sprintf(s, "SS%d %d %d#", motor_index, motor_speed, motor_acceleration);
@@ -217,7 +217,7 @@ void t_jenny5_arduino_controller::send_set_stepper_motor_speed_and_acceleration(
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_ultrasonic_distance(int sensor_index)
+void t_scufy_lib::send_get_ultrasonic_distance(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RU%d#", sensor_index);
@@ -229,7 +229,7 @@ void t_jenny5_arduino_controller::send_get_ultrasonic_distance(int sensor_index)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_button_state(int button_index)
+void t_scufy_lib::send_get_button_state(int button_index)
 {
 	char s[20];
 	sprintf(s, "RB%d#", button_index);
@@ -241,7 +241,7 @@ void t_jenny5_arduino_controller::send_get_button_state(int button_index)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_potentiometer_position(int sensor_index)
+void t_scufy_lib::send_get_potentiometer_position(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RP%d#", sensor_index);
@@ -253,7 +253,7 @@ void t_jenny5_arduino_controller::send_get_potentiometer_position(int sensor_ind
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_AS5147_position(int sensor_index)
+void t_scufy_lib::send_get_AS5147_position(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RA%d#", sensor_index);
@@ -265,7 +265,7 @@ void t_jenny5_arduino_controller::send_get_AS5147_position(int sensor_index)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_infrared_signal_strength(int sensor_index)
+void t_scufy_lib::send_get_infrared_signal_strength(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RI%d#", sensor_index);
@@ -277,7 +277,7 @@ void t_jenny5_arduino_controller::send_get_infrared_signal_strength(int sensor_i
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_motors_sensors_statistics(void)
+void t_scufy_lib::send_get_motors_sensors_statistics(void)
 {
 	char s[20];
 	sprintf(s, "G#");
@@ -289,7 +289,7 @@ void t_jenny5_arduino_controller::send_get_motors_sensors_statistics(void)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_disable_stepper_motor(int motor_index)
+void t_scufy_lib::send_disable_stepper_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "SD%d#", motor_index);
@@ -301,7 +301,7 @@ void t_jenny5_arduino_controller::send_disable_stepper_motor(int motor_index)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_lock_stepper_motor(int motor_index)
+void t_scufy_lib::send_lock_stepper_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "SL%d#", motor_index);
@@ -313,7 +313,7 @@ void t_jenny5_arduino_controller::send_lock_stepper_motor(int motor_index)
 
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_data_from_serial(unsigned char *buffer, int buffer_size)
+int t_scufy_lib::get_data_from_serial(unsigned char *buffer, int buffer_size)
 {
 	int num_available;
 	if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK)
@@ -329,7 +329,7 @@ int t_jenny5_arduino_controller::get_data_from_serial(unsigned char *buffer, int
 		//RS232_PollComport(port_number, (unsigned char*)buffer, buffer_size);
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor_index, 
+void t_scufy_lib::send_attach_sensors_to_stepper_motor(int motor_index, 
 	int num_potentiometers, int *potentiometers_index,
 	int* pot_low, int* pot_high, int *pot_home, int *pot_direction,
 	int num_AS5147s, int *AS5147_index,
@@ -373,7 +373,7 @@ void t_jenny5_arduino_controller::send_attach_sensors_to_stepper_motor(int motor
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_remove_attached_sensors_from_stepper_motor(int motor_index)
+void t_scufy_lib::send_remove_attached_sensors_from_stepper_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "AS%d 0#", motor_index);
@@ -385,7 +385,7 @@ void t_jenny5_arduino_controller::send_remove_attached_sensors_from_stepper_moto
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_motor_parameters(int motor_index)
+void t_scufy_lib::send_get_motor_parameters(int motor_index)
 {
 	char s[10];
 	sprintf(s, "GS%d#", motor_index);
@@ -397,7 +397,7 @@ void t_jenny5_arduino_controller::send_get_motor_parameters(int motor_index)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_potentiometer_parameters(int potentiometer_index)
+void t_scufy_lib::send_get_potentiometer_parameters(int potentiometer_index)
 {
 	char s[10];
 	sprintf(s, "GP%d#", potentiometer_index);
@@ -409,7 +409,7 @@ void t_jenny5_arduino_controller::send_get_potentiometer_parameters(int potentio
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_set_potentiometer_parameters(int potentiometer_index)
+void t_scufy_lib::send_set_potentiometer_parameters(int potentiometer_index)
 {
 	char s[30];
 	sprintf(s, "SP%d#", potentiometer_index);
@@ -421,7 +421,7 @@ void t_jenny5_arduino_controller::send_set_potentiometer_parameters(int potentio
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_is_alive(void)
+void t_scufy_lib::send_is_alive(void)
 {
 	char s[3];
 	strcpy(s, "T#");
@@ -433,7 +433,7 @@ void t_jenny5_arduino_controller::send_is_alive(void)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int str_length)
+void t_scufy_lib::parse_and_queue_commands(char* tmp_str, int str_length)
 {
 	int i = 0;
 	while (i < str_length) {
@@ -693,7 +693,7 @@ void t_jenny5_arduino_controller::parse_and_queue_commands(char* tmp_str, int st
 	}
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::update_commands_from_serial(void)
+bool t_scufy_lib::update_commands_from_serial(void)
 {
 	// the same code as in firmware
 	unsigned char tmp_buffer[MAX_BUFFER_LENGTH];
@@ -748,7 +748,7 @@ bool t_jenny5_arduino_controller::update_commands_from_serial(void)
 		return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(jenny5_event &event, int available_info)
+bool t_scufy_lib::query_for_event(jenny5_event &event, int available_info)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next){
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -785,7 +785,7 @@ bool t_jenny5_arduino_controller::query_for_event(jenny5_event &event, int avail
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &event, int available_info)
+bool t_scufy_lib::wait_for_command_completion(jenny5_event &event, int available_info)
 {
 	clock_t start_time = clock();
 	bool event_success = false;
@@ -817,7 +817,7 @@ bool t_jenny5_arduino_controller::wait_for_command_completion(jenny5_event &even
 	return true;
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::clear_events_list(void)
+void t_scufy_lib::clear_events_list(void)
 {
 	while (received_events.head){
 		jenny5_event* e = (jenny5_event*)received_events.GetHeadInfo();
@@ -826,7 +826,7 @@ void t_jenny5_arduino_controller::clear_events_list(void)
 	}
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type)
+bool t_scufy_lib::query_for_event(int event_type)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -839,7 +839,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_firmware_version_event(char *arduino_firmware_version)
+bool t_scufy_lib::query_for_firmware_version_event(char *arduino_firmware_version)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -855,7 +855,7 @@ bool t_jenny5_arduino_controller::query_for_firmware_version_event(char *arduino
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1)
+bool t_scufy_lib::query_for_event(int event_type, int *param1)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -869,7 +869,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1, intptr_t *param2)
+bool t_scufy_lib::query_for_event(int event_type, int *param1, intptr_t *param2)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -884,7 +884,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int *param1, i
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1)
+bool t_scufy_lib::query_for_event(int event_type, int param1)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -897,7 +897,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1)
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, intptr_t* param2)
+bool t_scufy_lib::query_for_event(int event_type, int param1, intptr_t* param2)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -911,7 +911,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, in
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, int param2)
+bool t_scufy_lib::query_for_event(int event_type, int param1, int param2)
 {
 	for (t_node_double_linked *node_p = received_events.head; node_p; node_p = node_p->next) {
 		jenny5_event* e = (jenny5_event*)received_events.GetCurrentInfo(node_p);
@@ -924,7 +924,7 @@ bool t_jenny5_arduino_controller::query_for_event(int event_type, int param1, in
 	return false;
 }
 //--------------------------------------------------------------
-bool t_jenny5_arduino_controller::query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2)
+bool t_scufy_lib::query_for_2_events(int event_type1, int param1_1, int event_type2, int param1_2)
 {
 	bool event1_found = false;
 	bool event2_found = false;
@@ -956,7 +956,7 @@ bool t_jenny5_arduino_controller::query_for_2_events(int event_type1, int param1
 		return false;
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_go_home_stepper_motor(int motor_index)
+void t_scufy_lib::send_go_home_stepper_motor(int motor_index)
 {
 	char s[20];
 	sprintf(s, "SH%d#", motor_index);
@@ -968,17 +968,17 @@ void t_jenny5_arduino_controller::send_go_home_stepper_motor(int motor_index)
 
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_stepper_motor_state(int motor_index)
+int t_scufy_lib::get_stepper_motor_state(int motor_index)
 {
 	return stepper_motor_state[motor_index];
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::set_stepper_motor_state(int motor_index, int state)
+void t_scufy_lib::set_stepper_motor_state(int motor_index, int state)
 {
 	stepper_motor_state[motor_index] = state;
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_stepper_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins)
+void t_scufy_lib::send_create_stepper_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins)
 {
 	char s[63];
 	sprintf(s, "CS %d", num_motors);
@@ -997,7 +997,7 @@ void t_jenny5_arduino_controller::send_create_stepper_motors(int num_motors, int
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins)
+void t_scufy_lib::send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins)
 {
 	char s[63];
 	sprintf(s, "CD %d", num_motors);
@@ -1016,7 +1016,7 @@ void t_jenny5_arduino_controller::send_create_dc_motors(int num_motors, int *pwm
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_ultrasonics(int num_ultrasonics, int* trig_pins, int* echo_pins)
+void t_scufy_lib::send_create_ultrasonics(int num_ultrasonics, int* trig_pins, int* echo_pins)
 {
 	char s[63];
 	sprintf(s, "CU %d", num_ultrasonics);
@@ -1035,7 +1035,7 @@ void t_jenny5_arduino_controller::send_create_ultrasonics(int num_ultrasonics, i
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiometers, int* out_pins)
+void t_scufy_lib::send_create_potentiometers(int num_potentiometers, int* out_pins)
 {
 	char s[63];
 	sprintf(s, "CP %d", num_potentiometers);
@@ -1054,7 +1054,7 @@ void t_jenny5_arduino_controller::send_create_potentiometers(int num_potentiomet
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_as5147s(int num_as5147s, int* out_pins)
+void t_scufy_lib::send_create_as5147s(int num_as5147s, int* out_pins)
 {
 	char s[63];
 	sprintf(s, "CA %d", num_as5147s);
@@ -1073,7 +1073,7 @@ void t_jenny5_arduino_controller::send_create_as5147s(int num_as5147s, int* out_
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_infrared_sensors(int num_infrared_sensors, int* _out_pins)
+void t_scufy_lib::send_create_infrared_sensors(int num_infrared_sensors, int* _out_pins)
 {
 	char s[63];
 	sprintf(s, "CI %d", num_infrared_sensors);
@@ -1092,7 +1092,7 @@ void t_jenny5_arduino_controller::send_create_infrared_sensors(int num_infrared_
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_buttons(int num_buttons, int* out_pins)
+void t_scufy_lib::send_create_buttons(int num_buttons, int* out_pins)
 {
 	char s[63];
 	sprintf(s, "CB %d", num_buttons);
@@ -1111,38 +1111,38 @@ void t_jenny5_arduino_controller::send_create_buttons(int num_buttons, int* out_
 
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_ultrasonic_state(int ultrasonic_index)
+int t_scufy_lib::get_ultrasonic_state(int ultrasonic_index)
 {
 	return ultrasonic_state[ultrasonic_index];
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::set_ultrasonic_state(int ultrasonic_index, int state)
+void t_scufy_lib::set_ultrasonic_state(int ultrasonic_index, int state)
 {
 	ultrasonic_state[ultrasonic_index] = state;
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_potentiometer_state(int potentiometer_index)
+int t_scufy_lib::get_potentiometer_state(int potentiometer_index)
 {
 	return potentiometer_state[potentiometer_index];
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::set_potentiometer_state(int potentiometer_index, int new_state)
+void t_scufy_lib::set_potentiometer_state(int potentiometer_index, int new_state)
 {
 	potentiometer_state[potentiometer_index] = new_state;
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_infrared_state(int infrared_index)
+int t_scufy_lib::get_infrared_state(int infrared_index)
 {
 	return infrared_state[infrared_index];
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::set_infrared_state(int infrared_index, int new_state)
+void t_scufy_lib::set_infrared_state(int infrared_index, int new_state)
 {
 	infrared_state[infrared_index] = new_state;
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for moving a DC motor for a given number of microseconds
-void t_jenny5_arduino_controller::send_move_dc_motor(int motor_index, int num_miliseconds)
+void t_scufy_lib::send_move_dc_motor(int motor_index, int num_miliseconds)
 {
 	char s[20];
 	sprintf(s, "MD%d %d#", motor_index, num_miliseconds);
@@ -1155,7 +1155,7 @@ void t_jenny5_arduino_controller::send_move_dc_motor(int motor_index, int num_mi
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for moving a DC motor to home position
-void t_jenny5_arduino_controller::send_go_home_dc_motor(int motor_index)
+void t_scufy_lib::send_go_home_dc_motor(int motor_index)
 {
 	char s[20];
 	sprintf(s, "HD%d#", motor_index);
@@ -1168,7 +1168,7 @@ void t_jenny5_arduino_controller::send_go_home_dc_motor(int motor_index)
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for disabling a DC motor
-void t_jenny5_arduino_controller::send_disable_dc_motor(int motor_index)
+void t_scufy_lib::send_disable_dc_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "DD%d#", motor_index);
@@ -1181,7 +1181,7 @@ void t_jenny5_arduino_controller::send_disable_dc_motor(int motor_index)
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for setting the speed of a given DC motor
-void t_jenny5_arduino_controller::send_set_dc_motor_speed(int motor_index, int motor_speed)
+void t_scufy_lib::send_set_dc_motor_speed(int motor_index, int motor_speed)
 {
 	char s[20];
 	sprintf(s, "SD%d %d#", motor_index, motor_speed);
@@ -1194,7 +1194,7 @@ void t_jenny5_arduino_controller::send_set_dc_motor_speed(int motor_index, int m
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for attaching several sensors to a given DC motor
-void t_jenny5_arduino_controller::send_attach_sensors_to_dc_motor(int motor_index, int num_buttons, int *buttons_index)
+void t_scufy_lib::send_attach_sensors_to_dc_motor(int motor_index, int num_buttons, int *buttons_index)
 {
 	char s[64];
 	sprintf(s, "AD%d %d", motor_index, num_buttons);
@@ -1212,7 +1212,7 @@ void t_jenny5_arduino_controller::send_attach_sensors_to_dc_motor(int motor_inde
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for reading removing all attached sensors of a motor
-void t_jenny5_arduino_controller::send_remove_attached_sensors_from_dc_motor(int motor_index)
+void t_scufy_lib::send_remove_attached_sensors_from_dc_motor(int motor_index)
 {
 	char s[10];
 	sprintf(s, "AD%d 0#", motor_index);
@@ -1225,18 +1225,18 @@ void t_jenny5_arduino_controller::send_remove_attached_sensors_from_dc_motor(int
 }
 //--------------------------------------------------------------
 // returns the state of a motor
-int t_jenny5_arduino_controller::get_dc_motor_state(int motor_index)
+int t_scufy_lib::get_dc_motor_state(int motor_index)
 {
 	return dc_motor_state[motor_index];
 }
 //--------------------------------------------------------------
 // sets the state of a motor
-void t_jenny5_arduino_controller::set_dc_motor_state(int motor_index, int new_state)
+void t_scufy_lib::set_dc_motor_state(int motor_index, int new_state)
 {
 	dc_motor_state[motor_index] = new_state;
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_tera_ranger_one(void)
+void t_scufy_lib::send_create_tera_ranger_one(void)
 {
 	char s[10];
 	sprintf(s, "CT#");
@@ -1248,7 +1248,7 @@ void t_jenny5_arduino_controller::send_create_tera_ranger_one(void)
 
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin)
+void t_scufy_lib::send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin)
 {
 	char s[30];
 	sprintf(s, "CL %d %d %d %d#", dir_pin, step_pin, enable_pin, ir_pin);
@@ -1262,19 +1262,19 @@ void t_jenny5_arduino_controller::send_create_LIDAR(int dir_pin, int step_pin, i
 //--------------------------------------------------------------
 
 // returns the state of the tera ranger one sensor
-int t_jenny5_arduino_controller::get_tera_ranger_one_state(void)
+int t_scufy_lib::get_tera_ranger_one_state(void)
 {
 	return tera_ranger_one_state;
 }
 //--------------------------------------------------------------
 // sets the state of the tera ranger one sensor
-void t_jenny5_arduino_controller::set_tera_ranger_one_state(int new_state)
+void t_scufy_lib::set_tera_ranger_one_state(int new_state)
 {
 	tera_ranger_one_state = new_state;
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for reading the Tera Ranger One sensor
-void t_jenny5_arduino_controller::send_get_tera_ranger_one_distance(void)
+void t_scufy_lib::send_get_tera_ranger_one_distance(void)
 {
 	char s[10];
 	sprintf(s, "TR#");
@@ -1285,7 +1285,7 @@ void t_jenny5_arduino_controller::send_get_tera_ranger_one_distance(void)
 #endif
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_LIDAR_go(void)
+void t_scufy_lib::send_LIDAR_go(void)
 {
 	char s[10];
 	sprintf(s, "LG#");
@@ -1296,7 +1296,7 @@ void t_jenny5_arduino_controller::send_LIDAR_go(void)
 #endif
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_LIDAR_stop(void)
+void t_scufy_lib::send_LIDAR_stop(void)
 {
 	char s[10];
 	sprintf(s, "LH#");
@@ -1307,7 +1307,7 @@ void t_jenny5_arduino_controller::send_LIDAR_stop(void)
 #endif
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration)
+void t_scufy_lib::send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration)
 {
 	char s[20];
 	sprintf(s, "LS %d %d#", motor_speed, motor_acceleration);
@@ -1318,7 +1318,7 @@ void t_jenny5_arduino_controller::send_set_LIDAR_motor_speed_and_acceleration(in
 #endif
 }
 //--------------------------------------------------------------
-void t_jenny5_arduino_controller::send_get_free_memory(void)
+void t_scufy_lib::send_get_free_memory(void)
 {
 	char s[20];
 	sprintf(s, "RM#");
@@ -1329,7 +1329,7 @@ void t_jenny5_arduino_controller::send_get_free_memory(void)
 #endif
 }
 //--------------------------------------------------------------
-int t_jenny5_arduino_controller::get_free_memory(void)
+int t_scufy_lib::get_free_memory(void)
 {
 	send_get_free_memory();
 

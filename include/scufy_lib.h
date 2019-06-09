@@ -1,3 +1,5 @@
+// ScufyLib - a serial communication library with Scufy firmware
+
 // author: Mihai Oltean, 
 // email: mihai.oltean@gmail.com
 // main website: www.jenny5.org
@@ -7,8 +9,8 @@
 // MIT License
 // ---------------------------------------------------------------------------
 
-#ifndef jenny5_command_module_H
-#define jenny5_command_module_H
+#ifndef scufy_lib_H
+#define scufy_lib_H
 
 
 #include "lista_voidp.h"
@@ -27,7 +29,7 @@
 #define EVENT_INFO_PARAM2 4
 
 //----------------------------------------------------------------
-class t_jenny5_arduino_controller{
+class t_scufy_lib{
 private:
 	// version number of the library
 	char library_version[20];
@@ -65,8 +67,8 @@ private:
 	int get_data_from_serial(unsigned char* buffer, int buffer_size);
 
 public:
-	t_jenny5_arduino_controller(void);
-	~t_jenny5_arduino_controller(void);
+	t_scufy_lib(void);
+	~t_scufy_lib(void);
 
 	// connects to given serial port
 	bool connect(const char* port, int baud_rate);
@@ -80,7 +82,7 @@ public:
 	// returns a string containing the version number of this library
 	const char* get_library_version(void);
 	
-	// send a command to Arduino for obtaining the version number of the firmware 
+	// send a command to Arduino for obtaining the version number of the Scufy firmware 
 	void send_get_firmware_version(void);
 
 	// reads data from serial and updates the list of received events from Arduino
