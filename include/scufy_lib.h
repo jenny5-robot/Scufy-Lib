@@ -107,7 +107,7 @@ public:
 
 	// search in the list of events for a particular event type
 	// it returns true if the event is found in list
-	// the first occurance of the event is removed from the list
+	// the first occurrence of the event is removed from the list
 	bool query_for_event(int event_type);
 	
 	// search in the list of events for a firmware version event type
@@ -143,52 +143,52 @@ public:
 
 	// -------------- CREATE COMMANDS ----------------
 	// sends (to Arduino) a command for creating a stepper motor controller
-	// several arrays of pin indecses for direction, step and enable must be specified
+	// several arrays of pin indexes for direction, step and enable must be specified
 	// this method should be called once at the beginning of the program
-	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_stepper_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
 	
 	// sends (to Arduino) a command for creating a DC motor controller
-	// several arrays of pin indecses for direction, step and enable must be specified
+	// several arrays of pin indexes for direction, step and enable must be specified
 	// this method should be called once at the beginning of the program
-	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins);
 
 	// sends (to Arduino) a command for creating a ultrasonic controller
 	// this method should be called once at the beginning of the program
-	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_ultrasonics(int num_ultrasonics, int* trig_pins, int* echo_pins);
 
 	// sends (to Arduino) a command for creating a potentiometer controller
 	// this method should be called once at the beginning of the program
-	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_potentiometers(int num_potentiometers, int* out_pins);
 
 	// sends (to Arduino) a command for creating a as5147s controller
 	// this method should be called once at the beginning of the program
-	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_as5147s(int num_as5147s, int* out_pins);
 
 	// sends (to Arduino) a command for creating an infrared controller
 	// this method should be called once at the beginning of the program
-	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_infrared_sensors(int num_infrared_sensors, int* out_pins);
 
 	// sends (to Arduino) a command for creating a buttons controller
 	// this method should be called once at the beginning of the program
-	// calling it multiple times is allowed, but this will only fragment the Arduino memmory
+	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_buttons(int num_buttons_sensors, int* out_pins);
 
-	// sends (to Arduino) a command for creating a tera ranger one controller
+	// sends (to Arduino) a command for creating a Tera Ranger One controller
 	// this method should be called once at the beginning of the program
-	// only one sensor is permited per Arduino board
+	// only one sensor is permitted per Arduino board
 	void send_create_tera_ranger_one(void);
 
-	// sends (to Arduino) a command for creating a tera ranger one LIDAR controller
+	// sends (to Arduino) a command for creating a Tera Ranger One LiDAR controller
 	// this method should be called once at the beginning of the program
-	// only one sensor is permited per Arduino board
-	// only 1 LIDAR per Arduino board is possible due to the use of SDA and SLC pins for the signal
-	void send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin);
+	// only one sensor is permitted per Arduino board
+	// only 1 LiDAR per Arduino board is possible due to the use of SDA and SLC pins for the signal
+	void send_create_LiDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin);
 
 	// sends (to Arduino) a command (T#) for testing if the connection is alive
 	// when the Arduino will respond, the event will be added in the list
@@ -285,14 +285,14 @@ public:
 	// sends (to Arduino) a command for reading the Tera Ranger One sensor
 	void send_get_tera_ranger_one_distance(void);
 
-	// sends (to Arduino) a command for starting the LIDAR rotation
-	void send_LIDAR_go(void);
+	// sends (to Arduino) a command for starting the LiDAR rotation
+	void send_LiDAR_go(void);
 
-	// sends (to Arduino) a command for stopping LIDAR rotation
-	void send_LIDAR_stop(void);
+	// sends (to Arduino) a command for stopping LiDAR rotation
+	void send_LiDAR_stop(void);
 
-	// sends (to Arduino) a command for setting the speed and acceleration of the LIDAR motor
-	void send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration);
+	// sends (to Arduino) a command for setting the speed and acceleration of the LiDAR motor
+	void send_set_LiDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration);
 
 	// ---------------------- DEBUG ---------------------------
 	// sends (to Arduino) a command for reading parameters of a motor; debug purposes
@@ -307,9 +307,11 @@ public:
 	// sends (to Arduino) a command for setting parameters of a potentiometer
 	void send_set_potentiometer_parameters(int potentiometer_index);
 
-	// sends a command for reading the free memory size
+	// sends a command for reading the size of free memory of Arduino
 	void send_get_free_memory(void);
 
+	// returns the size of the free memory from Arduino. 
+	// This method will not return until will not receive the event from Arduino or timeout
 	int get_free_memory(void);
 	
 
@@ -332,10 +334,10 @@ public:
 	// sets the state of an infrared sensor
 	void set_infrared_state(int infrared_index, int new_state);
 
-	// returns the state of the tera ranger one sensor
+	// returns the state of the Tera Ranger One sensor
 	int get_tera_ranger_one_state(void);
 
-	// sets the state of the tera ranger one sensor
+	// sets the state of the Tera Ranger One sensor
 	void set_tera_ranger_one_state(int new_state);
 };
 //----------------------------------------------------------------

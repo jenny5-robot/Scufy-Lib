@@ -1248,7 +1248,7 @@ void t_scufy_lib::send_create_tera_ranger_one(void)
 
 }
 //--------------------------------------------------------------
-void t_scufy_lib::send_create_LIDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin)
+void t_scufy_lib::send_create_LiDAR(int dir_pin, int step_pin, int enable_pin, int ir_pin)
 {
 	char s[30];
 	sprintf(s, "CL %d %d %d %d#", dir_pin, step_pin, enable_pin, ir_pin);
@@ -1285,7 +1285,7 @@ void t_scufy_lib::send_get_tera_ranger_one_distance(void)
 #endif
 }
 //--------------------------------------------------------------
-void t_scufy_lib::send_LIDAR_go(void)
+void t_scufy_lib::send_LiDAR_go(void)
 {
 	char s[10];
 	sprintf(s, "LG#");
@@ -1296,7 +1296,7 @@ void t_scufy_lib::send_LIDAR_go(void)
 #endif
 }
 //--------------------------------------------------------------
-void t_scufy_lib::send_LIDAR_stop(void)
+void t_scufy_lib::send_LiDAR_stop(void)
 {
 	char s[10];
 	sprintf(s, "LH#");
@@ -1307,7 +1307,7 @@ void t_scufy_lib::send_LIDAR_stop(void)
 #endif
 }
 //--------------------------------------------------------------
-void t_scufy_lib::send_set_LIDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration)
+void t_scufy_lib::send_set_LiDAR_motor_speed_and_acceleration(int motor_speed, int motor_acceleration)
 {
 	char s[20];
 	sprintf(s, "LS %d %d#", motor_speed, motor_acceleration);
