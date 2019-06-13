@@ -1,3 +1,5 @@
+// Scufy Lib - a serial communication library for Scufy Arduino firmware
+
 // author: Mihai Oltean, 
 // email: mihai.oltean@gmail.com
 // main website: https://www.jenny5.org
@@ -9,7 +11,7 @@
 
 
 #include "scufy_lib.h"
-#include "jenny5_events.h"
+#include "scufy_events.h"
 #include <stdio.h>
 
 #ifdef _WIN32

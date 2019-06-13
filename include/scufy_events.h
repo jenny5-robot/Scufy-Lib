@@ -4,8 +4,8 @@
 // mirror website: https://jenny5-robot.github.io
 // source code: https://github.com/jenny5-robot
 
-#ifndef jenny5_eventsH
-#define jenny5_eventsH
+#ifndef scufy_eventsH
+#define scufy_eventsH
 
 #include <stdio.h>
 

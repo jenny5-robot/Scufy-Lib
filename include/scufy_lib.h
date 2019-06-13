@@ -14,7 +14,7 @@
 
 
 #include "lista_voidp.h"
-#include "jenny5_events.h"
+#include "scufy_events.h"
 #include "c_serial.h"
 
 #include <iostream>
