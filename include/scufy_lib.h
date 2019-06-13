@@ -92,18 +92,8 @@ public:
 	// clear the list of received events
 	void clear_events_list(void);
 
-	// waits for the completion of the event passed as a parameter,
-	// also updates all the event data if it was found
-	// if waits more than SECONDS_UNTIL_TIMEOUT times out and ends the program
-	bool wait_for_command_completion(jenny5_event &event, int available_info = EVENT_INFO_TYPE);
-
-
 	// ---------------------QUERY LIST of COMMANDS ---------------
 
-	// search in the list of events for a particular event type
-	// if found, returns true and the event param will be updated with the info about the found event, 
-	// if not found, the function returns false
-	bool query_for_event(jenny5_event& event, int available_info = EVENT_INFO_TYPE);
 
 	// search in the list of events for a particular event type
 	// it returns true if the event is found in list

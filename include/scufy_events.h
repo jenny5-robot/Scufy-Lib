@@ -45,8 +45,6 @@
 #define FREE_MEMORY_EVENT 34
 #define INFO_EVENT 35
 
-#define SECONDS_UNTIL_TIMEOUT 3
-
 //-----------------------------------------------------------------------
 class jenny5_event{
 public:
