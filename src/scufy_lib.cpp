@@ -22,25 +22,28 @@
 
 #define DEBUG_ON
 
-#define MAX_BUFFER_LENGTH 40960
+#define MAX_BUFFER_LENGTH 16384
 
 //--------------------------------------------------------------
 t_scufy_lib::t_scufy_lib(void)
 {
-	strcpy(library_version, "2019.06.02.0"); // year.month.day.build number
+	strcpy(library_version, "2019.06.14.0"); // year.month.day.build number
 	current_buffer[0] = 0;
-	for (int i = 0; i < 6; i++)
-		stepper_motor_state[i] = COMMAND_DONE;
-	for (int i = 0; i < 3; i++)
-		dc_motor_state[i] = COMMAND_DONE;
-	for (int i = 0; i < 6; i++)
-		ultrasonic_state[i] = COMMAND_DONE;
-	for (int i = 0; i < 6; i++)
-		potentiometer_state[i] = COMMAND_DONE;
-	for (int i = 0; i < 6; i++)
-		infrared_state[i] = COMMAND_DONE;
-	
-	tera_ranger_one_state = 0;
+
+	for (int i = 0; i < MAX_NUM_STEPPER_MOTORS; i++)
+		stepper_motor_move_state[i] = COMMAND_DONE;
+	for (int i = 0; i < MAX_NUM_DC_MOTORS; i++)
+		dc_motor_move_state[i] = COMMAND_DONE;
+	for (int i = 0; i < MAX_NUM_ULTRASONIC_HC_SR04_SENSORS; i++)
+		ultrasonic_HC_SR04_read_state[i] = COMMAND_DONE;
+	for (int i = 0; i < MAX_NUM_POTENTIOMETERS; i++)
+		potentiometer_read_state[i] = COMMAND_DONE;
+	for (int i = 0; i < MAX_NUM_INFRARED_SENSORS; i++)
+		infrared_read_state[i] = COMMAND_DONE;
+	for (int i = 0; i < MAX_NUM_AS5147_SENSORS; i++)
+		AS5147_read_state[i] = COMMAND_DONE;
+
+	tera_ranger_one_read_state = COMMAND_DONE;
 
 	if (c_serial_new(&m_port, NULL) < 0) {
 		fprintf(stderr, "ERROR: Unable to create new serial port\n");
@@ -124,6 +127,7 @@ void t_scufy_lib::send_move_stepper_motor(int motor_index, int num_steps)
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
+	stepper_motor_move_state[motor_index] = COMMAND_SENT;
 
 }
 //--------------------------------------------------------------
@@ -136,6 +140,8 @@ void t_scufy_lib::send_move_stepper_motor2(int motor_index1, int num_steps1, int
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
+	stepper_motor_move_state[motor_index1] = COMMAND_SENT;
+	stepper_motor_move_state[motor_index2] = COMMAND_SENT;
 
 }
 //--------------------------------------------------------------
@@ -149,6 +155,9 @@ void t_scufy_lib::send_move_stepper_motor3(int motor_index1, int num_steps1, int
 	printf("%s\n", s);
 #endif
 
+	stepper_motor_move_state[motor_index1] = COMMAND_SENT;
+	stepper_motor_move_state[motor_index2] = COMMAND_SENT;
+	stepper_motor_move_state[motor_index3] = COMMAND_SENT;
 }
 //--------------------------------------------------------------
 void t_scufy_lib::send_move_stepper_motor4(int motor_index1, int num_steps1, int motor_index2, int num_steps2, int motor_index3, int num_steps3, int motor_index4, int num_steps4)
@@ -160,7 +169,10 @@ void t_scufy_lib::send_move_stepper_motor4(int motor_index1, int num_steps1, int
 #ifdef DEBUG_ON
 	printf("%s\n", s);
 #endif
-
+	stepper_motor_move_state[motor_index1] = COMMAND_SENT;
+	stepper_motor_move_state[motor_index2] = COMMAND_SENT;
+	stepper_motor_move_state[motor_index3] = COMMAND_SENT;
+	stepper_motor_move_state[motor_index4] = COMMAND_SENT;
 }
 //--------------------------------------------------------------
 void t_scufy_lib::send_stop_stepper_motor(int motor_index)
@@ -175,7 +187,6 @@ void t_scufy_lib::send_stop_stepper_motor(int motor_index)
 
 }
 //--------------------------------------------------------------
-
 void t_scufy_lib::send_move_stepper_motor_array(int num_motors, int* motor_index, int *num_steps)
 {
 	char s[63];
@@ -192,6 +203,8 @@ void t_scufy_lib::send_move_stepper_motor_array(int num_motors, int* motor_index
 	printf("%s\n", s);
 #endif
 
+	for (int i = 0; i < num_motors; i++)
+		stepper_motor_move_state[motor_index[i]] = COMMAND_SENT;
 }
 //--------------------------------------------------------------
 void t_scufy_lib::send_stepper_motor_goto_sensor_position(int motor_index, int sensor_position)
@@ -206,7 +219,6 @@ void t_scufy_lib::send_stepper_motor_goto_sensor_position(int motor_index, int s
 
 }
 //--------------------------------------------------------------
-
 void t_scufy_lib::send_set_stepper_motor_speed_and_acceleration(int motor_index, int motor_speed, int motor_acceleration)
 {
 	char s[20];
@@ -219,7 +231,7 @@ void t_scufy_lib::send_set_stepper_motor_speed_and_acceleration(int motor_index,
 
 }
 //--------------------------------------------------------------
-void t_scufy_lib::send_get_ultrasonic_distance(int sensor_index)
+void t_scufy_lib::send_get_ultrasonic_HC_SR04_distance(int sensor_index)
 {
 	char s[20];
 	sprintf(s, "RU%d#", sensor_index);
@@ -903,12 +915,12 @@ void t_scufy_lib::send_go_home_stepper_motor(int motor_index)
 //--------------------------------------------------------------
 int t_scufy_lib::get_stepper_motor_state(int motor_index)
 {
-	return stepper_motor_state[motor_index];
+	return stepper_motor_move_state[motor_index];
 }
 //--------------------------------------------------------------
 void t_scufy_lib::set_stepper_motor_state(int motor_index, int state)
 {
-	stepper_motor_state[motor_index] = state;
+	stepper_motor_move_state[motor_index] = state;
 }
 //--------------------------------------------------------------
 void t_scufy_lib::send_create_stepper_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins)
@@ -949,7 +961,7 @@ void t_scufy_lib::send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1
 
 }
 //--------------------------------------------------------------
-void t_scufy_lib::send_create_ultrasonics(int num_ultrasonics, int* trig_pins, int* echo_pins)
+void t_scufy_lib::send_create_ultrasonics_HC_SR04(int num_ultrasonics, int* trig_pins, int* echo_pins)
 {
 	char s[63];
 	sprintf(s, "CU %d", num_ultrasonics);
@@ -1044,34 +1056,44 @@ void t_scufy_lib::send_create_buttons(int num_buttons, int* out_pins)
 
 }
 //--------------------------------------------------------------
-int t_scufy_lib::get_ultrasonic_state(int ultrasonic_index)
+int t_scufy_lib::get_ultrasonic_HC_SR04_state(int ultrasonic_index)
 {
-	return ultrasonic_state[ultrasonic_index];
+	return ultrasonic_HC_SR04_read_state[ultrasonic_index];
 }
 //--------------------------------------------------------------
-void t_scufy_lib::set_ultrasonic_state(int ultrasonic_index, int state)
+void t_scufy_lib::set_ultrasonic_HC_SR04_state(int ultrasonic_index, int state)
 {
-	ultrasonic_state[ultrasonic_index] = state;
+	ultrasonic_HC_SR04_read_state[ultrasonic_index] = state;
 }
 //--------------------------------------------------------------
 int t_scufy_lib::get_potentiometer_state(int potentiometer_index)
 {
-	return potentiometer_state[potentiometer_index];
+	return potentiometer_read_state[potentiometer_index];
 }
 //--------------------------------------------------------------
 void t_scufy_lib::set_potentiometer_state(int potentiometer_index, int new_state)
 {
-	potentiometer_state[potentiometer_index] = new_state;
+	potentiometer_read_state[potentiometer_index] = new_state;
 }
 //--------------------------------------------------------------
 int t_scufy_lib::get_infrared_state(int infrared_index)
 {
-	return infrared_state[infrared_index];
+	return infrared_read_state[infrared_index];
 }
 //--------------------------------------------------------------
 void t_scufy_lib::set_infrared_state(int infrared_index, int new_state)
 {
-	infrared_state[infrared_index] = new_state;
+	infrared_read_state[infrared_index] = new_state;
+}
+//--------------------------------------------------------------
+int t_scufy_lib::get_AS5147_state(int AS5147_index)
+{
+	return AS5147_read_state[AS5147_index];
+}
+//--------------------------------------------------------------
+void t_scufy_lib::set_AS5147_state(int AS5147_index, int new_state)
+{
+	AS5147_read_state[AS5147_index] = new_state;
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for moving a DC motor for a given number of microseconds
@@ -1160,13 +1182,13 @@ void t_scufy_lib::send_remove_attached_sensors_from_dc_motor(int motor_index)
 // returns the state of a motor
 int t_scufy_lib::get_dc_motor_state(int motor_index)
 {
-	return dc_motor_state[motor_index];
+	return dc_motor_move_state[motor_index];
 }
 //--------------------------------------------------------------
 // sets the state of a motor
 void t_scufy_lib::set_dc_motor_state(int motor_index, int new_state)
 {
-	dc_motor_state[motor_index] = new_state;
+	dc_motor_move_state[motor_index] = new_state;
 }
 //--------------------------------------------------------------
 void t_scufy_lib::send_create_tera_ranger_one(void)
@@ -1197,13 +1219,13 @@ void t_scufy_lib::send_create_LiDAR(int dir_pin, int step_pin, int enable_pin, i
 // returns the state of the tera ranger one sensor
 int t_scufy_lib::get_tera_ranger_one_state(void)
 {
-	return tera_ranger_one_state;
+	return tera_ranger_one_read_state;
 }
 //--------------------------------------------------------------
 // sets the state of the tera ranger one sensor
 void t_scufy_lib::set_tera_ranger_one_state(int new_state)
 {
-	tera_ranger_one_state = new_state;
+	tera_ranger_one_read_state = new_state;
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for reading the Tera Ranger One sensor

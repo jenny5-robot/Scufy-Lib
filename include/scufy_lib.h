@@ -24,9 +24,13 @@
 #define COMMAND_SENT 1
 #define COMMAND_DONE 2
 
-#define EVENT_INFO_TYPE 1
-#define EVENT_INFO_PARAM1 2
-#define EVENT_INFO_PARAM2 4
+#define MAX_NUM_STEPPER_MOTORS 6
+#define MAX_NUM_DC_MOTORS 3
+#define MAX_NUM_ULTRASONIC_HC_SR04_SENSORS 6
+#define MAX_NUM_POTENTIOMETERS 6
+#define MAX_NUM_AS5147_SENSORS 6
+#define MAX_NUM_INFRARED_SENSORS 6
+
 
 //----------------------------------------------------------------
 class t_scufy_lib{
@@ -45,18 +49,20 @@ private:
 	char current_buffer[4096]; 
 
 	// each motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
-	int stepper_motor_state[6]; // max 6 motors 
+	int stepper_motor_move_state[MAX_NUM_STEPPER_MOTORS]; // max 6 motors 
 
 	// each dc motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
-	int dc_motor_state[3]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which Arduino Nano has)
+	int dc_motor_move_state[MAX_NUM_DC_MOTORS]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which Arduino Nano has)
 
-	int ultrasonic_state[6]; // max 6 ultrasounds (each ultrasonic occupy 2 digital pins ... so 6x2 = 12 digital pins = which Arduino Nano has)
+	int ultrasonic_HC_SR04_read_state[MAX_NUM_ULTRASONIC_HC_SR04_SENSORS]; // max HC-SR04 6 ultrasounds (each ultrasonic occupy 2 digital pins ... so 6x2 = 12 digital pins = which Arduino Nano has)
 
-	int potentiometer_state[6]; // if I have max 6 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
+	int potentiometer_read_state[MAX_NUM_POTENTIOMETERS]; // if I have max 6 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
 
-	int infrared_state[6]; // I suppose that I don't have so many infrared sensors attached to 1 controller
+	int AS5147_read_state[MAX_NUM_POTENTIOMETERS]; // if I have max 6 motors, the number of potentiometers is not higher because each potentiometer is attached to 1 motor
 
-	int tera_ranger_one_state;
+	int infrared_read_state[MAX_NUM_INFRARED_SENSORS]; // I suppose that I don't have so many infrared sensors attached to 1 controller
+
+	int tera_ranger_one_read_state;
 
 	// parse the string for events
 	void parse_and_queue_commands(char* tmp_str, int str_length);
@@ -147,7 +153,7 @@ public:
 	// sends (to Arduino) a command for creating a ultrasonic controller
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memory
-	void send_create_ultrasonics(int num_ultrasonics, int* trig_pins, int* echo_pins);
+	void send_create_ultrasonics_HC_SR04(int num_ultrasonics, int* trig_pins, int* echo_pins);
 
 	// sends (to Arduino) a command for creating a potentiometer controller
 	// this method should be called once at the beginning of the program
@@ -257,8 +263,8 @@ public:
 
 
 	// ----------------------- SENSORS ----------------------
-	// sends (to Arduino) a command for reading a ultrasonic
-	void send_get_ultrasonic_distance(int sensor_index);
+	// sends (to Arduino) a command for reading a HC_SR04 ultrasonic
+	void send_get_ultrasonic_HC_SR04_distance(int sensor_index);
 	
 	// sends (to Arduino) a command for a button state
 	void send_get_button_state(int button_index);
@@ -307,16 +313,22 @@ public:
 
 	//  ----------------------- STATE -----------------------
 	// returns the state of a ultrasonic
-	int get_ultrasonic_state(int ultrasonic_index);
+	int get_ultrasonic_HC_SR04_state(int ultrasonic_index);
 
 	// sets the state of a ultrasonic
-	void set_ultrasonic_state(int ultrasonic_index, int new_state);
+	void set_ultrasonic_HC_SR04_state(int ultrasonic_index, int new_state);
 
 	// returns the state of a potentiometer
 	int get_potentiometer_state(int potentiometer_index);
 
 	// gets the state of a potentiometer
 	void set_potentiometer_state(int potentiometer_index, int new_state);
+
+	// returns the state of a AS5147 sensor
+	int get_AS5147_state(int potentiometer_index);
+
+	// gets the state of a AS5147 sensor
+	void set_AS5147_state(int potentiometer_index, int new_state);
 
 	// returns the state of an infrared sensor
 	int get_infrared_state(int infrared_index);
