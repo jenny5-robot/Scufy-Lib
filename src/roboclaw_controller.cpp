@@ -133,10 +133,9 @@ void t_roboclaw_controller::get_firmware_version(char *firmware_version)
 		
 		int data_length = 2;
 		c_serial_write_data(m_port, buffer, &data_length);
-		//RS232_SendBuf(port_number, (unsigned char*)buffer, 2);
 		Sleep(10);
 
-		//RS232_PollComport(port_number, buffer, 32);
+		
 		int num_available;
 		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			buffer[0] = 0;
@@ -170,8 +169,6 @@ double t_roboclaw_controller::get_board_temperature(void)
 		if (num_available <= 0)
 			return 0;
 		c_serial_read_data(m_port, buffer, &buffer_size, &m_lines);
-
-//		RS232_PollComport(port_number, buffer, 10);
 
 		return (double)(buffer[0] << 8 | buffer[1]) / 10.0;
 	}
@@ -218,7 +215,6 @@ bool t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 
 		int data_length = 5;
 		c_serial_write_data(m_port, buffer, &data_length);
-//		RS232_SendBuf(port_number, buffer, 5);
 		Sleep(10);
 
 		int num_available;

@@ -130,6 +130,10 @@ public:
 	t_roboclaw_controller(void);
 	~t_roboclaw_controller(void);
 
+	// returns the library version
+	// the caller must not delete the pointer
+	const char* get_library_version(void);
+
 	bool connect(const char* port, int baud_rate);
 	void close_connection(void);
 	bool is_open(void);
@@ -141,10 +145,6 @@ public:
 
 	// Read the main battery voltage level connected to B+ and B- terminals
 	double get_main_battery_voltage(void);
-
-	// returns the library version
-	// the caller must not delete the pointer
-	const char* get_library_version(void);
 
 	// Read RoboClaw firmware version. 
 	// Returns up to 48 bytes(depending on the Roboclaw model) and 
