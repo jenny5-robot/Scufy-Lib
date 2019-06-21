@@ -1,6 +1,7 @@
-# jenny5-control-module
-version 2015.12.27.0
+# Scufy Lib
 
-C++ library for controlling a Jenny 5 module.
+version 2019.05.20.0
+
+C++ library for sending commands to [Scufy Arduino firmware](https://github.com/jenny5-robot/Scufy).
 
 
