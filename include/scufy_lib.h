@@ -25,7 +25,7 @@
 #define COMMAND_DONE 2
 
 #define MAX_NUM_STEPPER_MOTORS 6
-#define MAX_NUM_DC_MOTORS 3
+#define MAX_NUM_DC_MOTORS_TB6612FNG 3
 #define MAX_NUM_ULTRASONIC_HC_SR04_SENSORS 6
 #define MAX_NUM_POTENTIOMETERS 6
 #define MAX_NUM_AS5147_SENSORS 6
@@ -52,7 +52,7 @@ private:
 	int stepper_motor_move_state[MAX_NUM_STEPPER_MOTORS]; // max 6 motors 
 
 	// each dc motor can be in one of 2 states: COMMAND_DONE and COMMAND_SENT
-	int dc_motor_move_state[MAX_NUM_DC_MOTORS]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which Arduino Nano has)
+	int dc_motor_TB6612FNG_move_state[MAX_NUM_DC_MOTORS_TB6612FNG]; // max dc 3 motors (each motor occupy 4 digital pins ... so 4x3 = 12 digital pins = which Arduino Nano has)
 
 	int ultrasonic_HC_SR04_read_state[MAX_NUM_ULTRASONIC_HC_SR04_SENSORS]; // max HC-SR04 6 ultrasounds (each ultrasonic occupy 2 digital pins ... so 6x2 = 12 digital pins = which Arduino Nano has)
 
@@ -144,11 +144,11 @@ public:
 	// calling it multiple times is allowed, but this will only fragment the Arduino memory
 	void send_create_stepper_motors(int num_motors, int* dir_pins, int* step_pins, int* enable_pins);
 	
-	// sends (to Arduino) a command for creating a DC motor controller
+	// sends (to Arduino) a command for creating a DC motor controller (by using TB6612FNG board)
 	// several arrays of pin indexes for direction, step and enable must be specified
 	// this method should be called once at the beginning of the program
 	// calling it multiple times is allowed, but this will only fragment the Arduino memory
-	void send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins);
+	void send_create_dc_motors_TB6612FNG(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins);
 
 	// sends (to Arduino) a command for creating a ultrasonic controller
 	// this method should be called once at the beginning of the program
@@ -245,21 +245,21 @@ public:
 
 	// ---------------------- DC motors ----------------------
 	// sends (to Arduino) a command for moving a DC motor for a given number of microseconds
-	void send_move_dc_motor(int motor_index, int num_miliseconds);
+	void send_move_dc_motor_TB6612FNG(int motor_index, int num_miliseconds);
 	// sends (to Arduino) a command for moving a DC motor to home position
-	void send_go_home_dc_motor(int motor_index);
+	void send_go_home_dc_motor_TB6612FNG(int motor_index);
 	// sends (to Arduino) a command for disabling a DC motor
-	void send_disable_dc_motor(int motor_index);
+	void send_disable_dc_motor_TB6612FNG(int motor_index);
 	// sends (to Arduino) a command for setting the speed of a given DC motor
-	void send_set_dc_motor_speed(int motor_index, int motor_speed);
+	void send_set_dc_motor_speed_TB6612FNG(int motor_index, int motor_speed);
 	// sends (to Arduino) a command for attaching several sensors to a given DC motor
-	void send_attach_sensors_to_dc_motor(int motor_index, int num_buttons, int *buttons_index);
+	void send_attach_sensors_to_dc_motor_TB6612FNG(int motor_index, int num_buttons, int *buttons_index);
 	// sends (to Arduino) a command for reading removing all attached sensors of a motor
-	void send_remove_attached_sensors_from_dc_motor(int motor_index);
+	void send_remove_attached_sensors_from_dc_motor_TB6612FNG(int motor_index);
 	// returns the state of a motor
-	int get_dc_motor_state(int motor_index);
+	int get_dc_motor_state_TB6612FNG(int motor_index);
 	// sets the state of a motor
-	void set_dc_motor_state(int motor_index, int new_state);
+	void set_dc_motor_state_TB6612FNG(int motor_index, int new_state);
 
 
 	// ----------------------- SENSORS ----------------------

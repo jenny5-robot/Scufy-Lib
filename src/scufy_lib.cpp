@@ -27,13 +27,13 @@
 //--------------------------------------------------------------
 t_scufy_lib::t_scufy_lib(void)
 {
-	strcpy(library_version, "2019.06.14.0"); // year.month.day.build number
+	strcpy(library_version, "2019.06.15.0"); // year.month.day.build number
 	current_buffer[0] = 0;
 
 	for (int i = 0; i < MAX_NUM_STEPPER_MOTORS; i++)
 		stepper_motor_move_state[i] = COMMAND_DONE;
-	for (int i = 0; i < MAX_NUM_DC_MOTORS; i++)
-		dc_motor_move_state[i] = COMMAND_DONE;
+	for (int i = 0; i < MAX_NUM_DC_MOTORS_TB6612FNG; i++)
+		dc_motor_TB6612FNG_move_state[i] = COMMAND_DONE;
 	for (int i = 0; i < MAX_NUM_ULTRASONIC_HC_SR04_SENSORS; i++)
 		ultrasonic_HC_SR04_read_state[i] = COMMAND_DONE;
 	for (int i = 0; i < MAX_NUM_POTENTIOMETERS; i++)
@@ -522,7 +522,7 @@ void t_scufy_lib::parse_and_queue_commands(char* tmp_str, int str_length)
 						int ultrasonic_index, distance;
 						sscanf(tmp_str + i + 2, "%d%d", &ultrasonic_index, &distance);
 						i += 5;
-						jenny5_event *e = new jenny5_event(ULTRASONIC_EVENT, ultrasonic_index, distance, 0);
+						jenny5_event *e = new jenny5_event(ULTRASONIC_READ_EVENT, ultrasonic_index, distance, 0);
 						received_events.Add((void*)e);
 					}
 					else
@@ -530,7 +530,7 @@ void t_scufy_lib::parse_and_queue_commands(char* tmp_str, int str_length)
 							int potentiometer_index, position;
 							sscanf(tmp_str + i + 2, "%d%d", &potentiometer_index, &position);
 							i += 5;
-							jenny5_event *e = new jenny5_event(POTENTIOMETER_EVENT, potentiometer_index, position, 0);
+							jenny5_event *e = new jenny5_event(POTENTIOMETER_READ_EVENT, potentiometer_index, position, 0);
 							received_events.Add((void*)e);
 						}
 						else
@@ -538,7 +538,7 @@ void t_scufy_lib::parse_and_queue_commands(char* tmp_str, int str_length)
 								int as5147_index, position;
 								sscanf(tmp_str + i + 2, "%d%d", &as5147_index, &position);
 								i += 5;
-								jenny5_event *e = new jenny5_event(AS5147_EVENT, as5147_index, position, 0);
+								jenny5_event *e = new jenny5_event(AS5147_READ_EVENT, as5147_index, position, 0);
 								received_events.Add((void*)e);
 							}
 							else
@@ -546,7 +546,7 @@ void t_scufy_lib::parse_and_queue_commands(char* tmp_str, int str_length)
 									int infrared_index, distance;
 									sscanf(tmp_str + i + 2, "%d%d", &infrared_index, &distance);
 									i += 5;
-									jenny5_event *e = new jenny5_event(INFRARED_EVENT, infrared_index, distance, 0);
+									jenny5_event *e = new jenny5_event(INFRARED_READ_EVENT, infrared_index, distance, 0);
 									received_events.Add((void*)e);
 								}
 								else
@@ -554,7 +554,7 @@ void t_scufy_lib::parse_and_queue_commands(char* tmp_str, int str_length)
 										int button_index, button_state;
 										sscanf(tmp_str + i + 2, "%d%d", &button_index, &button_state);
 										i += 5;
-										jenny5_event *e = new jenny5_event(BUTTON_EVENT, button_index, button_state, 0);
+										jenny5_event *e = new jenny5_event(BUTTON_READ_EVENT, button_index, button_state, 0);
 										received_events.Add((void*)e);
 									}
 									else
@@ -562,7 +562,7 @@ void t_scufy_lib::parse_and_queue_commands(char* tmp_str, int str_length)
 											int distance;
 											int num_read;
 											sscanf(tmp_str + i + 2, "%d%n", &distance, &num_read);
-											jenny5_event *e = new jenny5_event(TERA_RANGER_ONE_EVENT, distance, 0, 0);
+											jenny5_event *e = new jenny5_event(TERA_RANGER_ONE_READ_EVENT, distance, 0, 0);
 											received_events.Add((void*)e);
 											i += 2 + num_read + 1;
 										}
@@ -942,7 +942,7 @@ void t_scufy_lib::send_create_stepper_motors(int num_motors, int* dir_pins, int*
 
 }
 //--------------------------------------------------------------
-void t_scufy_lib::send_create_dc_motors(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins)
+void t_scufy_lib::send_create_dc_motors_TB6612FNG(int num_motors, int *pwm_pins, int* dir1_pins, int* dir2_pins, int* enable_pins)
 {
 	char s[63];
 	sprintf(s, "CD %d", num_motors);
@@ -1097,7 +1097,7 @@ void t_scufy_lib::set_AS5147_state(int AS5147_index, int new_state)
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for moving a DC motor for a given number of microseconds
-void t_scufy_lib::send_move_dc_motor(int motor_index, int num_miliseconds)
+void t_scufy_lib::send_move_dc_motor_TB6612FNG(int motor_index, int num_miliseconds)
 {
 	char s[20];
 	sprintf(s, "MD%d %d#", motor_index, num_miliseconds);
@@ -1110,7 +1110,7 @@ void t_scufy_lib::send_move_dc_motor(int motor_index, int num_miliseconds)
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for moving a DC motor to home position
-void t_scufy_lib::send_go_home_dc_motor(int motor_index)
+void t_scufy_lib::send_go_home_dc_motor_TB6612FNG(int motor_index)
 {
 	char s[20];
 	sprintf(s, "HD%d#", motor_index);
@@ -1123,7 +1123,7 @@ void t_scufy_lib::send_go_home_dc_motor(int motor_index)
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for disabling a DC motor
-void t_scufy_lib::send_disable_dc_motor(int motor_index)
+void t_scufy_lib::send_disable_dc_motor_TB6612FNG(int motor_index)
 {
 	char s[10];
 	sprintf(s, "DD%d#", motor_index);
@@ -1136,7 +1136,7 @@ void t_scufy_lib::send_disable_dc_motor(int motor_index)
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for setting the speed of a given DC motor
-void t_scufy_lib::send_set_dc_motor_speed(int motor_index, int motor_speed)
+void t_scufy_lib::send_set_dc_motor_speed_TB6612FNG(int motor_index, int motor_speed)
 {
 	char s[20];
 	sprintf(s, "SD%d %d#", motor_index, motor_speed);
@@ -1149,7 +1149,7 @@ void t_scufy_lib::send_set_dc_motor_speed(int motor_index, int motor_speed)
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for attaching several sensors to a given DC motor
-void t_scufy_lib::send_attach_sensors_to_dc_motor(int motor_index, int num_buttons, int *buttons_index)
+void t_scufy_lib::send_attach_sensors_to_dc_motor_TB6612FNG(int motor_index, int num_buttons, int *buttons_index)
 {
 	char s[64];
 	sprintf(s, "AD%d %d", motor_index, num_buttons);
@@ -1167,7 +1167,7 @@ void t_scufy_lib::send_attach_sensors_to_dc_motor(int motor_index, int num_butto
 }
 //--------------------------------------------------------------
 // sends (to Arduino) a command for reading removing all attached sensors of a motor
-void t_scufy_lib::send_remove_attached_sensors_from_dc_motor(int motor_index)
+void t_scufy_lib::send_remove_attached_sensors_from_dc_motor_TB6612FNG(int motor_index)
 {
 	char s[10];
 	sprintf(s, "AD%d 0#", motor_index);
@@ -1180,15 +1180,15 @@ void t_scufy_lib::send_remove_attached_sensors_from_dc_motor(int motor_index)
 }
 //--------------------------------------------------------------
 // returns the state of a motor
-int t_scufy_lib::get_dc_motor_state(int motor_index)
+int t_scufy_lib::get_dc_motor_state_TB6612FNG(int motor_index)
 {
-	return dc_motor_move_state[motor_index];
+	return dc_motor_TB6612FNG_move_state[motor_index];
 }
 //--------------------------------------------------------------
 // sets the state of a motor
-void t_scufy_lib::set_dc_motor_state(int motor_index, int new_state)
+void t_scufy_lib::set_dc_motor_state_TB6612FNG(int motor_index, int new_state)
 {
-	dc_motor_move_state[motor_index] = new_state;
+	dc_motor_TB6612FNG_move_state[motor_index] = new_state;
 }
 //--------------------------------------------------------------
 void t_scufy_lib::send_create_tera_ranger_one(void)
