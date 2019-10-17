@@ -1,10 +1,7 @@
-// author: Mihai Oltean
-// email: mihai.oltean@gmail.com
-// main website: https://www.jenny5.org
-// mirror website: https://jenny5-robot.github.io
-// source code: https://github.com/jenny5-robot
-
-// MIT License
+// Author: Mihai Oltean, https://mihaioltean.github.io, mihai.oltean@gmail.com
+// More details: https://jenny5.org, https://jenny5-robot.github.io/
+// Source code: github.com/jenny5-robot
+// License: MIT
 // ---------------------------------------------------------------------------
 
 #include "roboclaw_controller.h"
@@ -30,7 +27,7 @@ uint16_t CRC16(unsigned char *packet, int nBytes)
 //--------------------------------------------------------------
 t_roboclaw_controller::t_roboclaw_controller(void)
 {
-	strcpy(library_version, "2019.06.01.0"); // year.month.day.build number
+	strcpy(library_version, "2019.09.27.0"); // year.month.day.build number
 
 	if (c_serial_new(&m_port, NULL) < 0) {
 		//fprintf(stderr, "ERROR: Unable to create new serial port\n");
@@ -158,6 +155,9 @@ double t_roboclaw_controller::get_board_temperature(void)
 		buffer[0] = 0x80;// port
 		buffer[1] = GETTEMP;
 		int data_length = 2;
+
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -183,6 +183,9 @@ double t_roboclaw_controller::get_main_battery_voltage(void)
 		buffer[0] = 0x80;// port
 		buffer[1] = GETMBATT;
 		int data_length = 2;
+		
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -214,6 +217,9 @@ bool t_roboclaw_controller::drive_forward_M1(unsigned char speed)
 		buffer[4] = (unsigned char)crc;
 
 		int data_length = 5;
+
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -244,6 +250,9 @@ bool t_roboclaw_controller::drive_forward_M2(unsigned char speed)
 		buffer[4] = (unsigned char)crc;
 
 		int data_length = 5;
+
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -274,11 +283,14 @@ bool t_roboclaw_controller::drive_backward_M1(unsigned char speed)
 		buffer[4] = (unsigned char)crc;
 
 		int data_length = 5;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
 		int num_available;
 		int buffer_size = 10;
+
 		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
 		}
@@ -304,6 +316,8 @@ bool t_roboclaw_controller::drive_backward_M2(unsigned char speed)
 		buffer[4] = (unsigned char)crc;
 
 		int data_length = 5;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -327,7 +341,9 @@ void t_roboclaw_controller::get_motors_current_consumption(double &current_motor
 		unsigned char buffer[10];
 		buffer[0] = 0x80;// port
 		buffer[1] = GETCURRENTS;
-		int data_length = 5;
+		int data_length = 2;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -361,9 +377,18 @@ bool t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t d
 
 		buffer[2] = duty >> 8;
 		buffer[3] = (unsigned char)duty;
+		/*
+		buffer[4] = accel >> 8;
+		buffer[5] = (unsigned char)accel;
+
+		buffer[6] = accel >> 8;
+		buffer[7] = (unsigned char)accel;
+		*/
 
 		buffer[4] = accel >> 8;
 		buffer[5] = (unsigned char)accel;
+
+		accel >>= 16;
 
 		buffer[6] = accel >> 8;
 		buffer[7] = (unsigned char)accel;
@@ -373,6 +398,8 @@ bool t_roboclaw_controller::drive_M1_with_signed_duty_and_acceleration(int16_t d
 		buffer[9] = (unsigned char)crc;
 
 		int data_length = 10;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 		
@@ -399,9 +426,17 @@ bool t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t d
 
 		buffer[2] = duty >> 8;
 		buffer[3] = (unsigned char)duty;
-
+		/*
 		buffer[4] = accel >> 8;
 		buffer[5] = (unsigned char)accel;
+
+		buffer[6] = accel >> 8;
+		buffer[7] = (unsigned char)accel;
+		*/
+		buffer[4] = accel >> 8;
+		buffer[5] = (unsigned char)accel;
+
+		accel >>= 16;
 
 		buffer[6] = accel >> 8;
 		buffer[7] = (unsigned char)accel;
@@ -411,6 +446,8 @@ bool t_roboclaw_controller::drive_M2_with_signed_duty_and_acceleration(int16_t d
 		buffer[9] = (unsigned char)crc;
 
 		int data_length = 10;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 		int num_available;
@@ -451,6 +488,8 @@ bool t_roboclaw_controller::set_M1_max_current_limit(double c_max)
 		buffer[11] = (unsigned char)crc;
 
 		int data_length = 12;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 		int num_available;
@@ -491,10 +530,12 @@ bool t_roboclaw_controller::set_M2_max_current_limit(double c_max)
 		buffer[11] = (unsigned char)crc;
 
 		int data_length = 12;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 		int num_available;
-		int buffer_size = 10;
+		int buffer_size = 12;
 		if (c_serial_get_available(m_port, &num_available) != CSERIAL_OK) {
 			return false;
 		}
@@ -513,6 +554,8 @@ void t_roboclaw_controller::read_motor_PWM(double &pwm_motor_1, double &pwm_moto
 		buffer[0] = 0x80;// port
 		buffer[1] = GETPWMS;
 		int data_length = 2;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -544,6 +587,8 @@ uint16_t t_roboclaw_controller::read_status(void)
 		buffer[0] = 0x80;// port
 		buffer[1] = GETERROR;
 		int data_length = 2;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 
@@ -578,6 +623,8 @@ void t_roboclaw_controller::set_standard_config_settings(uint16_t config)
 		buffer[5] = (unsigned char)crc;
 
 		int data_length = 6;
+
+		c_serial_flush(m_port);
 		c_serial_write_data(m_port, buffer, &data_length);
 		Sleep(10);
 	}
@@ -590,6 +637,8 @@ uint16_t t_roboclaw_controller::read_standard_config_settings(void)
 		buffer[0] = 0x80;// port
 		buffer[1] = GETCONFIG;
 		int data_length = 2;
+		c_serial_flush(m_port);
+
 		c_serial_write_data(m_port, buffer, &data_length);
 
 		Sleep(10);

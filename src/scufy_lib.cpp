@@ -1,12 +1,7 @@
-// Scufy Lib - a serial communication library for Scufy Arduino firmware
-
-// author: Mihai Oltean, 
-// email: mihai.oltean@gmail.com
-// main website: https://www.jenny5.org
-// mirror website: https://jenny5-robot.github.io
-// source code: https://github.com/jenny5-robot
-
-// MIT License
+// Author: Mihai Oltean, https://mihaioltean.github.io, mihai.oltean@gmail.com
+// More details: https://jenny5.org, https://jenny5-robot.github.io/
+// Source code: github.com/jenny5-robot
+// License: MIT
 // ---------------------------------------------------------------------------
 
 
